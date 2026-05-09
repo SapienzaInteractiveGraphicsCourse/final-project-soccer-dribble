@@ -129,6 +129,21 @@ document.addEventListener('triggerReplay', () => {
     }
 });
 
+// Ascoltatore per skippare il replay con SPAZIO
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && replaySystem.isPlaying) {
+        replaySystem.stopPlayback();
+        uiManager.showReplayUI(false);
+        matchManager.resetAfterGoal();
+
+        // RIATTIVA GLI INDICATORI
+        if (effects) {
+            if (effects.playerIndicator) effects.playerIndicator.visible = true;
+            if (effects.targetGoalGroup) effects.targetGoalGroup.visible = true;
+        }
+    }
+});
+
 // --- GAME LOOP ---
 function animate() {
     requestAnimationFrame(animate);

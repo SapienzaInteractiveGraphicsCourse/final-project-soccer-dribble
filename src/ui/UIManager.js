@@ -331,7 +331,7 @@ export class UIManager {
             if (!replayIcon) {
                 replayIcon = document.createElement('div');
                 replayIcon.id = 'replay-indicator';
-                replayIcon.innerHTML = '🔴 REPLAY';
+                replayIcon.innerHTML = '<span style="animation: blinker 1s linear infinite; display: inline-block;">🔴 REPLAY</span><br><span style="font-size: 16px; color: white; font-weight: normal; text-shadow: 1px 1px 0 #000;">PRESS SPACEBAR TO SKIP</span>';
                 replayIcon.style.cssText = `
                     position: fixed;
                     top: 20px;
@@ -342,12 +342,13 @@ export class UIManager {
                     font-family: sans-serif;
                     text-shadow: 2px 2px 0 #000;
                     z-index: 1000;
-                    animation: blinker 1s linear infinite;
                 `;
                 const style = document.createElement('style');
                 style.innerHTML = `@keyframes blinker { 50% { opacity: 0; } }`;
                 document.head.appendChild(style);
                 document.body.appendChild(replayIcon);
+            } else {
+                replayIcon.innerHTML = '<span style="animation: blinker 1s linear infinite; display: inline-block;">🔴 REPLAY</span><br><span style="font-size: 16px; color: white; font-weight: normal; text-shadow: 1px 1px 0 #000;">PRESS SPACEBAR TO SKIP</span>';
             }
             replayIcon.style.display = 'block';
 

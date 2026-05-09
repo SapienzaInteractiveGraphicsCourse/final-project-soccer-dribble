@@ -1,0 +1,619 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  /* Blocca lo schermo e impedisce di scrollare la pagina */
+  overflow: hidden; 
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+}
+
+/* Regole per il canvas creato dal motore 3D */
+canvas {
+  display: block; /* Rimuove lo spazio bianco fantasma sotto le immagini/canvas */
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+
+/* ... (codice esistente per html, body e canvas) ... */
+
+#blocker {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5); /* Sfondo semi-trasparente */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10; /* Sopra al canvas */
+}
+
+#instructions {
+  text-align: center;
+  font-family: sans-serif;
+  line-height: 1.6;
+}
+
+
+#game-ui {
+    position: fixed; /* Usa fixed invece di absolute! */
+    top: 0; 
+    left: 0; 
+    width: 100vw; /* 100% della larghezza dello schermo */
+    height: 100vh; /* 100% dell'altezza dello schermo */
+    pointer-events: none; 
+    z-index: 10; /* Assicura che la UI stia sempre sopra al gioco */
+    font-family: 'Arial', sans-serif;
+    user-select: none;
+}
+/* --- TABELLONE --- */
+#scoreboard {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 10px 30px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+
+#scoreboard .team {
+    font-size: 18px;
+    color: #bbb;
+    margin: 0 15px;
+}
+
+#scoreboard .score {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+#timer {
+    font-size: 16px;
+    color: #4CAF50; /* Verde fosforo per il tempo */
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+/* --- STAMINA --- */
+#stamina-container {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    width: 250px;
+}
+
+#stamina-label {
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 2px black;
+    letter-spacing: 1px;
+}
+
+#stamina-bar-bg {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid white;
+    height: 18px;
+    border-radius: 9px;
+    overflow: hidden;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+
+#stamina-bar-fill {
+    width: 100%;
+    height: 100%;
+    background-color: #4CAF50;
+    transition: width 0.1s linear, background-color 0.3s;
+}
+
+
+
+/* --- RADAR --- */
+#radar {
+    position: absolute;
+    bottom: 30px; /* Distanza dal fondo dello schermo */
+    left: 30px;   /* Distanza da sinistra */
+    width: 200px;
+    height: 130px;
+    background-color: rgba(76, 175, 80, 0.6); /* Verde semi-trasparente */
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    overflow: hidden; /* Evita che i pallini escano dal bordo */
+}
+
+#radar-center-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+    transform: translateX(-50%);
+}
+
+#radar-player {
+    position: absolute;
+    width: 10px;
+    height: 14px;
+    background-color: #f44336; /* Rosso per il giocatore */
+    border: 2px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%); /* Centra il pallino sulle coordinate esatte */
+    transition: left 0.1s, top 0.1s; /* Rende il movimento più fluido */
+}
+
+
+
+#radar-ball {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: white; /* Bianco per il pallone */
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 3px black; /* Un po' di ombra per farlo staccare */
+    transition: left 0.1s, top 0.1s;
+}
+
+
+
+#radar-player::after {
+    content: '';
+    position: absolute;
+    top: -14px; /* Lo spingiamo più fuori rispetto al cerchio blu */
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent; /* Mantiene la base stretta */
+    border-right: 4px solid transparent;
+    border-bottom: 14px solid white; /* Aumenta questo per allungare ancora di più la freccia */
+}
+#radar-center-circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px; /* Dimensione del cerchio */
+    height: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+/* Stili esistenti del tuo gioco... */
+
+/* --- NUOVI STILI MENU --- */
+#ui-layer {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 10;
+  pointer-events: none; /* Lascia passare i click al canvas quando nascosto */
+}
+
+.menu-screen {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  pointer-events: auto; /* Riabilita i click per i pulsanti */
+  font-family: 'Arial', sans-serif;
+}
+
+.menu-screen h1 {
+  font-size: 60px;
+  margin-bottom: 40px;
+  text-shadow: 0 0 20px #4CAF50;
+}
+
+.menu-screen h2 {
+  font-size: 40px;
+  margin-bottom: 30px;
+}
+
+.menu-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: 2px solid white;
+  padding: 15px 40px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 10px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.menu-btn:hover {
+  background-color: white;
+  color: #4CAF50;
+  transform: scale(1.1);
+}
+
+.formation-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+/* --- STILI MENU FORMAZIONI VISIVE --- */
+
+.formation-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background-color: rgba(0, 0, 0, 0.5); /* Sfondo scuro semi-trasparente */
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  transition: transform 0.3s, background-color 0.3s, border-color 0.3s;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+}
+
+.formation-card:hover {
+  background-color: rgba(76, 175, 80, 0.4); /* Si colora leggermente di verde al passaggio del mouse */
+  border-color: #4CAF50;
+  transform: scale(1.05);
+}
+
+/* Il rettangolo del campo di calcio */
+.mini-pitch {
+  width: 100px;
+  height: 140px;
+  background-color: #2e7d32; /* Verde prato */
+  border: 2px solid white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Linea di metà campo */
+.mini-pitch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  transform: translateY(-50%);
+}
+
+/* Cerchio di centrocampo */
+.mini-pitch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  border: 2px solid white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Stile base dei pallini (giocatori) */
+.dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white; /* Bordino bianco per farli risaltare */
+  transform: translateX(-50%); /* Centra il pallino esattamente sulla coordinata 'left' */
+  z-index: 2; /* Si assicura che stiano sopra le linee bianche */
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Colori specifici per ruolo */
+.dot.gk {
+  background-color: #ffeb3b; /* Giallo per il portiere */
+}
+
+.dot.player {
+  background-color: #f44336; /* Rosso per i giocatori di movimento */
+}
+
+
+/* Il rettangolo del campo di calcio (più grande!) */
+.mini-pitch {
+  width: 160px;   /* Prima era 100px */
+  height: 220px;  /* Prima era 140px */
+  background-color: #2e7d32; 
+  border: 2px solid white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Linea di metà campo (rimane uguale) */
+.mini-pitch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: white;
+  transform: translateY(-50%);
+}
+
+/* Cerchio di centrocampo (allargato per proporzione) */
+.mini-pitch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 45px;    /* Prima era 30px */
+  height: 45px;   /* Prima era 30px */
+  border: 2px solid white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+
+
+#bonus-hud {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00ffff;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+  width: 250px;
+  z-index: 10;
+}
+
+.bonus-title {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #ccc;
+  letter-spacing: 1px;
+}
+
+/* La "finestrella" della slot machine */
+.bonus-slot {
+  height: 35px; /* Altezza esatta di un singolo elemento */
+  overflow: hidden; /* Nasconde tutto ciò che è sopra o sotto */
+  background: #111;
+  border-radius: 4px;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #333;
+  position: relative;
+}
+
+/* Il rullo che scorrerà verso l'alto */
+#bonus-roller {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  /* L'animazione verrà gestita via Javascript */
+}
+
+/* I singoli elementi dentro il rullo */
+.bonus-item {
+  height: 35px;
+  line-height: 35px;
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.bonus-empty { color: #666; font-style: italic; }
+.bonus-random { color: #00ffcc; text-shadow: 0 0 5px #00ffcc; }
+.bonus-supershot { color: #ff2200; text-shadow: 0 0 10px #ff2200; }
+
+
+/* --- BARRA DEL BOOST --- */
+#boost-container {
+    position: absolute;
+    bottom: 80px; /* Posizionata esattamente sopra la stamina (che di solito sta a 30-40px) */
+    right: 20px;
+    width: 270px; /* 250px (barra) + 16px (padding) + 4px (bordi) */
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px;
+    border-radius: 6px;
+    border: 2px solid #ffaa00;
+}
+
+#boost-label {
+    color: #ffaa00;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    margin-bottom: 4px;
+    text-shadow: 0 0 5px #ffaa00;
+}
+
+#boost-bar-bg {
+    width: 100%;
+    height: 18px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#boost-bar-fill {
+    width: 33%; /* Partiamo con un terzo di boost */
+    height: 100%;
+    background: linear-gradient(90deg, #ff8800, #ffcc00);
+    box-shadow: 0 0 10px #ffaa00;
+    transition: width 0.1s linear;
+}
+
+
+/* Stili per il Carosello dei Comandi */
+.carousel-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 600px;
+  max-width: 90vw;
+  margin: 20px auto;
+  position: relative;
+}
+
+.carousel-track {
+  width: 450px;
+  height: 380px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #4CAF50;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+}
+
+.carousel-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+  transform: translateX(20px);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.carousel-slide h3 {
+  text-align: center;
+  color: #4CAF50;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-shadow: 0 0 5px #4CAF50;
+}
+
+/* Frecce del carosello */
+.carousel-arrow {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 40px;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.carousel-arrow:hover {
+  color: #4CAF50;
+  transform: scale(1.2);
+}
+
+/* Puntini indicatori */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  background: #555;
+  border-radius: 50%;
+  transition: background 0.3s;
+}
+
+.dot.active {
+  background: #4CAF50;
+  box-shadow: 0 0 8px #4CAF50;
+}
+
+/* Stili interni delle schede */
+.commands-grid p {
+  margin: 10px 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.commands-grid span {
+  background: #333;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  margin-right: 15px;
+  min-width: 70px;
+  text-align: center;
+  border: 1px solid #666;
+}
+
+.boost-info .key-highlight {
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.boost-info .key-highlight span {
+  background: #FFA500;
+  color: black;
+  padding: 5px 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 0 10px #FFA500;
+}
+
+.boost-info ul {
+  line-height: 1.8;
+  margin-top: 20px;
+}
+
+.bonus-desc {
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.bonus-card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border-left: 5px solid;
+}
+
+.bonus-card.orange { border-left-color: #FF4500; }
+.bonus-card.blue { border-left-color: #00BFFF; }
+
+.bonus-card h4 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+}
+.bonus-card.orange h4 { color: #FF4500; }
+.bonus-card.blue h4 { color: #00BFFF; }
+.bonus-card p { margin: 0; font-size: 14px; }

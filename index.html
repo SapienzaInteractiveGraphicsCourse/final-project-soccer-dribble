@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soccer Dribble</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  
+  <div id="ui-layer">
+
+    <div id="loading-screen" class="menu-screen">
+      <h1>CARICAMENTO...</h1>
+      <div style="width: 300px; height: 20px; background: #222; border: 2px solid white; border-radius: 10px; margin-top: 20px; overflow: hidden;">
+        <div id="loading-bar-fill" style="width: 0%; height: 100%; background: #4CAF50; transition: width 0.2s;"></div>
+      </div>
+      <p id="loading-text" style="font-weight: bold; margin-top: 10px;">0%</p>
+    </div>
+
+    <div id="main-menu" class="menu-screen">
+      <h1>SOCCER DRIBBLE</h1>
+      <button id="btn-play" class="menu-btn">PLAY</button>
+      <button id="btn-commands" class="menu-btn">COMANDI</button>
+    </div>
+
+    <div id="commands-menu" class="menu-screen" style="display: none;">
+      <h2>COMANDI DI GIOCO</h2>
+      
+      <div class="carousel-container">
+        <button id="btn-prev-slide" class="carousel-arrow">&#10094;</button>
+
+        <div class="carousel-track">
+          
+          <div class="carousel-slide active">
+            <h3>🎮 Comandi Base</h3>
+            <div class="commands-grid">
+              <p><span>W A S D</span> Muoviti / Orbita</p>
+              <p><span>Mouse</span> Mira / Telecamera</p>
+              <p><span>Shift</span> Corri (usa Stamina)</p>
+              <p><span>Click SX</span> Passaggio (tieni per potenza)</p>
+              <p><span>Click DX</span> Tiro (tiro a giro in diagonale)</p>
+              <p><span>E</span> Cambia Giocatore</p>
+              <p><span>C</span> Cambia Squadra (Modalità 1v1)</p>
+              <p><span>T</span> Scivolata difensiva</p>
+            </div>
+          </div>
+
+          <div class="carousel-slide">
+            <h3>🚀 Il Boost</h3>
+            <div class="boost-info">
+              <div class="key-highlight">Tieni premuto <span>SPAZIO</span></div>
+              <p>Attiva uno scatto potentissimo per spingere la palla in avanti e lanciare un contropiede fulmineo.</p>
+              <ul>
+                <li>Consuma rapidamente la <b>Barra del Boost</b> (Gialla).</li>
+                <li>Ricarica il boost passando sopra le <b>Pedane Luminose</b> presenti sul campo.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="carousel-slide">
+            <h3>💎 Bonus & Power-Up</h3>
+            <p class="bonus-desc">Raccogli i diamanti sul campo. Il bonus si attiva <b>solo al prossimo tiro (Click DX)</b>. Se passi la palla o cambi giocatore, il bonus svanisce!</p>
+            
+            <div class="bonus-card orange">
+              <h4>🔥 SUPER TIRO</h4>
+              <p>Potenza x2.5. La palla lascia una scia di fuoco e viaggia dritta a velocità devastante.</p>
+            </div>
+
+            <div class="bonus-card blue">
+              <h4>⚡ TIRO ELETTRICO</h4>
+              <p>Potenza x2.5. La palla segue una traiettoria a zig-zag imprevedibile per il portiere.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <button id="btn-next-slide" class="carousel-arrow">&#10095;</button>
+      </div>
+
+      <div class="carousel-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+
+      <button id="btn-back-commands" class="menu-btn" style="margin-top: 25px;">INDIETRO</button>
+    </div>
+
+    <div id="formation-menu" class="menu-screen" style="display: none;">
+      <h2>SCEGLI LA FORMAZIONE</h2>
+      <div class="formation-buttons">
+        
+        <div class="formation-buttons">
+        
+        <button id="btn-form-21" class="menu-btn formation-card">
+          <div class="mini-pitch">
+            <div class="dot gk" style="bottom: 5%; left: 50%;"></div>
+            <div class="dot player" style="bottom: 20%; left: 25%;"></div>
+            <div class="dot player" style="bottom: 20%; left: 75%;"></div>
+            <div class="dot player" style="top: 20%; left: 50%;"></div>
+          </div>
+    
+        </button>
+
+        <button id="btn-form-12" class="menu-btn formation-card">
+          <div class="mini-pitch">
+            <div class="dot gk" style="bottom: 5%; left: 50%;"></div>
+            <div class="dot player" style="bottom: 15%; left: 50%;"></div>
+            <div class="dot player" style="top: 20%; left: 25%;"></div>
+            <div class="dot player" style="top: 20%; left: 75%;"></div>
+          </div>
+      
+        </button>
+
+      </div>
+
+      </div>
+      <button id="btn-back-formation" class="menu-btn" style="margin-top:20px;">INDIETRO</button>
+    </div>
+  </div>
+
+  <div id="blocker" style="display: none;">
+    <div id="pause-menu" style="display: flex; flex-direction: column; align-items: center; font-family: 'Arial', sans-serif;">
+      <h1 style="font-size: 60px; margin-bottom: 40px; text-shadow: 0 0 20px #4CAF50; color: white;">PAUSA</h1>
+      <button id="btn-resume" class="menu-btn">RIPRENDI</button>
+      <button id="btn-pause-commands" class="menu-btn">COMANDI</button>
+      <button id="btn-exit" class="menu-btn">ESCI</button>
+    </div>
+  </div>
+
+  <div id="game-ui" style="display: none;">
+    <div id="scoreboard">
+      <span class="team">HOME</span>
+      <span class="score">0 - 0</span>
+      <span class="team">AWAY</span>
+      <div id="timer">00:00</div>
+    </div>
+    <div id="boost-container">
+      <div id="boost-label">BOOST</div>
+      <div id="boost-bar-bg">
+        <div id="boost-bar-fill"></div>
+      </div>
+    </div>
+    <div id="stamina-container">
+      <div id="stamina-label">STAMINA</div>
+      <div id="stamina-bar-bg">
+        <div id="stamina-bar-fill"></div>
+      </div>
+    </div>
+    <div id="radar">
+        <div id="radar-center-line"></div> 
+        <div id="radar-center-circle"></div> 
+        <div id="radar-player"></div>
+        <div id="radar-ball"></div>
+    </div>
+
+    <div id="bonus-hud">
+      <div class="bonus-title">BONUS ACQUISITO</div>
+      <div class="bonus-slot">
+        <div id="bonus-roller">
+          <div class="bonus-item bonus-empty">NESSUNO</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

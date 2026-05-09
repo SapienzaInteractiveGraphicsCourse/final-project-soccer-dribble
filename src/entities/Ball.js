@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { modelManager } from '../core/ModelLoader.js';
 
 export class Ball {
     constructor(scene) {
@@ -50,17 +49,26 @@ export class Ball {
         this.loadModel();
     }
 
-    // ... [MANTIENI IL TUO METODO loadModel INVARIATO] ...
     loadModel() {
-        modelManager.load('/models/ball.glb', (gltf) => {
-            this.mesh = gltf.scene;
-            const visualScale = 0.2;
-            this.mesh.scale.set(visualScale, visualScale, visualScale);
-            this.mesh.castShadow = true;
-            this.mesh.receiveShadow = true;
-            this.scene.add(this.mesh);
+        // Creiamo la sfera con il raggio fisico reale della palla
+        const geometry = new THREE.SphereGeometry(this.radius, 32, 32);
+        
+        // Carichiamo la texture dalla cartella "texture"
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load('../../public/textures/ball/qatar_07.jpg', () => {
             this.isLoaded = true;
         });
+
+        const material = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.4,
+            metalness: 0.1
+        });
+
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.castShadow = true;
+        this.mesh.receiveShadow = true;
+        this.scene.add(this.mesh);
     }
 
     // --- NUOVO METODO PER INNESCARE L'EFFETTO ---

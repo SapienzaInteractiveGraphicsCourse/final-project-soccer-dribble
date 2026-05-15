@@ -25,12 +25,17 @@ export class UIManager {
 
     setupLoadingManager() {
         this.mainMenu.style.display = 'none';
+        let isFirstLoad = true;
+        
         THREE.DefaultLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
             const percentuale = (itemsLoaded / itemsTotal) * 100;
             this.loadingBarFill.style.width = percentuale + '%';
             this.loadingText.innerText = Math.floor(percentuale) + '%';
         };
         THREE.DefaultLoadingManager.onLoad = () => {
+            if (!isFirstLoad) return; // Evita che il menu riappaia quando si carica il meteo in background
+            isFirstLoad = false;
+            
             setTimeout(() => {
                 this.loadingScreen.style.display = 'none';
                 this.mainMenu.style.display = 'flex';
@@ -42,7 +47,7 @@ export class UIManager {
         document.getElementById('btn-play').addEventListener('click', (e) => {
             e.stopPropagation();
             this.mainMenu.style.display = 'none';
-            this.formationMenu.style.display = 'flex';
+            this.settingsMenu.style.display = 'flex';
         });
 
         // Crea dinamicamente il tasto "TRAINING" e il relativo sottomenu
@@ -92,6 +97,57 @@ export class UIManager {
                 e.stopPropagation();
                 trainingMenu.style.display = 'none';
                 this.startGame('penalty');
+            });
+            
+            // --- NUOVO: MENU IMPOSTAZIONI METEO E ORARIO ---
+            const settingsMenu = document.createElement('div');
+            settingsMenu.id = 'settings-menu';
+            settingsMenu.className = this.formationMenu.className;
+            settingsMenu.style.display = 'none';
+            settingsMenu.style.flexDirection = 'column';
+            settingsMenu.style.alignItems = 'center';
+            settingsMenu.style.gap = '20px';
+            settingsMenu.innerHTML = `
+                <h1 style="color: white; font-family: sans-serif; margin-bottom: 20px; font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">IMPOSTAZIONI PARTITA</h1>
+                <div style="display: flex; gap: 30px; font-family: sans-serif; margin-bottom: 20px;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">ORARIO</label>
+                        <select id="select-time" style="padding: 10px 20px; font-size: 18px; border-radius: 8px; border: 2px solid #4CAF50; background: rgba(0,0,0,0.7); color: white; cursor: pointer; outline: none;">
+                            <option value="day">Giorno (Day)</option>
+                            <option value="night">Notte (Night)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">METEO</label>
+                        <select id="select-weather" style="padding: 10px 20px; font-size: 18px; border-radius: 8px; border: 2px solid #4CAF50; background: rgba(0,0,0,0.7); color: white; cursor: pointer; outline: none;">
+                            <option value="clear">Sereno (Clear)</option>
+                            <option value="fog">Nebbia (Fog)</option>
+                            <option value="rain">Pioggia (Rain)</option>
+                            <option value="snow">Neve (Snow)</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="btn-next-settings" class="${btnPlay.className}">AVANTI</button>
+                <button id="btn-back-settings" class="${btnPlay.className}" style="margin-top: 10px;">INDIETRO</button>
+            `;
+            this.mainMenu.parentNode.appendChild(settingsMenu);
+            this.settingsMenu = settingsMenu;
+
+            document.getElementById('btn-next-settings').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.settingsMenu.style.display = 'none';
+                this.formationMenu.style.display = 'flex';
+                
+                const time = document.getElementById('select-time').value;
+                const weather = document.getElementById('select-weather').value;
+                // Segnala al motore di gioco di aggiornare il meteo
+                document.dispatchEvent(new CustomEvent('updateEnvironment', { detail: { time, weather } }));
+            });
+
+            document.getElementById('btn-back-settings').addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.settingsMenu.style.display = 'none';
+                this.mainMenu.style.display = 'flex';
             });
         }
 

@@ -2,7 +2,7 @@ import './style.css';
 import * as THREE from 'three';
 
 // Import moduli e refactor
-import { setupScene } from './core/SceneSetup.js';
+import { setupScene, updateSceneEnvironment, updateWeatherParticles } from './core/SceneSetup.js';
 import { UIManager } from './ui/UIManager.js';
 import { setupEffects, updateEffects } from './effects/GameEffects.js';
 import { MatchManager } from './game/MatchManager.js';
@@ -63,6 +63,11 @@ const uiManager = new UIManager((mode) => {
     matchManager.isGameStarted = true;
     matchManager.startGame(mode);
     player.controls.lock();
+});
+
+// Ascolta l'evento per cambiare le condizioni meteo/orario
+document.addEventListener('updateEnvironment', (e) => {
+    updateSceneEnvironment(scene, e.detail.time, e.detail.weather);
 });
 
 document.addEventListener('bonusCleared', () => {
@@ -225,6 +230,8 @@ function animate() {
             updateEffects(effects, player, matchManager.playerTeam, clock.getElapsedTime(), isRunning, deltaTime, camera);
             matchManager.updateRules();
             uiManager.updateRadar(player.model, player.yaw, ball.mesh, ball.position, bots);
+            
+            updateWeatherParticles(deltaTime, player.model ? player.model.position : new THREE.Vector3());
 
             // REGISTRA IL FRAME
             replaySystem.record(gameEntities);

@@ -13,7 +13,7 @@ export function setupScene() {
     scene.background = new THREE.Color(0x87CEEB);
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    
+
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
@@ -66,12 +66,12 @@ export function setupScene() {
 export function updateSceneEnvironment(scene, timeOfDay, weather) {
     const rgbeLoader = new RGBELoader();
     const exrLoader = new EXRLoader();
-    
+
     // --- 1. GESTIONE ORARIO (LUCI E SKYBOX) ---
     if (timeOfDay === 'night') {
         // Colore di fallback scuro immediato
         scene.background = new THREE.Color(0x020205);
-        
+
         // Carichiamo il file .exr che hai scaricato
         exrLoader.load('/textures/skybox/night_sky.exr', (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -80,18 +80,18 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
         }, undefined, (err) => {
             console.error("Errore nel caricamento dell'EXR notturno:", err);
         });
-        
+
         // Setup luci notturne
-        directionalLight.intensity = 0.2; // Il "sole" quasi scompare
-        directionalLight.color.setHex(0x444477);
-        ambientLight.intensity = 0.1;
-        ambientLight.color.setHex(0x222233);
-        
+        directionalLight.intensity = 0.6; // Luna più forte per far risaltare i giocatori
+        directionalLight.color.setHex(0x7777aa); // Tonalità bluastra più chiara
+        ambientLight.intensity = 0.5; // Luce di base alzata per illuminare i modelli 3D da ogni lato
+        ambientLight.color.setHex(0x606070); // Grigio/blu neutro
+
         createStadiumLights(scene);
     } else {
         // Giorno: Colore di fallback azzurro
         scene.background = new THREE.Color(0x87CEEB);
-        
+
         // Carichiamo il file .hdr per il giorno
         rgbeLoader.load('/textures/skybox/sky.hdr', (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
@@ -100,13 +100,13 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
         }, undefined, (err) => {
             console.error("Errore nel caricamento dell'HDR diurno:", err);
         });
-        
+
         // Setup luci diurne (Sole pieno)
         directionalLight.intensity = 1.2;
         directionalLight.color.setHex(0xffffff);
         ambientLight.intensity = 0.5;
         ambientLight.color.setHex(0xffffff);
-        
+
         removeStadiumLights(scene);
     }
 
@@ -123,21 +123,21 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
             ambientLight.intensity *= 0.8;
             directionalLight.intensity *= 0.5;
             break;
-            
+
         case 'rain':
             scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x050508 : 0x888899, 0.01);
             ambientLight.intensity *= 0.6;
             directionalLight.intensity *= 0.4;
             createRain(scene);
             break;
-            
+
         case 'snow':
             scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x222233 : 0xeeeeff, 0.012);
             ambientLight.intensity *= 1.1; // La neve schiarisce l'ambiente
             directionalLight.intensity *= 0.7;
             createSnow(scene);
             break;
-            
+
         default: // 'clear'
             // Nessuna nebbia o particelle aggiuntive
             break;
@@ -147,28 +147,44 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
 let stadiumLights = [];
 function createStadiumLights(scene) {
     if (stadiumLights.length > 0) return;
+
+    // Posizioni basate sulle dimensioni del tuo Pitch.js (100x60)
+    // Le mettiamo leggermente esterne ai quattro angoli
     const positions = [
-        new THREE.Vector3(-55, 40, -35),
-        new THREE.Vector3(55, 40, -35),
-        new THREE.Vector3(-55, 40, 35),
-        new THREE.Vector3(55, 40, 35)
+        new THREE.Vector3(-80, 60, -60), // Angolo Nord-Ovest
+        new THREE.Vector3(80, 60, -60),  // Angolo Nord-Est
+        new THREE.Vector3(-80, 60, 60),  // Angolo Sud-Ovest
+        new THREE.Vector3(80, 60, 60)    // Angolo Sud-Est
     ];
 
     positions.forEach(pos => {
-        const spotLight = new THREE.SpotLight(0xffffff, 2.0);
+        // Abbassiamo l'intensità per evitare di sovraesporre e far brillare troppo il campo
+        const spotLight = new THREE.SpotLight(0xffffff, 10.0); 
         spotLight.position.copy(pos);
-        spotLight.target.position.set(0, 0, 0);
-        spotLight.angle = Math.PI / 4;
+        
+        // PUNTAMENTO: Invece di puntare tutto a (0,0,0), 
+        // lasciamo che ogni luce punti verso il centro del campo per incrociarsi
+        spotLight.target.position.set(0, 0, 0); 
+        
+        // AMPIEZZA: Angolo molto largo (circa 90 gradi)
+        spotLight.angle = Math.PI / 2; 
+        
+        // SFUMATURA: Penumbra per bordi molto morbidi che si fondono tra loro
         spotLight.penumbra = 0.5;
-        spotLight.decay = 1.5;
-        spotLight.distance = 150;
-        spotLight.castShadow = true;
+        
+        // DECADIMENTO: 1.0 rende la luce meno soggetta a spegnersi subito
+        spotLight.decay = 0.5; 
+        spotLight.distance = 400; 
+        
+        // OTTIMIZZAZIONE PRESTAZIONI: Disabilitiamo le ombre dei 4 fari angolari.
+        // Renderizzare 4 ombre sovrapposte ad alta risoluzione causa un calo massiccio di FPS.
+        spotLight.castShadow = false;
+
         scene.add(spotLight);
         scene.add(spotLight.target);
         stadiumLights.push({ light: spotLight, target: spotLight.target });
     });
 }
-
 function removeStadiumLights(scene) {
     stadiumLights.forEach(sl => {
         scene.remove(sl.light);
@@ -190,7 +206,7 @@ function createRain(scene) {
         rainVel.push(new THREE.Vector3(0, -10 - Math.random() * 10, 0)); // Velocità caduta
     }
     rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-    
+
     const rainMat = new THREE.PointsMaterial({
         color: 0xaaaaaa,
         size: 0.1,
@@ -216,7 +232,7 @@ function createSnow(scene) {
         snowVel.push(new THREE.Vector3((Math.random() - 0.5) * 2, -2 - Math.random() * 3, (Math.random() - 0.5) * 2));
     }
     snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
-    
+
     const snowMat = new THREE.PointsMaterial({
         color: 0xffffff,
         size: 0.3,
@@ -252,11 +268,11 @@ export function updateWeatherParticles(deltaTime, playerPosition) {
             positions[i * 3] += velocities[i].x * deltaTime;
             positions[i * 3 + 1] += velocities[i].y * deltaTime;
             positions[i * 3 + 2] += velocities[i].z * deltaTime;
-            
+
             // Oscillazione laterale casuale per la neve
             velocities[i].x += (Math.random() - 0.5) * 0.1;
             velocities[i].z += (Math.random() - 0.5) * 0.1;
-            
+
             if (positions[i * 3 + 1] < 0) {
                 positions[i * 3 + 1] = 60 + Math.random() * 10;
                 positions[i * 3] = playerPosition.x + (Math.random() - 0.5) * 150;

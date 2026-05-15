@@ -7,6 +7,35 @@ let directionalLight;
 let ambientLight;
 let rainSystem = null;
 let snowSystem = null;
+let snowOverlay = null;
+
+// Funzione per creare dinamicamente una texture a chiazze di neve
+function createSnowPatchTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, 512, 512);
+
+    for (let i = 0; i < 150; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const radius = Math.random() * 30 + 10;
+        const grad = context.createRadialGradient(x, y, 0, x, y, radius);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        context.fillStyle = grad;
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.PI * 2);
+        context.fill();
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(40, 40); // Ripetizioni sul campo
+    return texture;
+}
 
 export function setupScene() {
     const scene = new THREE.Scene();
@@ -59,6 +88,14 @@ export function setupScene() {
     pitch.rotation.x = -Math.PI / 2;
     pitch.receiveShadow = true;
     scene.add(pitch);
+
+    // Livello "Neve" a chiazze invisibile di default, posizionato appena sopra l'erba
+    const snowMat = new THREE.MeshStandardMaterial({ map: createSnowPatchTexture(), transparent: true, opacity: 0.0, roughness: 0.9, depthWrite: false });
+    snowOverlay = new THREE.Mesh(pitchGeo, snowMat);
+    snowOverlay.rotation.x = -Math.PI / 2;
+    snowOverlay.position.y = 0.01; // Si incastra tra il prato (y=0) e le linee (y=0.02)
+    snowOverlay.receiveShadow = true;
+    scene.add(snowOverlay);
 
     return { scene, camera, renderer };
 }
@@ -116,25 +153,28 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
     if (rainSystem) { scene.remove(rainSystem); rainSystem = null; }
     if (snowSystem) { scene.remove(snowSystem); snowSystem = null; }
 
+    if (snowOverlay) snowOverlay.material.opacity = 0.0; // Reset della neve sul terreno
+
     // Logica nebbia e parametri luce basati sul meteo
     switch (weather) {
         case 'fog':
-            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x0a0a12 : 0xcccccc, 0.015);
+            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x444455 : 0xcccccc, 0.015); // Grigio invece che nero di notte
             ambientLight.intensity *= 0.8;
             directionalLight.intensity *= 0.5;
             break;
 
         case 'rain':
-            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x050508 : 0x888899, 0.01);
+            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x333344 : 0x888899, 0.01); // Grigio scuro invece che nero
             ambientLight.intensity *= 0.6;
             directionalLight.intensity *= 0.4;
             createRain(scene);
             break;
 
         case 'snow':
-            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x222233 : 0xeeeeff, 0.012);
+            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x555566 : 0xeeeeff, 0.012); // Grigio chiaro bluastro
             ambientLight.intensity *= 1.1; // La neve schiarisce l'ambiente
             directionalLight.intensity *= 0.7;
+            if (snowOverlay) snowOverlay.material.opacity = 0.9; // Mostra le chiazze sul prato!
             createSnow(scene);
             break;
 
@@ -220,7 +260,7 @@ function createRain(scene) {
 }
 
 function createSnow(scene) {
-    const snowCount = 10000;
+    const snowCount = 3000; // Ridotta la neve che cade per maggiore visibilità
     const snowGeo = new THREE.BufferGeometry();
     const snowPos = new Float32Array(snowCount * 3);
     const snowVel = [];

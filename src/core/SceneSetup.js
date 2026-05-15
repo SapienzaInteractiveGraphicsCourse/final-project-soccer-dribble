@@ -309,9 +309,13 @@ export function updateWeatherParticles(deltaTime, playerPosition) {
             positions[i * 3 + 1] += velocities[i].y * deltaTime;
             positions[i * 3 + 2] += velocities[i].z * deltaTime;
 
-            // Oscillazione laterale casuale per la neve
+            // Oscillazione laterale casuale per la neve con attrito
             velocities[i].x += (Math.random() - 0.5) * 0.1;
             velocities[i].z += (Math.random() - 0.5) * 0.1;
+            
+            // Smorzamento (Friction) per evitare che i fiocchi accelerino all'infinito e sembrino linee orizzontali
+            velocities[i].x *= 0.98; 
+            velocities[i].z *= 0.98;
 
             if (positions[i * 3 + 1] < 0) {
                 positions[i * 3 + 1] = 60 + Math.random() * 10;

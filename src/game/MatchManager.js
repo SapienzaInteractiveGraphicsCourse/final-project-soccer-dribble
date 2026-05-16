@@ -116,14 +116,6 @@ export class MatchManager {
                 const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
                 this.switchCharacter(distT1 < distT2 ? this.currentT1 : this.currentT2);
             }
-            else if (e.code === 'KeyC') {
-                if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; // Blocca cambio squadra in allenamento
-                if (this.isControllingGK) return; // BLOCCO: Non puoi cambiare squadra mentre rinvii
-                
-                this.toggleTeamControl();
-                const nomeSquadra = this.playerTeam === 'home' ? "ROSSA" : "BLU";
-                this.uiManager.showInGameMessage("CAMBIO SQUADRA: " + nomeSquadra);
-            }
             else if (e.code === 'KeyT') {
                 if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; // Blocca scivolata in allenamento
                 if (this.isControllingGK) return; // Il portiere non scivola
@@ -206,65 +198,6 @@ export class MatchManager {
         this.camera.lookAt(cameraTarget);
     }
 
-    toggleTeamControl() {
-        // 1. Il player scambia il corpo (modello e animazioni) con il Bot avversario (O1)
-        this.switchCharacter(this.currentO1);
-        
-        // Invertiamo il colore sul radar del bot O1 (switchCharacter non lo fa in automatico)
-        if (this.currentO1.radarDot) {
-            // Se eravamo 'home' (rossi), il vecchio bot diventa il nemico rosso. Altrimenti blu.
-            this.currentO1.radarDot.style.backgroundColor = this.playerTeam === 'home' ? '#f44336' : '#2196F3';
-        }
-
-        // 2. Invece di scambiare le referenze (che rompe il ciclo update in main.js),
-        // scambiamo fisicamente i corpi tra i Teammates e i Bots rimanenti.
-        this.swapBodies(this.currentT1, this.currentO2);
-        this.swapBodies(this.currentT2, this.currentO3);
-
-        // 3. Cambiamo lo stato della squadra
-        this.playerTeam = this.playerTeam === 'home' ? 'away' : 'home';
-        
-        // Riaffidiamo i compagni corretti al player
-        this.player.teammates = [this.currentT1, this.currentT2];
-    }
-
-    // Nuova funzione per scambiare fisicamente le entità NPC
-    swapBodies(entityA, entityB) {
-        if (!entityA.model || !entityB.model) return;
-
-        // Ferma eventuali animazioni di tiro in corso per evitare bug visivi
-        if (entityA.animator) entityA.animator.cancelCharge();
-        if (entityB.animator) entityB.animator.cancelCharge();
-
-        // Scambia i Modelli 3D (le maglie)
-        const tempModel = entityA.model;
-        entityA.model = entityB.model;
-        entityB.model = tempModel;
-
-        // Scambia gli Animatori associati
-        const tempAnimator = entityA.animator;
-        entityA.animator = entityB.animator;
-        entityB.animator = tempAnimator;
-
-        // Scambia la Rotazione per non farli girare di scatto
-        const tempYaw = entityA.yaw;
-        entityA.yaw = entityB.yaw;
-        entityB.yaw = tempYaw;
-
-        // Scambia il Boost
-        if (entityA.boost === undefined) entityA.boost = 0;
-        if (entityB.boost === undefined) entityB.boost = 0;
-        const tempBoost = entityA.boost;
-        entityA.boost = entityB.boost;
-        entityB.boost = tempBoost;
-
-        // Scambia il colore dei pallini sul radar
-        if (entityA.radarDot && entityB.radarDot) {
-            const tempColor = entityA.radarDot.style.backgroundColor;
-            entityA.radarDot.style.backgroundColor = entityB.radarDot.style.backgroundColor;
-            entityB.radarDot.style.backgroundColor = tempColor;
-        }
-    }
 
     startGame(mode) {
         this.gameMode = mode;
@@ -499,20 +432,7 @@ export class MatchManager {
             const defendingTeam = isRightSide ? 'away' : 'home'; 
             const isCornerKick = this.lastTouchedTeam === defendingTeam;
             const attackingTeam = isCornerKick ? (defendingTeam === 'home' ? 'away' : 'home') : defendingTeam;
-            
-            if (attackingTeam !== this.playerTeam) this.toggleTeamControl();
 
-
-            if (!isCornerKick) {
-                const activeGK = this.playerTeam === 'home' ? this.homeGK : this.awayGK;
-                this.switchCharacter(activeGK);
-                
-                this.isControllingGK = true;     
-                this.controlledGK = activeGK;  
-                this.controlledGK.isSwappedOut = true; // <--- SPEGNI L'IA DEL PORTIERE  
-            } else {
-                this.restoreGoalkeeper(); // <--- Assicurati che per il corner sia ripristinato
-            }
 
             const ballX = isCornerKick ? (isRightSide ? fieldEndX : -fieldEndX) : (isRightSide ? 44.0 : -44.0);
             // ... continua con il posizionamento della palla ...
@@ -520,13 +440,61 @@ export class MatchManager {
             const targetFocusX = isRightSide ? 40 : -40; 
             const targetYaw = Math.atan2(targetFocusX - ballX, 0 - ballZ);
 
-            this.player.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
-            this.player.yaw = targetYaw;
-            this.player.model.rotation.y = targetYaw;
-            
-            this.player.action.startCorner(this.ball);
             this.ball.position.set(ballX, this.ball.radius, ballZ);
             this.ball.velocity.set(0,0,0);
+
+            let activeSetPieceNPC = null;
+
+            if (attackingTeam === this.playerTeam) {
+                if (!isCornerKick) {
+                    const activeGK = this.homeGK;
+                    this.switchCharacter(activeGK);
+                    
+                    this.isControllingGK = true;     
+                    this.controlledGK = activeGK;  
+                    this.controlledGK.isSwappedOut = true; 
+                } else {
+                    this.restoreGoalkeeper(); 
+                }
+
+                this.player.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
+                this.player.yaw = targetYaw;
+                this.player.model.rotation.y = targetYaw;
+                
+                if (isCornerKick) {
+                    this.player.action.startCorner(this.ball);
+                }
+            } else {
+                this.restoreGoalkeeper();
+                
+                if (isCornerKick) {
+                    let closestBot = this.currentO1;
+                    let minDist = Infinity;
+                    [this.currentO1, this.currentO2, this.currentO3].forEach(bot => {
+                        if (bot && bot.model) {
+                            const dist = bot.model.position.distanceTo(new THREE.Vector3(ballX, 0, ballZ));
+                            if (dist < minDist) {
+                                minDist = dist;
+                                closestBot = bot;
+                            }
+                        }
+                    });
+
+                    const kickerBot = closestBot;
+                    kickerBot.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
+                    kickerBot.yaw = targetYaw;
+                    kickerBot.model.rotation.y = targetYaw;
+                    this.ball.isHeld = true;
+                    activeSetPieceNPC = kickerBot;
+                } else {
+                    const botGK = this.awayGK;
+                    botGK.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
+                    botGK.yaw = targetYaw;
+                    botGK.model.rotation.y = targetYaw;
+                    this.ball.isHeld = true;
+                    activeSetPieceNPC = botGK;
+                }
+            }
 
             const allNPCs = [this.currentT1, this.currentT2, this.currentO1, this.currentO2, this.currentO3];
             if (this.isControllingGK && this.controlledGK) {
@@ -534,7 +502,7 @@ export class MatchManager {
             }
 
             allNPCs.forEach(npc => {
-                if (npc.model) {
+                if (npc.model && npc !== activeSetPieceNPC) {
                     let randX, randZ;
                     if (isCornerKick) {
                         randX = targetFocusX + (Math.random() * 8 - 4);
@@ -549,7 +517,8 @@ export class MatchManager {
                 }
             });
 
-            this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${this.playerTeam === 'home' ? 'ROSSA' : 'BLU'}` : `RIMESSA DAL FONDO: SQUADRA ${this.playerTeam === 'home' ? 'ROSSA' : 'BLU'}`);
+            const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
+            this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);
         }
 
         if (this.ball.isOut && !this.player.isThrowingIn && !this.ball.isGoal) {
@@ -563,17 +532,41 @@ export class MatchManager {
 
             this.restoreGoalkeeper(); // <--- AGGIUNGI QUI
             const throwInTeam = this.lastTouchedTeam === 'home' ? 'away' : 'home';
-            
-            if (throwInTeam !== this.playerTeam) this.toggleTeamControl();
 
             const side = this.ball.position.z > 0 ? 1 : -1;
             const outOfBoundsOffset = 1.5;
             
-            this.player.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
-            this.player.yaw = side > 0 ? Math.PI : 0;
-            this.player.startThrowIn();
-            
-            this.uiManager.showInGameMessage(`RIMESSA: SQUADRA ${this.playerTeam === 'home' ? "ROSSA" : "BLU"}`);
+            if (throwInTeam === this.playerTeam) {
+                this.player.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
+                this.player.yaw = side > 0 ? Math.PI : 0;
+                this.player.startThrowIn();
+                this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
+            } else {
+                // Rimessa Laterale Bot avversario
+                let closestBot = this.currentO1;
+                let minDist = Infinity;
+                [this.currentO1, this.currentO2, this.currentO3].forEach(bot => {
+                    if (bot && bot.model) {
+                        const dist = bot.model.position.distanceTo(new THREE.Vector3(this.ball.position.x, 0, this.ball.position.z));
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestBot = bot;
+                        }
+                    }
+                });
+
+                const throwerBot = closestBot;
+                throwerBot.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
+                const botYaw = side > 0 ? Math.PI : 0;
+                throwerBot.yaw = botYaw;
+                throwerBot.model.rotation.y = botYaw;
+
+                this.ball.position.set(throwerBot.model.position.x, 1.5, throwerBot.model.position.z);
+                this.ball.velocity.set(0, 0, 0);
+                this.ball.isHeld = true; // Trattieni la palla senza lanciarla
+
+                this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
+            }
         }
     }
 
@@ -598,7 +591,6 @@ export class MatchManager {
         if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
             this.startGame(this.gameMode); // Resetta istantaneamente se fa gol in allenamento
         } else {
-            if (this.kickOffTeam !== this.playerTeam) this.toggleTeamControl();
             this.resetKickOff();
             
             // Reset della telecamera standard

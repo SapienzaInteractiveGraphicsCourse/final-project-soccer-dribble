@@ -364,7 +364,7 @@ export class Player {
             // --- COLLISIONE FISICA CORPO INTERO ---
             if (!this.action.isTakingCorner && !this.animator.isSliding) {
                 const playerHeight = 1.8;
-                const playerRadius = 0.35; // Raggio della capsula
+                const playerRadius = 0.45; // Raggio della capsula aumentato per hitbox più solida
                 
                 // Punto più vicino lungo l'asse Y del giocatore
                 const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, this.ball.position.y));
@@ -416,8 +416,26 @@ export class Player {
             const distance = new THREE.Vector2(this.model.position.x, this.model.position.z)
                 .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
 
-            const touchRadius = 0.65;
+            const touchRadius = 1.2; // Aumentato per migliorare la collisione ravvicinata
+            const controlRadius = 2.0; // Distanza a cui inizia il controllo palla magnetico
             const aimRadius = 3.0;
+
+            // --- EFFETTO MAGNETE (Controllo palla a distanza) ---
+            if (distance < controlRadius && moving && !this.action.chargingAction && this.ball.velocity.lengthSq() < 600) {
+                // Punto ideale davanti ai piedi del giocatore
+                const idealPos = this.model.position.clone().add(
+                    new THREE.Vector3(0, 0, 0.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.model.rotation.y)
+                );
+                idealPos.y = this.ball.position.y;
+                
+                const pullVec = new THREE.Vector3().subVectors(idealPos, this.ball.position);
+                if (pullVec.length() > 0.1) {
+                    // Forza proporzionale a quanto siamo vicini al raggio di controllo
+                    const magnetForce = (1 - (distance / controlRadius)) * 25 * deltaTime;
+                    this.ball.velocity.add(pullVec.normalize().multiplyScalar(magnetForce));
+                }
+            }
+
             if (distance < touchRadius) {
                 currentDribbleTouch = this.action.dribble(this.ball, this.yaw, isSprinting, isBoosting, this.keys, deltaTime);
             }
@@ -480,9 +498,6 @@ export class Player {
                     }
                 }
             } else {
-                if (distance < touchRadius) {
-                    this.action.dribble(this.ball, this.yaw, isSprinting, isBoosting, this.keys.run, deltaTime);
-                }
                 this.passArrow.visible = false;
             }
 

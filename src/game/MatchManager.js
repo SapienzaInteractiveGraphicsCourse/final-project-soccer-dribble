@@ -38,6 +38,7 @@ export class MatchManager {
 
         this.setupInputHandling();
         this.setupCornerEvent();
+        this.setupPassEvent();
 
         /* --- AUDIO DI SOTTOFONDO (STADIO / MUSICA) ---
         this.bgMusic = new Audio('../../public/sound/confusion.mp3');
@@ -69,6 +70,16 @@ export class MatchManager {
             const targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
             this.switchCharacter(targetTeammate);
             this.uiManager.showInGameMessage("RICEZIONE IN AREA!");
+        });
+    }
+
+    setupPassEvent() {
+        document.addEventListener('passExecuted', (e) => {
+            if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return;
+            const targetTeammate = e.detail.target;
+            if (targetTeammate && targetTeammate.model) {
+                this.switchCharacter(targetTeammate);
+            }
         });
     }
 

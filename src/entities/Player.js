@@ -471,6 +471,10 @@ export class Player {
                         if (wasTakingCorner) {
                             document.dispatchEvent(new CustomEvent('cornerKicked'));
                         }
+                        
+                        if (passTarget) {
+                            document.dispatchEvent(new CustomEvent('passExecuted', { detail: { target: passTarget } }));
+                        }
                         this.kickButtonHeld = false;
                         isChargingAnim = null;
                     }

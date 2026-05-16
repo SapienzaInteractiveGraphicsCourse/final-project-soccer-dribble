@@ -9,22 +9,25 @@ export const MatchState = {
 export class PossessionManager {
     constructor() {
         this.currentState = MatchState.FREE_BALL;
-        // Distanza massima (in unità di Three.js) per considerare la palla "al piede" di un giocatore
-        this.possessionThreshold = 1.5; 
+        this.possessionThreshold = 4.0; 
+        
+        // NUOVO: Sistema di tolleranza (Delay)
+        this.freeBallTimer = 0;
+        this.freeBallDelay = 1; // Secondi di volo della palla prima di dichiararla "libera"
     }
 
-    update(ball, player, teammates, bots) {
+    update(ball, player, teammates, bots, deltaTime) {
         if (!ball || !ball.isLoaded) return;
 
         let closestHomeDist = Infinity;
         let closestAwayDist = Infinity;
 
-        // 1. Distanza del Player (Team Home)
+        // 1. Distanza del Player
         if (player && player.model) {
             closestHomeDist = Math.min(closestHomeDist, player.model.position.distanceTo(ball.position));
         }
 
-        // 2. Distanze dei Teammates (Team Home)
+        // 2. Distanze dei Teammates
         if (teammates && teammates.length > 0) {
             teammates.forEach(t => {
                 if (t.model) {
@@ -33,7 +36,7 @@ export class PossessionManager {
             });
         }
 
-        // 3. Distanze dei Bots (Team Away)
+        // 3. Distanze dei Bots
         if (bots && bots.length > 0) {
             bots.forEach(b => {
                 if (b.model) {
@@ -42,14 +45,26 @@ export class PossessionManager {
             });
         }
 
-        // 4. Valutazione e assegnazione dello stato
-        if (closestHomeDist <= this.possessionThreshold && closestHomeDist < closestAwayDist) {
-            this.currentState = MatchState.HOME_POSSESSION;
-        } else if (closestAwayDist <= this.possessionThreshold && closestAwayDist < closestHomeDist) {
-            this.currentState = MatchState.AWAY_POSSESSION;
+        const absoluteClosestDist = Math.min(closestHomeDist, closestAwayDist);
+
+        // --- NUOVA LOGICA CON TIMER ---
+        if (absoluteClosestDist > this.possessionThreshold) {
+            // La palla è lontana, ma non cambiamo subito stato. Incrementiamo il timer.
+            this.freeBallTimer += deltaTime;
+            
+            // Cambia in FREE_BALL solo se la palla ha volato da sola per più di 0.6 secondi
+            if (this.freeBallTimer >= this.freeBallDelay) {
+                this.currentState = MatchState.FREE_BALL;
+            }
         } else {
-            // Se nessuno è abbastanza vicino, la palla è libera (es. lancio lungo, rimpallo)
-            this.currentState = MatchState.FREE_BALL;
+            // Appena qualcuno tocca o si avvicina alla palla, il timer si azzera istantaneamente
+            this.freeBallTimer = 0;
+            
+            if (closestHomeDist < closestAwayDist) {
+                this.currentState = MatchState.HOME_POSSESSION;
+            } else {
+                this.currentState = MatchState.AWAY_POSSESSION;
+            }
         }
     }
 

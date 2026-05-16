@@ -227,7 +227,7 @@ function animate() {
             const attackDirX = matchManager.playerTeam === 'home' ? 1 : -1;
             const isMatchStarted = matchManager.isGameStarted;
 
-            possessionManager.update(ball, player, teammates, bots);
+            possessionManager.update(ball, player, teammates, bots, deltaTime);
             const currentMatchState = possessionManager.getState();
             console.log(currentMatchState);
 

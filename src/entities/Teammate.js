@@ -150,5 +150,50 @@ export class Teammate {
         
         this.radarDot.style.left = pX + '%';
         this.radarDot.style.top = pZ + '%';
+
+        // --- COLLISIONE FISICA CORPO INTERO ---
+        if (ball && ball.isLoaded) {
+            const playerHeight = 1.8;
+            const playerRadius = 0.35; // Raggio della capsula
+            
+            // Punto più vicino lungo l'asse Y del compagno
+            const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, ball.position.y));
+            const closestPointOnPlayer = new THREE.Vector3(this.model.position.x, closestY, this.model.position.z);
+            
+            const distanceToBall3D = closestPointOnPlayer.distanceTo(ball.position);
+            const minDistance = playerRadius + ball.radius;
+
+            if (distanceToBall3D < minDistance) {
+                const pushDir = new THREE.Vector3().subVectors(ball.position, closestPointOnPlayer);
+                if (pushDir.lengthSq() > 0.001) {
+                    pushDir.normalize();
+                } else {
+                    pushDir.set(0, 1, 0); 
+                }
+
+                // Risoluzione compenetrazione
+                const overlap = minDistance - distanceToBall3D;
+                ball.position.addScaledVector(pushDir, overlap);
+
+                // Calcolo della velocità di rimbalzo
+                const dot = ball.velocity.dot(pushDir);
+                if (dot < 0) {
+                    const restitution = 0.3; // Il corpo assorbe l'urto
+                    const bounceImpulse = pushDir.clone().multiplyScalar(dot * (1 + restitution));
+                    ball.velocity.sub(bounceImpulse);
+
+                    // Trasferimento inerzia della corsa del compagno alla palla
+                    if (isMoving && this._moveDir) {
+                        const speed = isRunning ? 12 : 6;
+                        const playerVel = this._moveDir.clone().multiplyScalar(speed);
+                        
+                        const impactVel = playerVel.dot(pushDir);
+                        if (impactVel > 0) {
+                            ball.velocity.add(pushDir.multiplyScalar(impactVel * 0.4));
+                        }
+                    }
+                }
+            }
+        }
     }
 }

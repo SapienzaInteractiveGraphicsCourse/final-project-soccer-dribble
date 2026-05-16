@@ -360,6 +360,59 @@ export class Player {
         // Interazioni con la Palla (MIRA E DRIBBLING)
         let currentDribbleTouch = null;
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn) {
+
+            // --- COLLISIONE FISICA CORPO INTERO ---
+            if (!this.action.isTakingCorner && !this.animator.isSliding) {
+                const playerHeight = 1.8;
+                const playerRadius = 0.35; // Raggio della capsula
+                
+                // Punto più vicino lungo l'asse Y del giocatore
+                const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, this.ball.position.y));
+                const closestPointOnPlayer = new THREE.Vector3(this.model.position.x, closestY, this.model.position.z);
+                
+                const distanceToBall3D = closestPointOnPlayer.distanceTo(this.ball.position);
+                const minDistance = playerRadius + this.ball.radius;
+
+                if (distanceToBall3D < minDistance) {
+                    const pushDir = new THREE.Vector3().subVectors(this.ball.position, closestPointOnPlayer);
+                    if (pushDir.lengthSq() > 0.001) {
+                        pushDir.normalize();
+                    } else {
+                        pushDir.set(0, 1, 0); 
+                    }
+
+                    // Risoluzione compenetrazione: sposta la palla fuori dal modello
+                    const overlap = minDistance - distanceToBall3D;
+                    this.ball.position.addScaledVector(pushDir, overlap);
+
+                    // Calcolo della velocità di rimbalzo
+                    const dot = this.ball.velocity.dot(pushDir);
+                    if (dot < 0) {
+                        const restitution = 0.3; // Il corpo assorbe l'urto
+                        const bounceImpulse = pushDir.clone().multiplyScalar(dot * (1 + restitution));
+                        this.ball.velocity.sub(bounceImpulse);
+
+                        if (moving) {
+                            const moveVec = new THREE.Vector3();
+                            if (this.keys.forward) moveVec.add(dir);
+                            if (this.keys.backward) moveVec.sub(dir);
+                            if (this.keys.left) moveVec.sub(right);
+                            if (this.keys.right) moveVec.add(right);
+                            
+                            if (moveVec.lengthSq() > 0) {
+                                moveVec.normalize();
+                                const playerVel = moveVec.multiplyScalar(speed); // usa la speed calcolata sopra
+                                
+                                const impactVel = playerVel.dot(pushDir);
+                                if (impactVel > 0) {
+                                    this.ball.velocity.add(pushDir.multiplyScalar(impactVel * 0.4));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             const distance = new THREE.Vector2(this.model.position.x, this.model.position.z)
                 .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
 

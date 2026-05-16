@@ -20,6 +20,7 @@ import { FireTrailEffect } from './effects/FireTrailEffect.js'
 import { BoostPadManager } from './game/BoostPadManager.js';
 import { ReplaySystem } from './core/ReplaySystem.js';
 import { BenchPlayer } from './entities/BenchPlayer.js';
+import { PossessionManager, MatchState } from './game/PossessionManager.js';
 
 // --- INIZIALIZZAZIONE CORE ---
 const { scene, camera, renderer } = setupScene();
@@ -77,7 +78,7 @@ document.addEventListener('bonusCleared', () => {
 const matchManager = new MatchManager(camera, ball, player, teammates, bots, homeGK, awayGK, uiManager);
 const bonusManager = new BonusManager(scene, uiManager);
 window.fireTrailEffect = new FireTrailEffect(scene);
-
+const possessionManager = new PossessionManager();
 const boostPadManager = new BoostPadManager(scene);
 
 // Gestione Pointer Lock
@@ -224,9 +225,14 @@ function animate() {
             referee.update(deltaTime);
 
             const attackDirX = matchManager.playerTeam === 'home' ? 1 : -1;
-            // Usiamo lo stato del matchManager per capire se i giocatori possono muoversi
             const isMatchStarted = matchManager.isGameStarted;
-            teammates.forEach(t => t.update(deltaTime,ball, bots, attackDirX, isBallInPlay));
+
+            possessionManager.update(ball, player, teammates, bots);
+            const currentMatchState = possessionManager.getState();
+            console.log(currentMatchState);
+
+
+            teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBallInPlay, currentMatchState));
             bots.forEach(b => b.update(deltaTime));
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);

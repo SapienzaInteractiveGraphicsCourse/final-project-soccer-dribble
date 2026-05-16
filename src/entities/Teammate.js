@@ -59,14 +59,13 @@ export class Teammate {
         });
     }
 
-    update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true) {
+    update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true, matchState = 'FREE_BALL') {
         if (!this.model) return;
 
-        let isRunning = false;
-        let isMoving = false;
+        this.isRunning = false;
+        this.isMoving = false;
 
         // --- BLOCCO CALCIO D'INIZIO ---
-        // Se la partita non è iniziata, restano fermi in posizione e guardano la palla
         if (!isMatchStarted) {
             if (ball && ball.isLoaded) {
                 this._dirToBall.subVectors(ball.position, this.model.position);
@@ -79,8 +78,83 @@ export class Teammate {
             this.animator.animate(deltaTime, false, false, false, false, null, 0);
             return; // Interrompe qui la logica: nessun calcolo di movimento
         }
+        switch (matchState) {
+            case 'HOME_POSSESSION':
+                // La palla ce l'hai tu o un compagno: ATTACCO
+                this.executeAttackBehavior(deltaTime, ball, bots, attackDirX);
+                break;
 
-        // --- IA D'ATTACCO ---
+            case 'AWAY_POSSESSION':
+                // La palla ce l'ha l'avversario: DIFESA (da implementare)
+                this.executeDefendBehavior(deltaTime, ball, bots);
+                break;
+
+            case 'FREE_BALL':
+                // Palla contesa: CHI È PIÙ VICINO CI VA (da implementare)
+                this.executeFreeBallBehavior(deltaTime, ball);
+                break;
+        }
+
+        
+        this.model.rotation.y = THREE.MathUtils.lerp(
+            this.model.rotation.y, this.yaw, deltaTime * 15
+        );
+
+        this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+
+        // --- AGGIORNAMENTO RADAR ---
+        const FIELD_WIDTH_X = 97;
+        const FIELD_LENGTH_Z = 65;
+        let pX = ((this.model.position.x / FIELD_WIDTH_X) + 0.5) * 100;
+        let pZ = ((this.model.position.z / FIELD_LENGTH_Z) + 0.5) * 100;
+        
+        this.radarDot.style.left = pX + '%';
+        this.radarDot.style.top = pZ + '%';
+
+        // --- COLLISIONE FISICA CORPO INTERO ---
+        if (ball && ball.isLoaded) {
+            const playerHeight = 1.8;
+            const playerRadius = 0.35; 
+            
+            const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, ball.position.y));
+            const closestPointOnPlayer = new THREE.Vector3(this.model.position.x, closestY, this.model.position.z);
+            
+            const distanceToBall3D = closestPointOnPlayer.distanceTo(ball.position);
+            const minDistance = playerRadius + ball.radius;
+
+            if (distanceToBall3D < minDistance) {
+                const pushDir = new THREE.Vector3().subVectors(ball.position, closestPointOnPlayer);
+                if (pushDir.lengthSq() > 0.001) {
+                    pushDir.normalize();
+                } else {
+                    pushDir.set(0, 1, 0); 
+                }
+
+                const overlap = minDistance - distanceToBall3D;
+                ball.position.addScaledVector(pushDir, overlap);
+
+                const dot = ball.velocity.dot(pushDir);
+                if (dot < 0) {
+                    const restitution = 0.3; 
+                    const bounceImpulse = pushDir.clone().multiplyScalar(dot * (1 + restitution));
+                    ball.velocity.sub(bounceImpulse);
+
+                    if (this.isMoving && this._moveDir) {
+                        const speed = this.isRunning ? 12 : 6;
+                        const playerVel = this._moveDir.clone().multiplyScalar(speed);
+                        
+                        const impactVel = playerVel.dot(pushDir);
+                        if (impactVel > 0) {
+                            ball.velocity.add(pushDir.multiplyScalar(impactVel * 0.4));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    executeAttackBehavior(deltaTime, ball, bots, attackDirX) {
         if (ball && ball.isLoaded) {
             this._idealPos.set(0, 0, 0);
             
@@ -147,16 +221,16 @@ export class Teammate {
                 this._pushFromBall.y = 0;
                 this._pushFromBall.normalize();
                 this.model.position.addScaledVector(this._pushFromBall, 7 * deltaTime);
-                isMoving = true;
-                isRunning = true;
+                this.isMoving = true;
+                this.isRunning = true;
             } else if (distToIdeal > 1.5) {
-                isMoving = true;
+                this.isMoving = true;
                 this._moveDir.subVectors(this._idealPos, this.model.position);
                 this._moveDir.y = 0;
                 this._moveDir.normalize();
 
                 const speed = distToIdeal > 8 ? 12 : 6;
-                isRunning = speed > 8;
+                this.isRunning = speed > 8;
                 this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
             }
 
@@ -165,60 +239,13 @@ export class Teammate {
             this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
         }
 
-        this.model.rotation.y = THREE.MathUtils.lerp(
-            this.model.rotation.y, this.yaw, deltaTime * 15
-        );
+    }
 
-        this.animator.animate(deltaTime, false, isMoving, isRunning, false, null, 0);
+    executeDefendBehavior(deltaTime, ball, bots) {
+        // Qui scriveremo la logica per tornare in posizione o pressare
+    }
 
-        // --- AGGIORNAMENTO RADAR ---
-        const FIELD_WIDTH_X = 97;
-        const FIELD_LENGTH_Z = 65;
-        let pX = ((this.model.position.x / FIELD_WIDTH_X) + 0.5) * 100;
-        let pZ = ((this.model.position.z / FIELD_LENGTH_Z) + 0.5) * 100;
-        
-        this.radarDot.style.left = pX + '%';
-        this.radarDot.style.top = pZ + '%';
-
-        // --- COLLISIONE FISICA CORPO INTERO ---
-        if (ball && ball.isLoaded) {
-            const playerHeight = 1.8;
-            const playerRadius = 0.35; 
-            
-            const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, ball.position.y));
-            const closestPointOnPlayer = new THREE.Vector3(this.model.position.x, closestY, this.model.position.z);
-            
-            const distanceToBall3D = closestPointOnPlayer.distanceTo(ball.position);
-            const minDistance = playerRadius + ball.radius;
-
-            if (distanceToBall3D < minDistance) {
-                const pushDir = new THREE.Vector3().subVectors(ball.position, closestPointOnPlayer);
-                if (pushDir.lengthSq() > 0.001) {
-                    pushDir.normalize();
-                } else {
-                    pushDir.set(0, 1, 0); 
-                }
-
-                const overlap = minDistance - distanceToBall3D;
-                ball.position.addScaledVector(pushDir, overlap);
-
-                const dot = ball.velocity.dot(pushDir);
-                if (dot < 0) {
-                    const restitution = 0.3; 
-                    const bounceImpulse = pushDir.clone().multiplyScalar(dot * (1 + restitution));
-                    ball.velocity.sub(bounceImpulse);
-
-                    if (isMoving && this._moveDir) {
-                        const speed = isRunning ? 12 : 6;
-                        const playerVel = this._moveDir.clone().multiplyScalar(speed);
-                        
-                        const impactVel = playerVel.dot(pushDir);
-                        if (impactVel > 0) {
-                            ball.velocity.add(pushDir.multiplyScalar(impactVel * 0.4));
-                        }
-                    }
-                }
-            }
-        }
+    executeFreeBallBehavior(deltaTime, ball) {
+        // Qui scriveremo la logica per scattare sulla palla se è vicina
     }
 }

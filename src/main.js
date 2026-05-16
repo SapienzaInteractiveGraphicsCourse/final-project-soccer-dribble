@@ -62,6 +62,7 @@ for (let i = 0; i < 8; i++) {
 const uiManager = new UIManager((mode) => {
     matchManager.isGameStarted = true;
     matchManager.startGame(mode);
+    isBallInPlay = false; // <--- NUOVO: Reset all'inizio del match
     player.controls.lock();
 });
 
@@ -100,6 +101,7 @@ player.controls.addEventListener('unlock', () => { if (matchManager.isGameStarte
 // Stato Locale
 let stamina = 100;
 let matchTime = 0;
+let isBallInPlay = false;
 
 // --- GESTIONE SLOW MOTION ---
 let timeScale = 1.0;
@@ -140,6 +142,7 @@ document.addEventListener('keydown', (e) => {
         replaySystem.stopPlayback();
         uiManager.showReplayUI(false);
         matchManager.resetAfterGoal();
+        isBallInPlay = false;
 
         // RIATTIVA GLI INDICATORI
         if (effects) {
@@ -188,7 +191,8 @@ function animate() {
                 // Fine del replay
                 uiManager.showReplayUI(false);
                 matchManager.resetAfterGoal();
-
+                isBallInPlay = false; // <--- NUOVO: Blocca i compagni per il nuovo calcio d'inizio
+                
                 // RIATTIVA GLI INDICATORI
                 if (effects) {
                     if (effects.playerIndicator) effects.playerIndicator.visible = true;
@@ -198,6 +202,9 @@ function animate() {
         }
         // --- LOGICA GIOCO NORMALE ---
         else {
+            if (!isBallInPlay && ball.velocity && ball.velocity.lengthSq() > 0.01) {
+                isBallInPlay = true;
+            }
             // Logica Stamina (Tuo codice originale)
             const isMoving = player.keys.forward || player.keys.backward || player.keys.left || player.keys.right;
             const isRunning = player.keys.run && isMoving && stamina > 0;
@@ -215,7 +222,11 @@ function animate() {
             ball.update(deltaTime);
             player.update(deltaTime);
             referee.update(deltaTime);
-            teammates.forEach(t => t.update(deltaTime));
+
+            const attackDirX = matchManager.playerTeam === 'home' ? 1 : -1;
+            // Usiamo lo stato del matchManager per capire se i giocatori possono muoversi
+            const isMatchStarted = matchManager.isGameStarted;
+            teammates.forEach(t => t.update(deltaTime,ball, bots, attackDirX, isBallInPlay));
             bots.forEach(b => b.update(deltaTime));
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);

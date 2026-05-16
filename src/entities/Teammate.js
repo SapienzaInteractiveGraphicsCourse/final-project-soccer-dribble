@@ -59,18 +59,32 @@ export class Teammate {
         });
     }
 
-    update(deltaTime, ball = null, bots = [], attackDirX = 1) {
+    update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true) {
         if (!this.model) return;
 
         let isRunning = false;
         let isMoving = false;
+
+        // --- BLOCCO CALCIO D'INIZIO ---
+        // Se la partita non è iniziata, restano fermi in posizione e guardano la palla
+        if (!isMatchStarted) {
+            if (ball && ball.isLoaded) {
+                this._dirToBall.subVectors(ball.position, this.model.position);
+                this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+                this.model.rotation.y = THREE.MathUtils.lerp(
+                    this.model.rotation.y, this.yaw, deltaTime * 15
+                );
+            }
+            // Forza l'animazione di Idle
+            this.animator.animate(deltaTime, false, false, false, false, null, 0);
+            return; // Interrompe qui la logica: nessun calcolo di movimento
+        }
 
         // --- IA D'ATTACCO ---
         if (ball && ball.isLoaded) {
             this._idealPos.set(0, 0, 0);
             
             // 1. Avanzamento offensivo
-            // Cerca di proporsi in avanti rispetto alla palla per ricevere un passaggio
             this._idealPos.x = ball.position.x + (attackDirX * 12); 
             
             // 2. Mantenimento della posizione larga (Fasce o Centro)
@@ -78,26 +92,41 @@ export class Teammate {
             if (this.startPosition.z > 5) laneZ = 14;
             else if (this.startPosition.z < -5) laneZ = -14;
             
-            // Se siamo in zona d'attacco (vicini all'area di rigore), stringi verso il centro
             if (Math.abs(this.model.position.x) > 30) {
                 this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, 0, deltaTime * 1.5);
             } else {
                 this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, laneZ, deltaTime * 1.5);
             }
 
-            // 3. Evita gli avversari (Ricerca Spazio Libero)
-            const avoidanceRadius = 8.0;
+            // 3. SMARCAMENTO (Evita i bot e punta la porta)
+            const avoidanceRadius = 12.0; // Aumentato un po' per farli reagire in anticipo
             this._avoidanceVector.set(0, 0, 0);
             
             if (bots && bots.length > 0) {
+                const targetGoalX = 49.5 * attackDirX; // X della porta avversaria
+
                 bots.forEach(bot => {
                     if (bot && bot.model) {
                         const dist = this.model.position.distanceTo(bot.model.position);
                         if (dist < avoidanceRadius) {
+                            // A) Vettore di pura fuga dal bot
                             this._pushAway.subVectors(this.model.position, bot.model.position);
                             this._pushAway.y = 0;
-                            this._pushAway.normalize().multiplyScalar(avoidanceRadius - dist);
-                            this._avoidanceVector.add(this._pushAway);
+                            this._pushAway.normalize();
+
+                            // B) Vettore verso il centro della porta avversaria
+                            const dirToGoal = new THREE.Vector3(targetGoalX - this.model.position.x, 0, 0 - this.model.position.z).normalize();
+
+                            // C) Blend intelligente: se il bot è vicinissimo (distanza vicina a 0) scappa e basta.
+                            // Se il bot è ai margini del raggio, curva pesantemente verso la porta.
+                            const evasionBlend = dist / avoidanceRadius; 
+                            
+                            // lerpVectors miscela le due direzioni. Usa evasionBlend o un valore fisso tipo 0.5 o 0.6
+                            const escapeDir = new THREE.Vector3().lerpVectors(this._pushAway, dirToGoal, 0.6).normalize();
+
+                            // Scala l'intensità della fuga in base a quanto è vicino il bot
+                            escapeDir.multiplyScalar(avoidanceRadius - dist);
+                            this._avoidanceVector.add(escapeDir);
                         }
                     }
                 });
@@ -105,7 +134,7 @@ export class Teammate {
             
             this._idealPos.add(this._avoidanceVector);
 
-            // 4. Limiti del campo (per evitare che i giocatori escano)
+            // 4. Limiti del campo
             this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
             this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
 
@@ -113,7 +142,6 @@ export class Teammate {
             const distToIdeal = this.model.position.distanceTo(this._idealPos);
             const distToBall = this.model.position.distanceTo(ball.position);
             
-            // Se il compagno è troppo vicino alla palla (rischia di rubarla al player), si allontana
             if (distToBall < 3.5) {
                 this._pushFromBall.subVectors(this.model.position, ball.position);
                 this._pushFromBall.y = 0;
@@ -132,7 +160,7 @@ export class Teammate {
                 this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
             }
 
-            // 6. Guarda sempre la palla per essere pronto a ricevere
+            // 6. Guarda sempre la palla
             this._dirToBall.subVectors(ball.position, this.model.position);
             this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
         }
@@ -143,6 +171,7 @@ export class Teammate {
 
         this.animator.animate(deltaTime, false, isMoving, isRunning, false, null, 0);
 
+        // --- AGGIORNAMENTO RADAR ---
         const FIELD_WIDTH_X = 97;
         const FIELD_LENGTH_Z = 65;
         let pX = ((this.model.position.x / FIELD_WIDTH_X) + 0.5) * 100;
@@ -154,9 +183,8 @@ export class Teammate {
         // --- COLLISIONE FISICA CORPO INTERO ---
         if (ball && ball.isLoaded) {
             const playerHeight = 1.8;
-            const playerRadius = 0.35; // Raggio della capsula
+            const playerRadius = 0.35; 
             
-            // Punto più vicino lungo l'asse Y del compagno
             const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, ball.position.y));
             const closestPointOnPlayer = new THREE.Vector3(this.model.position.x, closestY, this.model.position.z);
             
@@ -171,18 +199,15 @@ export class Teammate {
                     pushDir.set(0, 1, 0); 
                 }
 
-                // Risoluzione compenetrazione
                 const overlap = minDistance - distanceToBall3D;
                 ball.position.addScaledVector(pushDir, overlap);
 
-                // Calcolo della velocità di rimbalzo
                 const dot = ball.velocity.dot(pushDir);
                 if (dot < 0) {
-                    const restitution = 0.3; // Il corpo assorbe l'urto
+                    const restitution = 0.3; 
                     const bounceImpulse = pushDir.clone().multiplyScalar(dot * (1 + restitution));
                     ball.velocity.sub(bounceImpulse);
 
-                    // Trasferimento inerzia della corsa del compagno alla palla
                     if (isMoving && this._moveDir) {
                         const speed = isRunning ? 12 : 6;
                         const playerVel = this._moveDir.clone().multiplyScalar(speed);

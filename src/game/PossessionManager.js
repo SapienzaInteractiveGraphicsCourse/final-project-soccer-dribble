@@ -2,18 +2,12 @@
 
 export const MatchState = {
     HOME_POSSESSION: 'HOME_POSSESSION',
-    AWAY_POSSESSION: 'AWAY_POSSESSION',
-    FREE_BALL: 'FREE_BALL'
+    AWAY_POSSESSION: 'AWAY_POSSESSION'
 };
 
 export class PossessionManager {
     constructor() {
-        this.currentState = MatchState.FREE_BALL;
-        this.possessionThreshold = 4.0; 
-        
-        // NUOVO: Sistema di tolleranza (Delay)
-        this.freeBallTimer = 0;
-        this.freeBallDelay = 2; // Secondi di volo della palla prima di dichiararla "libera"
+        this.currentState = MatchState.HOME_POSSESSION;
     }
 
     update(ball, player, teammates, bots, deltaTime) {
@@ -45,26 +39,10 @@ export class PossessionManager {
             });
         }
 
-        const absoluteClosestDist = Math.min(closestHomeDist, closestAwayDist);
-
-        // --- NUOVA LOGICA CON TIMER ---
-        if (absoluteClosestDist > this.possessionThreshold) {
-            // La palla è lontana, ma non cambiamo subito stato. Incrementiamo il timer.
-            this.freeBallTimer += deltaTime;
-            
-            // Cambia in FREE_BALL solo se la palla ha volato da sola per più di 0.6 secondi
-            if (this.freeBallTimer >= this.freeBallDelay) {
-                this.currentState = MatchState.FREE_BALL;
-            }
+        if (closestHomeDist <= closestAwayDist) {
+            this.currentState = MatchState.HOME_POSSESSION;
         } else {
-            // Appena qualcuno tocca o si avvicina alla palla, il timer si azzera istantaneamente
-            this.freeBallTimer = 0;
-            
-            if (closestHomeDist < closestAwayDist) {
-                this.currentState = MatchState.HOME_POSSESSION;
-            } else {
-                this.currentState = MatchState.AWAY_POSSESSION;
-            }
+            this.currentState = MatchState.AWAY_POSSESSION;
         }
     }
 

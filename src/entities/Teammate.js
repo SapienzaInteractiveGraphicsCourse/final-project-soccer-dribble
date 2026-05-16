@@ -59,7 +59,7 @@ export class Teammate {
         });
     }
 
-    update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true, matchState = 'FREE_BALL') {
+    update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true, matchState = 'HOME_POSSESSION') {
         if (!this.model) return;
 
         this.isRunning = false;
@@ -87,11 +87,6 @@ export class Teammate {
             case 'AWAY_POSSESSION':
                 // La palla ce l'ha l'avversario: DIFESA (da implementare)
                 this.executeDefendBehavior(deltaTime, ball, bots);
-                break;
-
-            case 'FREE_BALL':
-                // Palla contesa: CHI È PIÙ VICINO CI VA (da implementare)
-                //this.executeFreeBallBehavior(deltaTime, ball);
                 break;
         }
 

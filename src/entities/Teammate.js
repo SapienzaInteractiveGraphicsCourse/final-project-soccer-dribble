@@ -91,7 +91,7 @@ export class Teammate {
 
             case 'FREE_BALL':
                 // Palla contesa: CHI È PIÙ VICINO CI VA (da implementare)
-                this.executeFreeBallBehavior(deltaTime, ball);
+                //this.executeFreeBallBehavior(deltaTime, ball);
                 break;
         }
 

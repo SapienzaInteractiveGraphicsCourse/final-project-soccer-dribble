@@ -207,17 +207,63 @@ export class MatchManager {
     }
 
     toggleTeamControl() {
+        // 1. Il player scambia il corpo (modello e animazioni) con il Bot avversario (O1)
         this.switchCharacter(this.currentO1);
-        let tempT1 = this.currentT1;
-        let tempT2 = this.currentT2;
-        this.currentT1 = this.currentO2;
-        this.currentT2 = this.currentO3;
-        this.currentO2 = tempT1;
-        this.currentO3 = tempT2;
+        
+        // Invertiamo il colore sul radar del bot O1 (switchCharacter non lo fa in automatico)
+        if (this.currentO1.radarDot) {
+            // Se eravamo 'home' (rossi), il vecchio bot diventa il nemico rosso. Altrimenti blu.
+            this.currentO1.radarDot.style.backgroundColor = this.playerTeam === 'home' ? '#f44336' : '#2196F3';
+        }
+
+        // 2. Invece di scambiare le referenze (che rompe il ciclo update in main.js),
+        // scambiamo fisicamente i corpi tra i Teammates e i Bots rimanenti.
+        this.swapBodies(this.currentT1, this.currentO2);
+        this.swapBodies(this.currentT2, this.currentO3);
+
+        // 3. Cambiamo lo stato della squadra
         this.playerTeam = this.playerTeam === 'home' ? 'away' : 'home';
         
-        // Aggiorna i compagni del player
+        // Riaffidiamo i compagni corretti al player
         this.player.teammates = [this.currentT1, this.currentT2];
+    }
+
+    // Nuova funzione per scambiare fisicamente le entità NPC
+    swapBodies(entityA, entityB) {
+        if (!entityA.model || !entityB.model) return;
+
+        // Ferma eventuali animazioni di tiro in corso per evitare bug visivi
+        if (entityA.animator) entityA.animator.cancelCharge();
+        if (entityB.animator) entityB.animator.cancelCharge();
+
+        // Scambia i Modelli 3D (le maglie)
+        const tempModel = entityA.model;
+        entityA.model = entityB.model;
+        entityB.model = tempModel;
+
+        // Scambia gli Animatori associati
+        const tempAnimator = entityA.animator;
+        entityA.animator = entityB.animator;
+        entityB.animator = tempAnimator;
+
+        // Scambia la Rotazione per non farli girare di scatto
+        const tempYaw = entityA.yaw;
+        entityA.yaw = entityB.yaw;
+        entityB.yaw = tempYaw;
+
+        // Scambia il Boost
+        if (entityA.boost === undefined) entityA.boost = 0;
+        if (entityB.boost === undefined) entityB.boost = 0;
+        const tempBoost = entityA.boost;
+        entityA.boost = entityB.boost;
+        entityB.boost = tempBoost;
+
+        // Scambia il colore dei pallini sul radar
+        if (entityA.radarDot && entityB.radarDot) {
+            const tempColor = entityA.radarDot.style.backgroundColor;
+            entityA.radarDot.style.backgroundColor = entityB.radarDot.style.backgroundColor;
+            entityB.radarDot.style.backgroundColor = tempColor;
+        }
     }
 
     startGame(mode) {

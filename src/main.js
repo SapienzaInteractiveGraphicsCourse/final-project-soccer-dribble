@@ -233,7 +233,9 @@ function animate() {
 
 
             teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBallInPlay, currentMatchState, player, teammates));
-            bots.forEach(b => b.update(deltaTime));
+            const opponents = [player, ...teammates]; 
+            bots.forEach(b => b.update(deltaTime, isBallInPlay, currentMatchState, attackDirX, opponents, bots));
+            
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);
             bonusManager.update(deltaTime, matchManager.player);

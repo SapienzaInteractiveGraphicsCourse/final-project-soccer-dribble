@@ -232,7 +232,7 @@ function animate() {
             console.log(currentMatchState);
 
 
-            teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBallInPlay, currentMatchState));
+            teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBallInPlay, currentMatchState, player, teammates));
             bots.forEach(b => b.update(deltaTime));
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);

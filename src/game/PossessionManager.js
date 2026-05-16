@@ -13,7 +13,7 @@ export class PossessionManager {
         
         // NUOVO: Sistema di tolleranza (Delay)
         this.freeBallTimer = 0;
-        this.freeBallDelay = 1; // Secondi di volo della palla prima di dichiararla "libera"
+        this.freeBallDelay = 2; // Secondi di volo della palla prima di dichiararla "libera"
     }
 
     update(ball, player, teammates, bots, deltaTime) {

@@ -245,48 +245,71 @@ export class Teammate {
         // Qui scriveremo la logica per tornare in posizione o pressare
     }
 
-    executeFreeBallBehavior(deltaTime, ball) {
+    executeFreeBallBehavior(deltaTime, ball, player, teammates) {
         if (!ball || !ball.isLoaded) return;
 
         const distToBall = this.model.position.distanceTo(ball.position);
         
-        // Se il compagno è nel raggio di 15 metri, andrà a caccia della palla
-        const isNearBall = distToBall < 15.0; 
+        // 1. TROVA IL GIOCATORE PIÙ VICINO
+        let closestDist = distToBall;
+        let isAbsoluteClosest = true;
 
-        if (isNearBall) {
-            // 1. AGGRESSIONE: Punta dritto verso la palla
+        if (player && player.model) {
+            const playerDist = player.model.position.distanceTo(ball.position);
+            if (playerDist < closestDist) {
+                closestDist = playerDist;
+                isAbsoluteClosest = false;
+            }
+        }
+
+        if (teammates && teammates.length > 0) {
+            teammates.forEach(t => {
+                if (t !== this && t.model) {
+                    const tDist = t.model.position.distanceTo(ball.position);
+                    if (tDist < closestDist) {
+                        closestDist = tDist;
+                        isAbsoluteClosest = false;
+                    }
+                }
+            });
+        }
+
+        // 2. AZIONE: Se sei il più vicino
+        if (isAbsoluteClosest && distToBall < 15.0) {
             this._idealPos.copy(ball.position);
             this._idealPos.y = 0;
+
+            // --- ECCO IL COLLEGAMENTO CON IL MATCH MANAGER ---
+            // Richiedi lo switch automatico solo se non ne hai fatto uno negli ultimi 1.5 secondi
+            if (!this.lastSwitchTime || Date.now() - this.lastSwitchTime > 1500) {
+                document.dispatchEvent(new CustomEvent('autoSwitchRequested', { detail: { target: this } }));
+                this.lastSwitchTime = Date.now();
+            }
         } else {
-            // 2. TATTICA: Torna verso la sua zona, ma segue l'azione con lo sguardo
+            // 3. TATTICA: Non sei il più vicino, torna in posizione e stringi verso la palla
             this._idealPos.copy(this.startPosition);
-            
-            // Si sposta leggermente (30%) verso la X e la Z della palla per non essere troppo statico
             this._idealPos.x = THREE.MathUtils.lerp(this.startPosition.x, ball.position.x, 0.3);
             this._idealPos.z = THREE.MathUtils.lerp(this.startPosition.z, ball.position.z, 0.3);
         }
 
-        // 3. Limiti del campo (per evitare che escano dalle linee)
+        // 4. Limiti del campo
         this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
         this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
 
-        // 4. Movimento Fisico verso la posizione ideale calcolata
+        // 5. Movimento Fisico
         const distToIdeal = this.model.position.distanceTo(this._idealPos);
-        
         if (distToIdeal > 1.0) {
             this.isMoving = true;
             this._moveDir.subVectors(this._idealPos, this.model.position);
             this._moveDir.y = 0;
             this._moveDir.normalize();
 
-            // Se sta andando sulla palla scatta (12), se si sta riposizionando trotterella (6)
-            const speed = isNearBall ? 12 : 6; 
+            const speed = (isAbsoluteClosest && distToBall < 15.0) ? 12 : 6; 
             this.isRunning = speed > 8;
             
             this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
         }
 
-        // 5. Indipendentemente da dove va, guarda sempre la palla
         this._dirToBall.subVectors(ball.position, this.model.position);
         this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }

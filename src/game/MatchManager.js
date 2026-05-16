@@ -39,6 +39,7 @@ export class MatchManager {
         this.setupInputHandling();
         this.setupCornerEvent();
         this.setupPassEvent();
+        this.setupAutoSwitchEvent(); // <--- AGGIUNGI QUESTO
 
         /* --- AUDIO DI SOTTOFONDO (STADIO / MUSICA) ---
         this.bgMusic = new Audio('../../public/sound/confusion.mp3');
@@ -54,6 +55,19 @@ export class MatchManager {
             // Ci mettiamo in ascolto di qualsiasi interazione (tastiera o mouse)
             ['click', 'mousedown', 'keydown'].forEach(evt => document.addEventListener(evt, startAudio));
         });*/
+    }
+
+    setupAutoSwitchEvent() {
+        document.addEventListener('autoSwitchRequested', (e) => {
+            // Blocca lo switch automatico negli allenamenti o se stai usando il portiere
+            if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return;
+            if (this.isControllingGK) return;
+
+            const targetTeammate = e.detail.target;
+            if (targetTeammate && targetTeammate.model) {
+                this.switchCharacter(targetTeammate);
+            }
+        });
     }
 
     setupCornerEvent() {

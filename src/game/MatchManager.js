@@ -305,27 +305,24 @@ export class MatchManager {
             if (this.playerTeam === 'home') {
                 if (this.player.model) {
                     this.player.model.position.set(-1.5, 0, 0); 
-                    this.player.model.rotation.y = Math.PI / 2; 
-                    this.player.yaw = Math.PI / 2; 
+                    
                 }
-                if (this.currentT1.model) { this.currentT1.model.position.set(-15, 0, 15); this.currentT1.model.rotation.y = Math.PI / 2; }
-                if (this.currentT2.model) { this.currentT2.model.position.set(-15, 0, -15); this.currentT2.model.rotation.y = Math.PI / 2; }
+                if (this.currentT1.model) { this.currentT1.model.position.set(-15, 0, 15);}
+                if (this.currentT2.model) { this.currentT2.model.position.set(-15, 0, -15); }
 
-                if (this.currentO1.model) { this.currentO1.model.position.set(10.5, 0, 0); this.currentO1.model.rotation.y = 3/2 * Math.PI; }
-                if (this.currentO2.model) { this.currentO2.model.position.set(20, 0, -15); this.currentO2.model.rotation.y = 3/2 * Math.PI; }
-                if (this.currentO3.model) { this.currentO3.model.position.set(20, 0, 15); this.currentO3.model.rotation.y = 3/2 * Math.PI; }
+                if (this.currentO1.model) { this.currentO1.model.position.set(10.5, 0, 0);  }
+                if (this.currentO2.model) { this.currentO2.model.position.set(20, 0, -15);  }
+                if (this.currentO3.model) { this.currentO3.model.position.set(20, 0, 15);  }
             } else {
                 if (this.player.model) {
                     this.player.model.position.set(1.5, 0, 0); 
-                    this.player.model.rotation.y = 3/2 * Math.PI; 
-                    this.player.yaw = 3/2 * Math.PI; 
                 }
-                if (this.currentT1.model) { this.currentT1.model.position.set(15, 0, 15); this.currentT1.model.rotation.y = 3/2 * Math.PI; }
-                if (this.currentT2.model) { this.currentT2.model.position.set(15, 0, -15); this.currentT2.model.rotation.y = 3/2 * Math.PI; }
+                if (this.currentT1.model) { this.currentT1.model.position.set(15, 0, 15); }
+                if (this.currentT2.model) { this.currentT2.model.position.set(15, 0, -15);  }
 
-                if (this.currentO1.model) { this.currentO1.model.position.set(-10.5, 0, 0); this.currentO1.model.rotation.y = Math.PI / 2; }
-                if (this.currentO2.model) { this.currentO2.model.position.set(-20, 0, -15); this.currentO2.model.rotation.y = Math.PI / 2; }
-                if (this.currentO3.model) { this.currentO3.model.position.set(-20, 0, 15); this.currentO3.model.rotation.y = Math.PI / 2; }
+                if (this.currentO1.model) { this.currentO1.model.position.set(-10.5, 0, 0);  }
+                if (this.currentO2.model) { this.currentO2.model.position.set(-20, 0, -15);  }
+                if (this.currentO3.model) { this.currentO3.model.position.set(-20, 0, 15); }
             }
             if (this.homeGK.model) {
                 this.homeGK.model.position.set(-48.5, 0, 0);

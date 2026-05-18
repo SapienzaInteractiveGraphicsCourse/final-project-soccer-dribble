@@ -83,7 +83,6 @@ export class MatchManager {
             const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
             const targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
             this.switchCharacter(targetTeammate);
-            this.uiManager.showInGameMessage("RICEZIONE IN AREA!");
         });
     }
 

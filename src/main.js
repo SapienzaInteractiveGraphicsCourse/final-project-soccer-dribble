@@ -229,7 +229,7 @@ function animate() {
 
             possessionManager.update(ball, player, teammates, bots, deltaTime);
             const currentMatchState = possessionManager.getState();
-            console.log(currentMatchState);
+           
 
 
             teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBallInPlay, currentMatchState, player, teammates));

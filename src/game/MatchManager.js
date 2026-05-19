@@ -533,26 +533,47 @@ export class MatchManager {
                 this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
             } else {
                 // Rimessa Laterale Bot avversario
-                let closestBot = this.currentO1;
-                let minDist = Infinity;
+                // --- INIZIO: Trova chi batte e chi riceve ---
+                let closestBot = null;
+                let secondClosestBot = null;
+                let minDist1 = Infinity;
+                let minDist2 = Infinity;
+
                 [this.currentO1, this.currentO2, this.currentO3].forEach(bot => {
                     if (bot && bot.model) {
                         const dist = bot.model.position.distanceTo(new THREE.Vector3(this.ball.position.x, 0, this.ball.position.z));
-                        if (dist < minDist) {
-                            minDist = dist;
-                            closestBot = bot;
+                        if (dist < minDist1) {
+                            // Quello che prima era il più vicino scala al secondo posto
+                            minDist2 = minDist1;
+                            secondClosestBot = closestBot; 
+                            
+                            // Abbiamo un nuovo bot più vicino
+                            minDist1 = dist;
+                            closestBot = bot; 
+                        } else if (dist < minDist2) {
+                            // È più lontano del primo, ma più vicino del secondo
+                            minDist2 = dist;
+                            secondClosestBot = bot; 
                         }
                     }
                 });
 
                 const throwerBot = closestBot;
+                const receiverBot = secondClosestBot;
+
                 throwerBot.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
                 const botYaw = side > 0 ? Math.PI : 0;
                 throwerBot.yaw = botYaw;
                 throwerBot.model.rotation.y = botYaw;
 
-                // Il bot avvia la propria procedura di lancio integrata
-                throwerBot.startThrowIn();
+                // 1. Passiamo il ricevitore al battitore
+                throwerBot.startThrowIn(receiverBot);
+                
+                // 2. Diciamo al ricevitore di farsi incontro
+                if (receiverBot) {
+                    receiverBot.setReceiveThrowInTarget(throwerBot.model.position, side);
+                }
+                // --- FINE FIX RIMESSA IA ---
 
                 this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
             }

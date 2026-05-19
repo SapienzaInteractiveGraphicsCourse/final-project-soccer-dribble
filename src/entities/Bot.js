@@ -15,6 +15,10 @@ export class Bot {
         this.animator = new PlayerAnimator();
         this.action = new PlayerAction();
 
+        this.targetReceiver = null;
+        this.isReceivingThrowIn = false;
+        this.throwInSupportPos = new THREE.Vector3();
+
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
@@ -54,36 +58,185 @@ export class Bot {
         if (this.isThrowingIn) {
             this.throwInTimer += deltaTime;
 
-            // Tempistiche (simula il tempo in cui guarda i compagni prima di lanciare)
-            const waitTime = 1.0;      // Rimane fermo 1 secondo
-            const releaseTime = waitTime + 0.55; // Momento esatto dello snap in avanti
-            const endTime = releaseTime + 0.4;   // Fine completa dell'animazione
+            // Fai guardare fluidamente il battitore verso il compagno che si avvicina!
+            if (this.targetReceiver && this.targetReceiver.model) {
+                 this.yaw = Math.atan2(
+                     this.targetReceiver.model.position.x - this.model.position.x,
+                     this.targetReceiver.model.position.z - this.model.position.z
+                 );
+                 // Ruota il bacino fluidamente verso il compagno
+                 const currentRot = this.model.rotation.y;
+                 let diff = this.yaw - currentRot;
+                 while (diff < -Math.PI) diff += Math.PI * 2;
+                 while (diff > Math.PI) diff -= Math.PI * 2;
+                 this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+            }
+
+            const waitTime = 1.0;
+            const releaseTime = waitTime + 0.55;
+            const endTime = releaseTime + 0.4;
 
             let isThrowingInAnim = false;
-            let isThrowingInState = true; // True = palla ferma dietro la nuca
+            let isThrowingInState = true;
 
             if (this.throwInTimer >= waitTime) {
                 isThrowingInState = false;
-                isThrowingInAnim = true; // Fa partire le braccia
+                isThrowingInAnim = true;
 
-                // Rilascia fisicamente la palla al momento giusto
                 if (this.throwInTimer >= releaseTime && this.ball.isHeld) {
-                    // Aggiunge una leggerissima imprecisione casuale all'angolo di lancio del bot
-                    const botThrowYaw = this.yaw + (Math.random() * 0.3 - 0.15); 
-                    this.action.executeThrow(this.ball, botThrowYaw, this.scene);
+                    // Lancia esattamente dove sta guardando (verso il compagno)
+                    let throwYaw = this.yaw + (Math.random() * 0.1 - 0.05);
+                    this.action.executeThrow(this.ball, throwYaw, this.scene);
+
+                    // Libera il ricevitore dal suo incarico (tornerà a giocare normale)
+                    if (this.targetReceiver) {
+                        this.targetReceiver.isReceivingThrowIn = false;
+                        this.targetReceiver = null;
+                    }
                 }
             }
 
-            // A lancio concluso, ridiamo il controllo all'IA
             if (this.throwInTimer >= endTime) {
                 this.isThrowingIn = false;
                 isThrowingInAnim = false;
-                this.animator.resetToBasePose(); 
+                this.animator.resetToBasePose();
             }
 
-            // Aggiorna lo scheletro e blocca (return) l'esecuzione della normale IA
             this.animator.animate(deltaTime, isThrowingInAnim, false, false, isThrowingInState, null, 0);
             return; 
+        }
+
+        // --- 2. GESTIONE RICEVITORE ---
+        if (this.isReceivingThrowIn && !this.isThrowingIn) {
+            // Sicurezza: se la palla viene rubata o è tornata in gioco, smetti di aspettare
+            if (!this.ball.isHeld) {
+                this.isReceivingThrowIn = false;
+            } else {
+                const distToSupport = this.model.position.distanceTo(this.throwInSupportPos);
+                
+                // Se non è ancora arrivato sul posto, corri
+                if (distToSupport > 0.5) {
+                    this.isMoving = true;
+                    this.isRunning = distToSupport > 4;
+                    
+                    this._moveDir.subVectors(this.throwInSupportPos, this.model.position);
+                    this._moveDir.y = 0;
+                    this._moveDir.normalize();
+                    
+                    const speed = this.isRunning ? 9 : 5;
+                    this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+                    
+                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                } else {
+                    // Arrivato sul posto: fermati e guarda la palla aspettando il lancio
+                    this.isMoving = false;
+                    this.isRunning = false;
+                    this._dirToBall.subVectors(this.ball.position, this.model.position);
+                    this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+                }
+                
+                this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+                
+                // Applica la rotazione fluida calcolata (il fix dell'effetto scattoso!)
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+
+                return; // Ferma l'esecuzione qui, ignora l'IA di attacco/difesa normale
+            }
+        }if (this.isThrowingIn) {
+            this.throwInTimer += deltaTime;
+
+            // Fai guardare fluidamente il battitore verso il compagno che si avvicina!
+            if (this.targetReceiver && this.targetReceiver.model) {
+                 this.yaw = Math.atan2(
+                     this.targetReceiver.model.position.x - this.model.position.x,
+                     this.targetReceiver.model.position.z - this.model.position.z
+                 );
+                 // Ruota il bacino fluidamente verso il compagno
+                 const currentRot = this.model.rotation.y;
+                 let diff = this.yaw - currentRot;
+                 while (diff < -Math.PI) diff += Math.PI * 2;
+                 while (diff > Math.PI) diff -= Math.PI * 2;
+                 this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+            }
+
+            const waitTime = 1.0;
+            const releaseTime = waitTime + 0.55;
+            const endTime = releaseTime + 0.4;
+
+            let isThrowingInAnim = false;
+            let isThrowingInState = true;
+
+            if (this.throwInTimer >= waitTime) {
+                isThrowingInState = false;
+                isThrowingInAnim = true;
+
+                if (this.throwInTimer >= releaseTime && this.ball.isHeld) {
+                    // Lancia esattamente dove sta guardando (verso il compagno)
+                    let throwYaw = this.yaw + (Math.random() * 0.1 - 0.05);
+                    this.action.executeThrow(this.ball, throwYaw, this.scene);
+
+                    // Libera il ricevitore dal suo incarico (tornerà a giocare normale)
+                    if (this.targetReceiver) {
+                        this.targetReceiver.isReceivingThrowIn = false;
+                        this.targetReceiver = null;
+                    }
+                }
+            }
+
+            if (this.throwInTimer >= endTime) {
+                this.isThrowingIn = false;
+                isThrowingInAnim = false;
+                this.animator.resetToBasePose();
+            }
+
+            this.animator.animate(deltaTime, isThrowingInAnim, false, false, isThrowingInState, null, 0);
+            return; 
+        }
+
+        // --- 2. GESTIONE RICEVITORE ---
+        if (this.isReceivingThrowIn && !this.isThrowingIn) {
+            // Sicurezza: se la palla viene rubata o è tornata in gioco, smetti di aspettare
+            if (!this.ball.isHeld) {
+                this.isReceivingThrowIn = false;
+            } else {
+                const distToSupport = this.model.position.distanceTo(this.throwInSupportPos);
+                
+                // Se non è ancora arrivato sul posto, corri
+                if (distToSupport > 0.5) {
+                    this.isMoving = true;
+                    this.isRunning = distToSupport > 4;
+                    
+                    this._moveDir.subVectors(this.throwInSupportPos, this.model.position);
+                    this._moveDir.y = 0;
+                    this._moveDir.normalize();
+                    
+                    const speed = this.isRunning ? 9 : 5;
+                    this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+                    
+                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                } else {
+                    // Arrivato sul posto: fermati e guarda la palla aspettando il lancio
+                    this.isMoving = false;
+                    this.isRunning = false;
+                    this._dirToBall.subVectors(this.ball.position, this.model.position);
+                    this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+                }
+                
+                this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+                
+                // Applica la rotazione fluida calcolata (il fix dell'effetto scattoso!)
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+
+                return; // Ferma l'esecuzione qui, ignora l'IA di attacco/difesa normale
+            }
         }
         
         this.isRunning = false;
@@ -236,17 +389,30 @@ export class Bot {
         }
     }
 
-    // Aggiungi questo metodo dove preferisci nella classe Bot (es. sotto loadGLB)
-    startThrowIn() {
+
+    
+    // Modifica questo metodo per fargli accettare il "receiver"
+    startThrowIn(receiver = null) {
         this.isThrowingIn = true;
         this.throwInTimer = 0;
+        this.targetReceiver = receiver; // Memorizza a chi dovrà lanciare
         
-        // Blocca i movimenti residui
         this.isMoving = false;
         this.isRunning = false;
         
-        // Passa l'osso della mano all'azione per fargli afferrare la palla
         const rightHand = this.animator.bones.rightHand;
         this.action.startThrowIn(this.ball, rightHand);
+    }
+
+    // Aggiungi questo metodo per il bot che deve ricevere la palla
+    setReceiveThrowInTarget(throwerPos, side) {
+        this.isReceivingThrowIn = true;
+        // Si posiziona a circa 7 metri dal battitore, rientrando verso il centro del campo
+        // 'side' ci dice in che metà campo siamo (1 o -1), quindi invertiamo per andare al centro
+        this.throwInSupportPos.set(
+            throwerPos.x + (Math.random() * 6 - 3), // Si smarca un po' a destra/sinistra
+            0,
+            throwerPos.z - (side * 7) // Entra in campo di 7 metri
+        );
     }
 }

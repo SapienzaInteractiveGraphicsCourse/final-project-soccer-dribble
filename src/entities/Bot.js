@@ -163,7 +163,8 @@ export class Bot {
             }
 
             const waitTime = 1.2;
-            const kickTime = waitTime + 0.2;
+            // Aumentiamo il tempo di caricamento per fargli fare un cross con una parabola bella alta
+            const kickTime = waitTime + 0.35;
             const endTime = kickTime + 0.4;
 
             if (this.cornerTimer >= waitTime && this.cornerTimer < kickTime) {
@@ -174,10 +175,27 @@ export class Bot {
             }
 
             if (this.cornerTimer >= kickTime && this.action.chargingAction) {
-                this.action.executeKick(this.ball, this.yaw, 0, null, this.targetReceiver);
+                // Creiamo un bersaglio fittizio vicino al ricevitore, per non renderlo un passaggio laser
+                let fakeTarget = null;
+                if (this.targetReceiver && this.targetReceiver.model) {
+                    // Offset casuale ridotto a +/- 2 metri per renderlo raggiungibile
+                    const errorX = (Math.random() - 0.5) * 4;
+                    const errorZ = (Math.random() - 0.5) * 4;
+                    const destPos = new THREE.Vector3(
+                        this.targetReceiver.model.position.x + errorX,
+                        0,
+                        this.targetReceiver.model.position.z + errorZ
+                    );
+                    fakeTarget = {
+                        model: { position: destPos }
+                    };
+                    // COMUNICHIAMO al ricevitore il punto di caduta del cross
+                    this.targetReceiver.cornerCrossTarget = destPos;
+                }
                 
-                // NOTA BENE: Non disattiviamo isReceivingCorner del ricevitore qui!
-                // Lo lasciamo attivo affinché possa fare il tiro al volo!
+                // Rimettiamo il 'pass' con bersaglio, così la fisica calcola la parabola esatta per raggiungere l'area
+                this.action.executeKick(this.ball, this.yaw, 0, null, fakeTarget);
+
                 if (this.targetReceiver) {
                     this.targetReceiver = null;
                 }
@@ -218,24 +236,30 @@ export class Bot {
             } 
             // FASE B: IL CROSS È PARTITO! Insegue la palla e si prepara al tiro
             else {
-                const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
-                                     .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
                 const distanceToBall3D = this.model.position.distanceTo(this.ball.position);
 
-                // 1. Insegue l'ombra della palla
-                if (distToBallXZ > 1.0) {
+                // 1. Insegue il punto di caduta del cross finché la palla è alta, poi corregge sull'ombra esatta
+                let targetPointXZ = (this.cornerCrossTarget && this.ball.position.y > 4.0) 
+                                    ? this.cornerCrossTarget 
+                                    : this.ball.position;
+                                    
+                const distToTargetXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                                     .distanceTo(new THREE.Vector2(targetPointXZ.x, targetPointXZ.z));
+
+                if (distToTargetXZ > 0.5) {
                     this.isMoving = true;
                     this.isRunning = true;
-                    this._moveDir.set(this.ball.position.x - this.model.position.x, 0, this.ball.position.z - this.model.position.z).normalize();
-                    this.model.position.addScaledVector(this._moveDir, 8 * deltaTime);
+                    this._moveDir.set(targetPointXZ.x - this.model.position.x, 0, targetPointXZ.z - this.model.position.z).normalize();
+                    this.model.position.addScaledVector(this._moveDir, 12 * deltaTime);
                     this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
                 } else {
                     this.isMoving = false;
                     this.isRunning = false;
+                    this.yaw = Math.atan2(this.cornerTargetGoalX - this.model.position.x, 0 - this.model.position.z);
                 }
 
                 // 2. La palla è vicina (in caduta): Guarda la porta e CARICA IL TIRO
-                if (distanceToBall3D < 5.0) {
+                if (distanceToBall3D < 6.0) {
                     this.yaw = Math.atan2(this.cornerTargetGoalX - this.model.position.x, 0 - this.model.position.z);
                     
                     if (!this.action.chargingAction) {
@@ -245,8 +269,11 @@ export class Bot {
                     this.action.updateCharge(deltaTime * 3, null); 
                 }
 
-                // 3. IMPATTO! La palla scende sotto i 2.5 metri ed è addosso al giocatore
-                if (distanceToBall3D < 2.0 && this.ball.position.y < 2.5) {
+                // 3. IMPATTO! La palla scende ed è vicina al giocatore
+                const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                                     .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
+                                     
+                if (distToBallXZ < 2.5 && this.ball.position.y < 3.0) {
                     // Mira fissa sulla porta
                     this.yaw = Math.atan2(this.cornerTargetGoalX - this.model.position.x, 0 - this.model.position.z);
                     
@@ -255,11 +282,13 @@ export class Bot {
                         this.action.kickPower = this.action.shootMaxPower * 0.85;
                     }
                     
-                    // BOOM! Calcia con una traiettoria dritta (-0.1)
-                    this.action.executeKick(this.ball, this.yaw, -0.1, null, null);
+                    // BOOM! Calcia con una traiettoria dritta (-0.1) ma aggiungendo un piccolo margine d'errore
+                    const shotError = (Math.random() - 0.5) * 0.35;
+                    this.action.executeKick(this.ball, this.yaw + shotError, -0.1, null, null);
                     
                     // Sgancia l'IA, l'azione da fermo è conclusa
                     this.isReceivingCorner = false;
+                    this.cornerCrossTarget = null;
                 }
             }
 
@@ -436,6 +465,7 @@ export class Bot {
     setReceiveCornerTarget(kickerPos, ballX, ballZ) {
         this.isReceivingCorner = true;
         this.cornerTargetGoalX = ballX > 0 ? 48.5 : -48.5; 
+        this.cornerCrossTarget = null;
         
         const dirX = ballX > 0 ? -1 : 1;
 

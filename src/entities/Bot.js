@@ -28,6 +28,7 @@ export class Bot {
         this.cornerTimer = 0;
         this.isReceivingCorner = false;
         this.cornerSupportPos = new THREE.Vector3();
+        this.cornerTargetGoalX = 0; // Memorizza quale porta attaccare
 
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
@@ -149,7 +150,6 @@ export class Bot {
         if (this.isTakingCorner) {
             this.cornerTimer += deltaTime;
 
-            // Segue il compagno che si avvicina con il corpo
             if (this.targetReceiver && this.targetReceiver.model) {
                 this.yaw = Math.atan2(
                     this.targetReceiver.model.position.x - this.model.position.x,
@@ -162,11 +162,10 @@ export class Bot {
                 this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
             }
 
-            const waitTime = 1.2;          // Tempo di attesa/posizionamento
-            const kickTime = waitTime + 0.2; // Inizio calcio di piatto assistito
-            const endTime = kickTime + 0.4;  // Fine animazione follow-through
+            const waitTime = 1.2;
+            const kickTime = waitTime + 0.2;
+            const endTime = kickTime + 0.4;
 
-            // Fase di caricamento fittizio per attivare le ossa dell'animator
             if (this.cornerTimer >= waitTime && this.cornerTimer < kickTime) {
                 if (!this.action.chargingAction) {
                     this.action.startCharge('pass');
@@ -174,11 +173,12 @@ export class Bot {
                 this.action.updateCharge(deltaTime, null);
             }
 
-            // Esecuzione del calcio assistito verso il ricevitore
             if (this.cornerTimer >= kickTime && this.action.chargingAction) {
                 this.action.executeKick(this.ball, this.yaw, 0, null, this.targetReceiver);
+                
+                // NOTA BENE: Non disattiviamo isReceivingCorner del ricevitore qui!
+                // Lo lasciamo attivo affinché possa fare il tiro al volo!
                 if (this.targetReceiver) {
-                    this.targetReceiver.isReceivingCorner = false;
                     this.targetReceiver = null;
                 }
             }
@@ -194,12 +194,11 @@ export class Bot {
             return;
         }
 
-        // --- 4. GESTIONE RICEVITORE CALCIO D'ANGOLO ---
+        // --- 4. GESTIONE RICEVITORE CALCIO D'ANGOLO (CROSS & GOAL) ---
         if (this.isReceivingCorner && !this.isTakingCorner) {
-            // Se la palla si muove ed è stata calciata, il bot torna libero
-            if (this.ball.velocity.lengthSq() > 5.0) {
-                this.isReceivingCorner = false;
-            } else {
+            
+            // FASE A: La palla non è ancora partita o è appena stata toccata
+            if (this.ball.velocity.lengthSq() < 1.0) {
                 const distToSupport = this.model.position.distanceTo(this.cornerSupportPos);
                 if (distToSupport > 0.5) {
                     this.isMoving = true;
@@ -216,15 +215,65 @@ export class Bot {
                     this._dirToBall.subVectors(this.ball.position, this.model.position);
                     this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
                 }
+            } 
+            // FASE B: IL CROSS È PARTITO! Insegue la palla e si prepara al tiro
+            else {
+                const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                                     .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
+                const distanceToBall3D = this.model.position.distanceTo(this.ball.position);
 
-                this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
-                const currentRot = this.model.rotation.y;
-                let diff = this.yaw - currentRot;
-                while (diff < -Math.PI) diff += Math.PI * 2;
-                while (diff > Math.PI) diff -= Math.PI * 2;
-                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
-                return;
+                // 1. Insegue l'ombra della palla
+                if (distToBallXZ > 1.0) {
+                    this.isMoving = true;
+                    this.isRunning = true;
+                    this._moveDir.set(this.ball.position.x - this.model.position.x, 0, this.ball.position.z - this.model.position.z).normalize();
+                    this.model.position.addScaledVector(this._moveDir, 8 * deltaTime);
+                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                } else {
+                    this.isMoving = false;
+                    this.isRunning = false;
+                }
+
+                // 2. La palla è vicina (in caduta): Guarda la porta e CARICA IL TIRO
+                if (distanceToBall3D < 5.0) {
+                    this.yaw = Math.atan2(this.cornerTargetGoalX - this.model.position.x, 0 - this.model.position.z);
+                    
+                    if (!this.action.chargingAction) {
+                        this.action.startCharge('shoot');
+                    }
+                    // Carica il tiro 3 volte più veloce per essere pronto all'impatto!
+                    this.action.updateCharge(deltaTime * 3, null); 
+                }
+
+                // 3. IMPATTO! La palla scende sotto i 2.5 metri ed è addosso al giocatore
+                if (distanceToBall3D < 2.0 && this.ball.position.y < 2.5) {
+                    // Mira fissa sulla porta
+                    this.yaw = Math.atan2(this.cornerTargetGoalX - this.model.position.x, 0 - this.model.position.z);
+                    
+                    // Sicurezza: spara comunque una botta potente se non ha caricato tutto
+                    if (this.action.kickPower < this.action.shootMaxPower * 0.7) {
+                        this.action.kickPower = this.action.shootMaxPower * 0.85;
+                    }
+                    
+                    // BOOM! Calcia con una traiettoria dritta (-0.1)
+                    this.action.executeKick(this.ball, this.yaw, -0.1, null, null);
+                    
+                    // Sgancia l'IA, l'azione da fermo è conclusa
+                    this.isReceivingCorner = false;
+                }
             }
+
+            // Manda all'animator lo stato del movimento E l'eventuale caricamento del tiro
+            let chargingAnim = this.action.chargingAction;
+            let chargeRatio = this.action.getChargeRatio();
+            this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, chargingAnim, chargeRatio);
+
+            const currentRot = this.model.rotation.y;
+            let diff = this.yaw - currentRot;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+            return;
         }
         
         // --- 5. COMPORTAMENTO IA STANDARD ---
@@ -375,30 +424,26 @@ export class Bot {
         );
     }
 
-    // --- NUOVI METODI PER IL CORNER ---
     startCorner(receiver = null) {
         this.isTakingCorner = true;
         this.cornerTimer = 0;
         this.targetReceiver = receiver;
         this.isMoving = false;
         this.isRunning = false;
-        
-        // Inizializza i flag di sbilanciamento del calcio d'angolo in PlayerAction
         this.action.startCorner(this.ball);
     }
 
     setReceiveCornerTarget(kickerPos, ballX, ballZ) {
         this.isReceivingCorner = true;
+        this.cornerTargetGoalX = ballX > 0 ? 48.5 : -48.5; 
         
-        // Calcola i vettori per far entrare il bot dentro l'area di rigore in diagonale
         const dirX = ballX > 0 ? -1 : 1;
-        const dirZ = ballZ > 0 ? -1 : 1;
 
-        // Si posiziona a circa 10m di X e 12m di Z rispetto alla bandierina (vertice dell'area)
+        // Si apposta nel cuore dell'area di rigore (Zona dischetto/limite area piccola)
         this.cornerSupportPos.set(
-            ballX + (dirX * 10.0),
+            ballX + (dirX * (11 + Math.random() * 3)), 
             0,
-            ballZ + (dirZ * 12.0)
+            (Math.random() * 8 - 4) 
         );
     }
 }

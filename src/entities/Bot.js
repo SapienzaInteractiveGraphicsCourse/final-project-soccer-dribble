@@ -72,7 +72,7 @@ export class Bot {
         
         // --- 1. GESTIONE BATTITORE RIMESSA ---
         if (this.isThrowingIn) {
-            this.throwInTimer += deltaTime;
+            let receiverReady = true;
 
             if (this.targetReceiver && this.targetReceiver.model) {
                  this.yaw = Math.atan2(
@@ -84,6 +84,18 @@ export class Bot {
                  while (diff < -Math.PI) diff += Math.PI * 2;
                  while (diff > Math.PI) diff -= Math.PI * 2;
                  this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+
+                 // Se il compagno sta ancora correndo per avvicinarsi, non siamo pronti
+                 if (this.targetReceiver.isMoving) {
+                     receiverReady = false;
+                 }
+            }
+
+            // Aspetta che il compagno si avvicini fermandosi (bloccando il timer prima del lancio)
+            if (!receiverReady && this.throwInTimer >= 0.9) {
+                this.throwInTimer += deltaTime * 0.02; // Fallback di ~5 secondi in caso il bot si incastri
+            } else {
+                this.throwInTimer += deltaTime;
             }
 
             const waitTime = 1.0;
@@ -98,8 +110,8 @@ export class Bot {
                 isThrowingInAnim = true;
 
                 if (this.throwInTimer >= releaseTime && this.ball.isHeld) {
-                    let throwYaw = this.yaw + (Math.random() * 0.1 - 0.05);
-                    this.action.executeThrow(this.ball, throwYaw, this.scene);
+                    let throwYaw = this.yaw; // Mira perfetta verso il ricevitore (nessun errore casuale)
+                    this.action.executeThrow(this.ball, throwYaw, this.scene, this.targetReceiver);
 
                     if (this.targetReceiver) {
                         this.targetReceiver.isReceivingThrowIn = false;
@@ -488,9 +500,9 @@ export class Bot {
     setReceiveThrowInTarget(throwerPos, side) {
         this.isReceivingThrowIn = true;
         this.throwInSupportPos.set(
-            throwerPos.x + (Math.random() * 6 - 3), 
+            throwerPos.x + (Math.random() * 4 - 2), 
             0,
-            throwerPos.z - (side * 7)
+            throwerPos.z - (side * 6) // Mantiene un po' di distanza per una ricezione comoda
         );
     }
 

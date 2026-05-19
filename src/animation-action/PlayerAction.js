@@ -41,7 +41,7 @@ export class PlayerAction {
         }
     }
 
-    executeThrow(ball, yaw, scene) {
+    executeThrow(ball, yaw, scene, targetReceiver = null) {
         this.isThrowingIn = false;
 
         if (ball && ball.isLoaded) {
@@ -62,8 +62,17 @@ export class PlayerAction {
             ball.position.copy(worldPos);
             ball.velocity.set(0, 0, 0);
 
-            const throwForceForward = 14; // Diminuita per una rimessa più controllabile
-            const throwForceUpward = 6;   // Abbassato anche lo slancio verticale
+            let throwForceForward = 14; 
+            let throwForceUpward = 6;   
+
+            // Se abbiamo un ricevitore target (Bot), calibriamo la potenza sulla sua distanza
+            if (targetReceiver && targetReceiver.model) {
+                const targetPos = targetReceiver.model.position;
+                const distance = new THREE.Vector2(worldPos.x, worldPos.z).distanceTo(new THREE.Vector2(targetPos.x, targetPos.z));
+                throwForceForward = Math.max(8, distance * 1.6); // Più è lontano, più forte lancia
+                throwForceUpward = Math.min(6, distance * 0.4 + 2); // Crea una piccola parabola perfetta
+            }
+
             const impulse = new THREE.Vector3(
                 throwDir.x * throwForceForward, throwForceUpward, throwDir.z * throwForceForward
             );

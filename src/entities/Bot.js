@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 import { PlayerAnimator } from '../animation-action/PlayerAnimation.js';
+import { PlayerAction } from '../animation-action/PlayerAction.js';
 
 export class Bot {
     constructor(scene, ball, startPos, startYaw) {
@@ -12,6 +13,7 @@ export class Bot {
         this.model = null;
 
         this.animator = new PlayerAnimator();
+        this.action = new PlayerAction();
 
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
@@ -49,6 +51,40 @@ export class Bot {
     // AGGIUNTI PARAMETRI: opponents (Player + Teammates) e bots
     update(deltaTime, isMatchStarted = true, matchState = 'HOME_POSSESSION', defendDirX = 1, opponents = [], bots = []) {
         if (!this.model) return;
+        if (this.isThrowingIn) {
+            this.throwInTimer += deltaTime;
+
+            // Tempistiche (simula il tempo in cui guarda i compagni prima di lanciare)
+            const waitTime = 1.0;      // Rimane fermo 1 secondo
+            const releaseTime = waitTime + 0.55; // Momento esatto dello snap in avanti
+            const endTime = releaseTime + 0.4;   // Fine completa dell'animazione
+
+            let isThrowingInAnim = false;
+            let isThrowingInState = true; // True = palla ferma dietro la nuca
+
+            if (this.throwInTimer >= waitTime) {
+                isThrowingInState = false;
+                isThrowingInAnim = true; // Fa partire le braccia
+
+                // Rilascia fisicamente la palla al momento giusto
+                if (this.throwInTimer >= releaseTime && this.ball.isHeld) {
+                    // Aggiunge una leggerissima imprecisione casuale all'angolo di lancio del bot
+                    const botThrowYaw = this.yaw + (Math.random() * 0.3 - 0.15); 
+                    this.action.executeThrow(this.ball, botThrowYaw, this.scene);
+                }
+            }
+
+            // A lancio concluso, ridiamo il controllo all'IA
+            if (this.throwInTimer >= endTime) {
+                this.isThrowingIn = false;
+                isThrowingInAnim = false;
+                this.animator.resetToBasePose(); 
+            }
+
+            // Aggiorna lo scheletro e blocca (return) l'esecuzione della normale IA
+            this.animator.animate(deltaTime, isThrowingInAnim, false, false, isThrowingInState, null, 0);
+            return; 
+        }
         
         this.isRunning = false;
         this.isMoving = false;
@@ -73,7 +109,20 @@ export class Bot {
         }
 
         this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+        const currentRot = this.model.rotation.y;
+        const targetRot = this.yaw;
+        
+        // Calcola la distanza più breve tra i due angoli
+        let diff = targetRot - currentRot;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        
+        // Gira il modello fluidamente (velocità 10)
+        this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+        // --- FINE FIX ROTAZIONE ---
+
         this.handleCollisions();
+        
     }
 
    executeDefendBehavior(deltaTime, defendDirX, opponents, bots) {
@@ -185,5 +234,19 @@ export class Bot {
                 }
             }
         }
+    }
+
+    // Aggiungi questo metodo dove preferisci nella classe Bot (es. sotto loadGLB)
+    startThrowIn() {
+        this.isThrowingIn = true;
+        this.throwInTimer = 0;
+        
+        // Blocca i movimenti residui
+        this.isMoving = false;
+        this.isRunning = false;
+        
+        // Passa l'osso della mano all'azione per fargli afferrare la palla
+        const rightHand = this.animator.bones.rightHand;
+        this.action.startThrowIn(this.ball, rightHand);
     }
 }

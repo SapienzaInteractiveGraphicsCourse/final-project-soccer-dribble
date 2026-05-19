@@ -73,7 +73,7 @@ export class MatchManager {
     setupCornerEvent() {
         document.addEventListener('cornerKicked', () => {
             if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
-            
+
             // --- FIX PORTIERE ---
             // Lasciamo fare tutto a restoreGoalkeeper() che gestisce correttamente anche l'IA
             this.restoreGoalkeeper();
@@ -102,15 +102,15 @@ export class MatchManager {
 
             // Tasto rapido per rimettere a posto la palla in allenamento
             if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick')) {
-                 this.startGame(this.gameMode);
-                 this.uiManager.showInGameMessage("PALLA RIPOSIZIONATA");
+                this.startGame(this.gameMode);
+                this.uiManager.showInGameMessage("PALLA RIPOSIZIONATA");
             }
 
             if (e.code === 'KeyE') {
                 if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; // Blocca cambio in allenamento
                 if (this.isControllingGK) return; // BLOCCO: Non puoi cambiare giocatore mentre rinvii
                 if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
-                
+
                 const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
                 const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
                 this.switchCharacter(distT1 < distT2 ? this.currentT1 : this.currentT2);
@@ -130,9 +130,9 @@ export class MatchManager {
         document.dispatchEvent(new CustomEvent('bonusCleared'));
         // --- INIZIO FIX: RESET BONUS AL CAMBIO GIOCATORE ---
         if (this.player.action && (this.player.action.hasSuperShot || this.player.action.hasElectricShot)) {
-            this.player.action.hasSuperShot = false; 
+            this.player.action.hasSuperShot = false;
             this.player.action.hasElectricShot = false;
-            
+
             // Spegne il bagliore (glow) dal vecchio corpo
             if (this.player.action.glowingModel) {
                 this.player.action.glowingModel.traverse((child) => {
@@ -144,13 +144,13 @@ export class MatchManager {
                 });
                 this.player.action.glowingModel = null;
             }
-            
+
             // Spegne la palla infuocata
             if (window.fireTrailEffect) {
                 window.fireTrailEffect.deactivate();
             }
         }
-      
+
 
         this.player.action.chargingAction = null;
         this.player.action.isThrowingIn = false;
@@ -161,7 +161,7 @@ export class MatchManager {
         const tempModel = this.player.model;
         this.player.model = teammate.model;
         teammate.model = tempModel;
-    
+
 
         const tempAnimator = this.player.animator;
         this.player.animator = teammate.animator;
@@ -172,7 +172,7 @@ export class MatchManager {
         teammate.yaw = tempYaw;
 
         if (teammate.boost === undefined) {
-            teammate.boost = 0; 
+            teammate.boost = 0;
         }
 
         // Scambiamo la percentuale di boost tra te e il compagno
@@ -182,7 +182,7 @@ export class MatchManager {
 
         if (this.ball && this.ball.mesh) {
             const targetYaw = Math.atan2(
-                this.ball.position.x - this.player.model.position.x, 
+                this.ball.position.x - this.player.model.position.x,
                 this.ball.position.z - this.player.model.position.z
             );
             this.player.yaw = targetYaw;
@@ -193,7 +193,7 @@ export class MatchManager {
         this.camera.position.copy(this.player.model.position.clone().add(offset));
 
         const cameraTarget = this.player.model.position.clone();
-        cameraTarget.y += 1.5; 
+        cameraTarget.y += 1.5;
         this.camera.lookAt(cameraTarget);
     }
 
@@ -201,7 +201,7 @@ export class MatchManager {
     startGame(mode) {
         this.gameMode = mode;
         this.player.isTraining = (mode === 'penalty' || mode === 'freekick'); // Imposta lo stato di allenamento
-        
+
         if (mode === '2-1' || mode === '1-2') {
             this.currentFormation = mode;
             this.resetKickOff();
@@ -212,12 +212,12 @@ export class MatchManager {
             this.setupFreeKick();
             this.uiManager.showInGameMessage("ALLENAMENTO PUNIZIONI<br><span style='font-size:20px'>Premi 'R' per riposizionare</span>");
         }
-        
+
         // Reset Telecamera dietro al giocatore
         const offset = this.player.cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), this.player.yaw);
         this.camera.position.copy(this.player.model.position.clone().add(offset));
         const cameraTarget = this.player.model.position.clone();
-        cameraTarget.y += 1.5; 
+        cameraTarget.y += 1.5;
         this.camera.lookAt(cameraTarget);
     }
 
@@ -225,9 +225,9 @@ export class MatchManager {
         this.playerTeam = 'home';
         this.homeScore = 0;
         this.awayScore = 0;
-        
+
         // Dischetto del rigore
-        this.ball.position.set(37.5, this.ball.radius, 0); 
+        this.ball.position.set(37.5, this.ball.radius, 0);
         this.ball.velocity.set(0, 0, 0);
         this.ball.isGoal = false;
         this.ball.isOut = false;
@@ -248,8 +248,8 @@ export class MatchManager {
         // Posiziona il portiere nemico sulla linea e nascondi il nostro
         if (this.awayGK.model) {
             this.awayGK.model.position.set(48.5, 0, 0);
-            this.awayGK.model.rotation.y = 3/2 * Math.PI;
-            this.awayGK.yaw = 3/2 * Math.PI;
+            this.awayGK.model.rotation.y = 3 / 2 * Math.PI;
+            this.awayGK.yaw = 3 / 2 * Math.PI;
             this.awayGK.isSwappedOut = false;
         }
         if (this.homeGK.model) { this.homeGK.model.position.set(-48.5, -100, 0); }
@@ -259,11 +259,11 @@ export class MatchManager {
         this.playerTeam = 'home';
         this.homeScore = 0;
         this.awayScore = 0;
-        
+
         // Zona limite area, angolata
         const ballX = 25.0;
         const ballZ = -12.0;
-        this.ball.position.set(ballX, this.ball.radius, ballZ); 
+        this.ball.position.set(ballX, this.ball.radius, ballZ);
         this.ball.velocity.set(0, 0, 0);
         this.ball.isGoal = false;
         this.ball.isOut = false;
@@ -277,9 +277,9 @@ export class MatchManager {
         }
 
         // Crea la barriera! (Usiamo i Bot)
-        if (this.currentO1.model) { this.currentO1.model.position.set(34, 0, -6); this.currentO1.model.rotation.y = 3/2 * Math.PI; }
-        if (this.currentO2.model) { this.currentO2.model.position.set(34, 0, -7.5); this.currentO2.model.rotation.y = 3/2 * Math.PI; }
-        if (this.currentO3.model) { this.currentO3.model.position.set(34, 0, -9); this.currentO3.model.rotation.y = 3/2 * Math.PI; }
+        if (this.currentO1.model) { this.currentO1.model.position.set(34, 0, -6); this.currentO1.model.rotation.y = 3 / 2 * Math.PI; }
+        if (this.currentO2.model) { this.currentO2.model.position.set(34, 0, -7.5); this.currentO2.model.rotation.y = 3 / 2 * Math.PI; }
+        if (this.currentO3.model) { this.currentO3.model.position.set(34, 0, -9); this.currentO3.model.rotation.y = 3 / 2 * Math.PI; }
 
         [this.currentT1, this.currentT2].forEach(npc => {
             if (npc.model) npc.model.position.set(0, -100, 0);
@@ -287,8 +287,8 @@ export class MatchManager {
 
         if (this.awayGK.model) {
             this.awayGK.model.position.set(48.5, 0, 0);
-            this.awayGK.model.rotation.y = 3/2 * Math.PI;
-            this.awayGK.yaw = 3/2 * Math.PI;
+            this.awayGK.model.rotation.y = 3 / 2 * Math.PI;
+            this.awayGK.yaw = 3 / 2 * Math.PI;
             this.awayGK.isSwappedOut = false;
         }
         if (this.homeGK.model) { this.homeGK.model.position.set(-48.5, -100, 0); }
@@ -299,19 +299,19 @@ export class MatchManager {
         this.ball.velocity.set(0, 0, 0);
         this.ball.isGoal = false;
         this.ball.isOut = false;
-        this.ball.isOutBaseline = false; 
-        
+        this.ball.isOutBaseline = false;
+
         if (this.currentFormation === '2-1' || this.currentFormation === '1-2') {
             // Dato che giochiamo sempre in 'home', posizioniamo direttamente i giocatori
             if (this.player.model) {
-                this.player.model.position.set(-1.5, 0, 0); 
+                this.player.model.position.set(-1.5, 0, 0);
             }
-            if (this.currentT1.model) { this.currentT1.model.position.set(-15, 0, 15);} 
+            if (this.currentT1.model) { this.currentT1.model.position.set(-15, 0, 15); }
             if (this.currentT2.model) { this.currentT2.model.position.set(-15, 0, -15); }
 
-            if (this.currentO1.model) { this.currentO1.model.position.set(10.5, 0, 0); this.currentO1.model.rotation.y = 3/2 * Math.PI;}
-            if (this.currentO2.model) { this.currentO2.model.position.set(20, 0, -15); this.currentO2.model.rotation.y = 3/2 * Math.PI; }
-            if (this.currentO3.model) { this.currentO3.model.position.set(20, 0, 15); this.currentO3.model.rotation.y = 3/2 * Math.PI; }
+            if (this.currentO1.model) { this.currentO1.model.position.set(10.5, 0, 0); this.currentO1.model.rotation.y = 3 / 2 * Math.PI; }
+            if (this.currentO2.model) { this.currentO2.model.position.set(20, 0, -15); this.currentO2.model.rotation.y = 3 / 2 * Math.PI; }
+            if (this.currentO3.model) { this.currentO3.model.position.set(20, 0, 15); this.currentO3.model.rotation.y = 3 / 2 * Math.PI; }
 
             if (this.homeGK.model) {
                 this.homeGK.model.position.set(-48.5, 0, 0);
@@ -320,8 +320,8 @@ export class MatchManager {
             }
             if (this.awayGK.model) {
                 this.awayGK.model.position.set(48.5, 0, 0);
-                this.awayGK.model.rotation.y = 3/2 * Math.PI;
-                this.awayGK.yaw = 3/2 * Math.PI;
+                this.awayGK.model.rotation.y = 3 / 2 * Math.PI;
+                this.awayGK.yaw = 3 / 2 * Math.PI;
             }
         }
     }
@@ -336,8 +336,8 @@ export class MatchManager {
 
             // Creiamo una lista di tutti i possibili giocatori in campo
             const allParticipants = [
-                this.player, this.currentT1, this.currentT2, 
-                this.currentO1, this.currentO2, this.currentO3, 
+                this.player, this.currentT1, this.currentT2,
+                this.currentO1, this.currentO2, this.currentO3,
                 this.homeGK, this.awayGK
             ];
 
@@ -377,25 +377,25 @@ export class MatchManager {
                     }
                 }
             }
-        }        
+        }
 
         // Logica Goal
         if (this.ball.isGoal && !this.isCelebrating) {
             this.isCelebrating = true;
             if (this.ball.position.x > 0) {
-                this.homeScore++; 
-                this.kickOffTeam = 'away'; 
+                this.homeScore++;
+                this.kickOffTeam = 'away';
                 this.uiManager.showInGameMessage(this.playerTeam === 'home' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO / AUTOGOAL 🤦‍♂️");
             } else {
                 this.awayScore++;
-                this.kickOffTeam = 'home'; 
+                this.kickOffTeam = 'home';
                 this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO / AUTOGOAL 🤦‍♂️");
             }
-            
+
             // Lancia l'evento del replay dopo 1.5s (permette di vedere un po' di esultanza dal vivo prima del replay)
             setTimeout(() => {
                 document.dispatchEvent(new CustomEvent('triggerReplay'));
-            }, 1500); 
+            }, 1500);
         }
 
         // Fuorigioco / Rimesse / Corner
@@ -409,24 +409,24 @@ export class MatchManager {
                 return;
             }
 
-            const fieldEndX = 49.5; 
-            const fieldEndZ = 30.5; 
-            
-            const isRightSide = this.ball.position.x > 0; 
+            const fieldEndX = 49.5;
+            const fieldEndZ = 30.5;
+
+            const isRightSide = this.ball.position.x > 0;
             const isTopCorner = this.ball.position.z > 0;
-            const defendingTeam = isRightSide ? 'away' : 'home'; 
+            const defendingTeam = isRightSide ? 'away' : 'home';
             const isCornerKick = this.lastTouchedTeam === defendingTeam;
             const attackingTeam = isCornerKick ? (defendingTeam === 'home' ? 'away' : 'home') : defendingTeam;
 
 
             const ballX = isCornerKick ? (isRightSide ? fieldEndX : -fieldEndX) : (isRightSide ? 44.0 : -44.0);
             // ... continua con il posizionamento della palla ...
-            const ballZ = isCornerKick ? (isTopCorner ? fieldEndZ : -fieldEndZ) : 0; 
-            const targetFocusX = isRightSide ? 40 : -40; 
+            const ballZ = isCornerKick ? (isTopCorner ? fieldEndZ : -fieldEndZ) : 0;
+            const targetFocusX = isRightSide ? 40 : -40;
             const targetYaw = Math.atan2(targetFocusX - ballX, 0 - ballZ);
 
             this.ball.position.set(ballX, this.ball.radius, ballZ);
-            this.ball.velocity.set(0,0,0);
+            this.ball.velocity.set(0, 0, 0);
 
             let activeSetPieceNPC = null;
 
@@ -434,24 +434,24 @@ export class MatchManager {
                 if (!isCornerKick) {
                     const activeGK = this.homeGK;
                     this.switchCharacter(activeGK);
-                    
-                    this.isControllingGK = true;     
-                    this.controlledGK = activeGK;  
-                    this.controlledGK.isSwappedOut = true; 
+
+                    this.isControllingGK = true;
+                    this.controlledGK = activeGK;
+                    this.controlledGK.isSwappedOut = true;
                 } else {
-                    this.restoreGoalkeeper(); 
+                    this.restoreGoalkeeper();
                 }
 
                 this.player.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
                 this.player.yaw = targetYaw;
                 this.player.model.rotation.y = targetYaw;
-                
+
                 if (isCornerKick) {
                     this.player.action.startCorner(this.ball);
                 }
             } else {
                 this.restoreGoalkeeper();
-                
+
                 if (isCornerKick) {
                     let closestBot = this.currentO1;
                     let minDist = Infinity;
@@ -505,9 +505,14 @@ export class MatchManager {
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
             this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);
         }
+        // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---
+        const allBots = [this.currentO1, this.currentO2, this.currentO3, this.currentT1, this.currentT2];
+        const isAnyBotThrowingIn = allBots.some(bot => bot && bot.isThrowingIn);
 
-        if (this.ball.isOut && !this.player.isThrowingIn && !this.ball.isGoal) {
+        // Aggiungi !isAnyBotThrowingIn alla condizione
+        if (this.ball.isOut && !this.player.isThrowingIn && !isAnyBotThrowingIn && !this.ball.isGoal) {
             this.ball.isOut = false;
+            // --- FINE FIX ---
 
             if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
                 this.uiManager.showInGameMessage("RITENTA!<br><span style='font-size:20px'>Premi 'R' per riposizionare</span>");
@@ -520,7 +525,7 @@ export class MatchManager {
 
             const side = this.ball.position.z > 0 ? 1 : -1;
             const outOfBoundsOffset = 1.5;
-            
+
             if (throwInTeam === this.playerTeam) {
                 this.player.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
                 this.player.yaw = side > 0 ? Math.PI : 0;
@@ -546,9 +551,8 @@ export class MatchManager {
                 throwerBot.yaw = botYaw;
                 throwerBot.model.rotation.y = botYaw;
 
-                this.ball.position.set(throwerBot.model.position.x, 1.5, throwerBot.model.position.z);
-                this.ball.velocity.set(0, 0, 0);
-                this.ball.isHeld = true; // Trattieni la palla senza lanciarla
+                // Il bot avvia la propria procedura di lancio integrata
+                throwerBot.startThrowIn();
 
                 this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
             }
@@ -558,12 +562,12 @@ export class MatchManager {
     restoreGoalkeeper() {
         if (this.isControllingGK && this.controlledGK) {
             this.controlledGK.isSwappedOut = false; // Riattiva l'IA del portiere
-            
+
             // --- FIX ANIMAZIONE ---
             // Cancella la memoria del caricamento tiro prima di ridargli il corpo
             // così lo scheletro torna dritto.
-            this.player.animator.cancelCharge(); 
-            
+            this.player.animator.cancelCharge();
+
             this.switchCharacter(this.controlledGK); // Ridagli il corpo!
             this.isControllingGK = false;
             this.controlledGK = null;
@@ -572,17 +576,17 @@ export class MatchManager {
 
     resetAfterGoal() {
         this.restoreGoalkeeper();
-        
+
         if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
             this.startGame(this.gameMode); // Resetta istantaneamente se fa gol in allenamento
         } else {
             this.resetKickOff();
-            
+
             // Reset della telecamera standard
             const offset = this.player.cameraOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), this.player.yaw);
             this.camera.position.copy(this.player.model.position.clone().add(offset));
             const cameraTarget = this.player.model.position.clone();
-            cameraTarget.y += 1.5; 
+            cameraTarget.y += 1.5;
             this.camera.lookAt(cameraTarget);
         }
 

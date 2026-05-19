@@ -50,8 +50,8 @@ export class PlayerAction {
 
             // Spingiamo la palla avanti per evitare collisioni col corpo
             worldPos.addScaledVector(throwDir, 0.8);
-            const safeX = 35 - 0.5;
-            const safeZ = 31 - 0.5;
+            const safeX = 49.5 - 0.5;
+            const safeZ = 30.5 - 0.5;
             worldPos.x = Math.max(-safeX, Math.min(safeX, worldPos.x));
             worldPos.z = Math.max(-safeZ, Math.min(safeZ, worldPos.z));
 

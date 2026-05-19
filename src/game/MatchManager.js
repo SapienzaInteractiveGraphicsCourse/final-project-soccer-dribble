@@ -453,23 +453,43 @@ export class MatchManager {
                 this.restoreGoalkeeper();
 
                 if (isCornerKick) {
-                    let closestBot = this.currentO1;
-                    let minDist = Infinity;
+                    let closestBot = null;
+                    let secondClosestBot = null;
+                    let minDist1 = Infinity;
+                    let minDist2 = Infinity;
+
+                    // Calcolo delle distanze per estrarre sia il battitore che il ricevitore vicino
                     [this.currentO1, this.currentO2, this.currentO3].forEach(bot => {
                         if (bot && bot.model) {
                             const dist = bot.model.position.distanceTo(new THREE.Vector3(ballX, 0, ballZ));
-                            if (dist < minDist) {
-                                minDist = dist;
+                            if (dist < minDist1) {
+                                minDist2 = minDist1;
+                                secondClosestBot = closestBot;
+                                
+                                minDist1 = dist;
                                 closestBot = bot;
+                            } else if (dist < minDist2) {
+                                minDist2 = dist;
+                                secondClosestBot = bot;
                             }
                         }
                     });
 
                     const kickerBot = closestBot;
+                    const receiverBot = secondClosestBot;
+
+                    // Posiziona il battitore dietro la palla nella bandierina
                     kickerBot.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
                     kickerBot.yaw = targetYaw;
                     kickerBot.model.rotation.y = targetYaw;
-                    this.ball.isHeld = true;
+                    
+                    // Avvia lo stato cooperativo del Calcio d'Angolo
+                    kickerBot.startCorner(receiverBot);
+                    
+                    if (receiverBot) {
+                        receiverBot.setReceiveCornerTarget(kickerBot.model.position, ballX, ballZ);
+                    }
+                    
                     activeSetPieceNPC = kickerBot;
                 } else {
                     const botGK = this.awayGK;

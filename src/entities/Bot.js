@@ -34,6 +34,10 @@ export class Bot {
         this.isReceivingGoalKick = false;
         this.goalKickRunDir = 1;
 
+        // --- STATI CALCIO D'INIZIO ---
+        this.isTakingKickOff = false;
+        this.kickOffTimer = 0;
+
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
@@ -358,6 +362,50 @@ export class Bot {
             }
         }
         
+        // --- 4.8 GESTIONE BATTITORE CALCIO D'INIZIO ---
+        if (this.isTakingKickOff) {
+            this.kickOffTimer += deltaTime;
+
+            if (this.targetReceiver && this.targetReceiver.model) {
+                this.yaw = Math.atan2(
+                    this.targetReceiver.model.position.x - this.model.position.x,
+                    this.targetReceiver.model.position.z - this.model.position.z
+                );
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+            }
+
+            const waitTime = 1.0;
+            const kickTime = waitTime + 0.35;
+            const endTime = kickTime + 0.4;
+
+            if (this.kickOffTimer >= waitTime && this.kickOffTimer < kickTime) {
+                if (!this.action.chargingAction) {
+                    this.action.startCharge('pass');
+                }
+                this.action.updateCharge(deltaTime, null);
+            }
+
+            if (this.kickOffTimer >= kickTime && this.action.chargingAction) {
+                let passTarget = this.targetReceiver;
+                this.action.executeKick(this.ball, this.yaw, 0, null, passTarget);
+                this.targetReceiver = null;
+            }
+
+            if (this.kickOffTimer >= endTime) {
+                this.isTakingKickOff = false;
+                this.animator.resetToBasePose();
+            }
+
+            let chargingAnim = (this.kickOffTimer >= waitTime && this.kickOffTimer < kickTime) ? 'pass' : null;
+            let chargeRatio = this.action.getChargeRatio();
+            this.animator.animate(deltaTime, false, false, false, false, chargingAnim, chargeRatio);
+            return;
+        }
+
         // --- 5. COMPORTAMENTO IA STANDARD ---
         this.isRunning = false;
         this.isMoving = false;
@@ -484,6 +532,17 @@ export class Bot {
                     }
                 }
             }
+        }
+    }
+
+    startKickOff(receiver = null) {
+        this.isTakingKickOff = true;
+        this.kickOffTimer = 0;
+        this.targetReceiver = receiver;
+        this.isMoving = false;
+        this.isRunning = false;
+        if (this.ball) {
+            this.ball.velocity.set(0, 0, 0);
         }
     }
 

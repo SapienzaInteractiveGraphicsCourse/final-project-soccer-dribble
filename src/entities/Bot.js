@@ -57,9 +57,6 @@ export class Bot {
             if (this.ball && this.ball.isLoaded) {
                 this._dirToBall.subVectors(this.ball.position, this.model.position);
                 this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
-                this.model.rotation.y = THREE.MathUtils.lerp(
-                    this.model.rotation.y, this.yaw, deltaTime * 15
-                );
             }
             this.animator.animate(deltaTime, false, false, false, false, null, 0);
             return; 
@@ -74,10 +71,6 @@ export class Bot {
                 this.executeAttackBehavior(deltaTime);
                 break;
         }
-
-        this.model.rotation.y = THREE.MathUtils.lerp(
-            this.model.rotation.y, this.yaw, deltaTime * 15
-        );
 
         this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
         this.handleCollisions();

@@ -30,6 +30,10 @@ export class Bot {
         this.cornerSupportPos = new THREE.Vector3();
         this.cornerTargetGoalX = 0; // Memorizza quale porta attaccare
 
+        // --- STATI RIMESSA DAL FONDO ---
+        this.isReceivingGoalKick = false;
+        this.goalKickRunDir = 1;
+
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
@@ -304,6 +308,43 @@ export class Bot {
             this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
             return;
         }
+
+        // --- 4.5. GESTIONE RICEVITORE RIMESSA DAL FONDO ---
+        if (this.isReceivingGoalKick) {
+            if (!this.ball.isHeld && this.ball.velocity.lengthSq() > 5.0) {
+                const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                                     .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
+                
+                // Interrompe la routine se la palla tocca terra o è a distanza di controllo palla
+                if (distToBallXZ < 3.0 || this.ball.position.y <= this.ball.radius + 0.1) {
+                    this.isReceivingGoalKick = false;
+                } else {
+                    this.isMoving = true;
+                    this.isRunning = true;
+                    this._moveDir.set(this.ball.position.x - this.model.position.x, 0, this.ball.position.z - this.model.position.z).normalize();
+                    this.model.position.addScaledVector(this._moveDir, 11 * deltaTime); // Insegue la traiettoria
+                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                }
+            } else {
+                this.isMoving = true;
+                this.isRunning = true;
+                this._moveDir.set(this.goalKickRunDir, 0, 0); // Scatta in avanti
+                this.model.position.addScaledVector(this._moveDir, 10 * deltaTime);
+                this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+            }
+
+            if (this.isReceivingGoalKick) {
+                this.model.position.x = THREE.MathUtils.clamp(this.model.position.x, -48, 48);
+                this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+                this.handleCollisions();
+                return;
+            }
+        }
         
         // --- 5. COMPORTAMENTO IA STANDARD ---
         this.isRunning = false;
@@ -475,5 +516,10 @@ export class Bot {
             0,
             (Math.random() * 8 - 4) 
         );
+    }
+
+    setReceiveGoalKickTarget(dirX) {
+        this.isReceivingGoalKick = true;
+        this.goalKickRunDir = dirX;
     }
 }

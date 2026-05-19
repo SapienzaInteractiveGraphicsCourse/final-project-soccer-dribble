@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 import { GoalKeeperAnimator } from '../animation-action/GoalKeeperAnimation.js';
+import { PlayerAction } from '../animation-action/PlayerAction.js';
 
 export class GoalKeeper {
     constructor(scene, ball, team, startPos, startYaw) {
@@ -13,6 +14,11 @@ export class GoalKeeper {
         this.model = null;
         this.isSwappedOut = false;
         this.animator = new GoalKeeperAnimator(); // Torniamo al tuo animatore base
+        this.action = new PlayerAction();
+
+        this.isTakingGoalKick = false;
+        this.goalKickTimer = 0;
+        this.targetReceiver = null;
 
         // --- FISICA ---
         // Raggio della Hitbox sferica del portiere
@@ -51,12 +57,69 @@ export class GoalKeeper {
         });
     }
 
+    startGoalKick(receiver = null) {
+        this.isTakingGoalKick = true;
+        this.goalKickTimer = 0;
+        this.targetReceiver = receiver;
+        this.ball.isHeld = true; 
+        this.ball.velocity.set(0,0,0);
+    }
+
     update(deltaTime, activePlayerModel) {
         if (!this.model) return;
 
         if (this.model === activePlayerModel) return;
 
         if (this.isSwappedOut) return;
+
+        // --- LOGICA RIMESSA DAL FONDO (Goal Kick) ---
+        if (this.isTakingGoalKick) {
+            this.goalKickTimer += deltaTime;
+
+            let futurePos = null;
+            if (this.targetReceiver && this.targetReceiver.model) {
+                futurePos = this.targetReceiver.model.position.clone();
+                // Prevediamo dove si troverà il giocatore basandoci sulla sua corsa
+                if (this.targetReceiver.isReceivingGoalKick && this.targetReceiver.goalKickRunDir) {
+                    futurePos.x += this.targetReceiver.goalKickRunDir * 10 * 0.8; 
+                }
+                this.yaw = Math.atan2(
+                    futurePos.x - this.model.position.x,
+                    futurePos.z - this.model.position.z
+                );
+                
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+            }
+
+            const waitTime = 1.0;
+            const kickTime = waitTime + 0.35;
+            const endTime = kickTime + 0.4;
+
+            if (this.goalKickTimer >= waitTime && this.goalKickTimer < kickTime) {
+                if (!this.action.chargingAction) this.action.startCharge('pass');
+                this.action.updateCharge(deltaTime, null);
+            }
+
+            if (this.goalKickTimer >= kickTime && this.action.chargingAction) {
+                this.ball.isHeld = false;
+                let fakeTarget = futurePos ? { model: { position: futurePos } } : null;
+                this.action.executeKick(this.ball, this.yaw, -0.2, null, fakeTarget);
+                this.targetReceiver = null;
+            }
+
+            if (this.goalKickTimer >= endTime) {
+                this.isTakingGoalKick = false;
+                this.animator.resetToBasePose();
+            }
+
+            let chargingAnim = (this.goalKickTimer >= waitTime && this.goalKickTimer < kickTime) ? 'pass' : null;
+            this.animator.animate(deltaTime, false, false, false, false, chargingAnim, this.action.getChargeRatio());
+            return;
+        }
 
         // --- IA DEL PORTIERE ---
         // 1. Calcola la linea di porta

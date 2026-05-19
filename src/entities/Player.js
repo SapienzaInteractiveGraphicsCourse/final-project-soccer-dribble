@@ -214,7 +214,7 @@ export class Player {
         // --- NUOVA LOGICA DIREZIONE MOVIMENTO (Lock-on sulla palla) ---
         let dir, right;
 
-        if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner) {
+        if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick) {
             // 1. Calcoliamo la direzione dal giocatore verso la palla sul piano XZ
             dir = new THREE.Vector3()
                 .subVectors(this.ball.position, this.model.position)
@@ -239,7 +239,7 @@ export class Player {
         let isChargingAnim = this.action.chargingAction;
 
         // Controlliamo se il giocatore può muoversi
-        const canMove = !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.chargingAction && !this.animator.isSliding;
+        const canMove = !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.action.chargingAction && !this.animator.isSliding;
 
         // --- LOGICA CONSUMO BOOST ---
         const isPressingMovement = (this.keys.forward || this.keys.backward || this.keys.left || this.keys.right) && canMove;
@@ -334,7 +334,7 @@ export class Player {
             // 3. Ruotiamo il modello fluidamente verso quell'angolo
             this.model.rotation.y += shortestAngle * deltaTime * this.modelRotationSpeed;
 
-        } else if ((moving || this.action.isThrowingIn || this.action.isTakingCorner) && !this.animator.isSliding) {
+        } else if ((moving || this.action.isThrowingIn || this.action.isTakingCorner || this.action.isTakingGoalKick) && !this.animator.isSliding) {
             // Fallback originale: segue la direzione di corsa/mira se la palla non c'è o siamo su palla inattiva
             this.model.rotation.y = THREE.MathUtils.lerp(
                 this.model.rotation.y, this.yaw, deltaTime * this.modelRotationSpeed
@@ -346,7 +346,7 @@ export class Player {
         let targetOffset = this.cameraOffset; // Offset di base (0, 3.5, -8)
 
         // Se stiamo battendo un corner, la telecamera si avvicina molto e si abbassa un po'
-        if (this.action.isTakingCorner) {
+        if (this.action.isTakingCorner || this.action.isTakingGoalKick) {
             targetOffset = new THREE.Vector3(0, 2.5, -3);
         }
 
@@ -362,7 +362,7 @@ export class Player {
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn) {
 
             // --- COLLISIONE FISICA CORPO INTERO ---
-            if (!this.action.isTakingCorner && !this.animator.isSliding) {
+            if (!this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.animator.isSliding) {
                 const playerHeight = 1.8;
                 const playerRadius = 0.45; // Raggio della capsula aumentato per hitbox più solida
                 
@@ -473,6 +473,7 @@ export class Player {
                     // Spara automaticamente se abbiamo rilasciato il tasto o raggunto il 100% di carica
                     if (!this.kickButtonHeld || this.action.getChargeRatio() >= 1.0) {
                         const wasTakingCorner = this.action.isTakingCorner;
+                        const wasTakingGoalKick = this.action.isTakingGoalKick;
                         this.animator.lastChargeRatio = this.action.getChargeRatio();
                         
                         let passTarget = null;
@@ -488,6 +489,9 @@ export class Player {
                         this.action.executeKick(this.ball, this.yaw, this.pitch, this.passArrow, passTarget);
                         if (wasTakingCorner) {
                             document.dispatchEvent(new CustomEvent('cornerKicked'));
+                        }
+                        if (wasTakingGoalKick) {
+                            document.dispatchEvent(new CustomEvent('goalKicked'));
                         }
                         
                         if (passTarget) {

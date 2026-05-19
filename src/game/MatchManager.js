@@ -37,7 +37,7 @@ export class MatchManager {
         this.player.teammates = [this.currentT1, this.currentT2];
 
         this.setupInputHandling();
-        this.setupCornerEvent();
+        this.setupSetPieceEvents();
         this.setupPassEvent();
         this.setupAutoSwitchEvent(); // <--- AGGIUNGI QUESTO
 
@@ -70,7 +70,7 @@ export class MatchManager {
         });
     }
 
-    setupCornerEvent() {
+    setupSetPieceEvents() {
         document.addEventListener('cornerKicked', () => {
             if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
 
@@ -79,6 +79,17 @@ export class MatchManager {
             this.restoreGoalkeeper();
 
             // Normale auto-switch all'attaccante per ricevere la palla
+            const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
+            const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
+            const targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
+            this.switchCharacter(targetTeammate);
+        });
+
+        document.addEventListener('goalKicked', () => {
+            if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
+
+            this.restoreGoalkeeper();
+
             const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
             const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
             const targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
@@ -449,6 +460,9 @@ export class MatchManager {
                 if (isCornerKick) {
                     this.player.action.startCorner(this.ball);
                 }
+                else {
+                    this.player.action.startGoalKick(this.ball);
+                }
             } else {
                 this.restoreGoalkeeper();
 
@@ -496,7 +510,8 @@ export class MatchManager {
                     botGK.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
                     botGK.yaw = targetYaw;
                     botGK.model.rotation.y = targetYaw;
-                    this.ball.isHeld = true;
+
+                    botGK.startGoalKick(null); // Il target gli verrà assegnato poco più giù
                     activeSetPieceNPC = botGK;
                 }
             }
@@ -513,14 +528,35 @@ export class MatchManager {
                         randX = targetFocusX + (Math.random() * 8 - 4);
                         randZ = (Math.random() * 16 - 8);
                     } else {
-                        const midFieldX = isRightSide ? 20 : -20;
-                        randX = midFieldX + (Math.random() * 10 - 5);
+                        // Posizioni di partenza vicino alla propria area per farli scattare in avanti
+                        const startX = isRightSide ? 30 : -30;
+                        randX = startX + (Math.random() * 8 - 4);
                         randZ = (Math.random() * 20 - 10);
                     }
                     npc.model.position.set(randX, 0, randZ);
                     npc.model.rotation.y = Math.atan2(ballX - randX, ballZ - randZ);
+                    
+                    if (npc.isReceivingGoalKick !== undefined) npc.isReceivingGoalKick = false;
                 }
             });
+
+            // --- FIX RIMESSA DAL FONDO: I BOT SCATTANO IN AVANTI ---
+            if (!isCornerKick) {
+                const runDir = isRightSide ? -1 : 1; // Corrono verso la porta avversaria
+                
+                if (attackingTeam === this.playerTeam) {
+                    [this.currentT1, this.currentT2].forEach(bot => {
+                        if (bot && bot.model && bot.setReceiveGoalKickTarget) bot.setReceiveGoalKickTarget(runDir);
+                    });
+                } else {
+                    const receivers = [this.currentO1, this.currentO2, this.currentO3].filter(b => b && b.model);
+                    if (receivers.length > 0) {
+                        receivers[0].setReceiveGoalKickTarget(runDir);
+                        if (receivers.length > 1) receivers[1].setReceiveGoalKickTarget(runDir);
+                        if (activeSetPieceNPC && activeSetPieceNPC.startGoalKick) activeSetPieceNPC.targetReceiver = receivers[0];
+                    }
+                }
+            }
 
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
             this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);

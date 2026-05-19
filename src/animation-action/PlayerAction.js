@@ -5,6 +5,7 @@ export class PlayerAction {
     constructor() {
         this.isThrowingIn = false;
         this.isTakingCorner = false;
+        this.isTakingGoalKick = false;
         this.chargingAction = null;
         this.kickPower = 0;
 
@@ -124,6 +125,13 @@ export class PlayerAction {
             ball.velocity.set(0, 0, 0);
         }
     }
+    startGoalKick(ball) {
+        this.isTakingGoalKick = true;
+        if (ball) {
+            ball.velocity.set(0, 0, 0);
+        }
+    }
+
     executeKick(ball, yaw, pitch, passArrow, passTarget = null) {
         if (!ball || !ball.isLoaded || !this.chargingAction) return;
 
@@ -141,7 +149,13 @@ export class PlayerAction {
 
         // --- GESTIONE PASSAGGIO PRECISO CON PARABOLA ---
         if (this.chargingAction === 'pass' && passTarget && passTarget.model) {
-            const targetPos = passTarget.model.position;
+            let targetPos = passTarget.model.position.clone();
+            
+            // Precisione ottimale sulla corsa se il compagno sta scattando per la rimessa dal fondo
+            if (passTarget.isReceivingGoalKick && passTarget.goalKickRunDir) {
+                targetPos.x += passTarget.goalKickRunDir * 10 * 0.8;
+            }
+
             const distanceToTarget = new THREE.Vector2(ball.position.x, ball.position.z).distanceTo(new THREE.Vector2(targetPos.x, targetPos.z));
             
             const chargeRatio = this.getChargeRatio();
@@ -193,6 +207,7 @@ export class PlayerAction {
             this.chargingAction = null;
             this.kickPower = 0;
             if (this.isTakingCorner) this.isTakingCorner = false;
+            if (this.isTakingGoalKick) this.isTakingGoalKick = false;
             
             return; // Terminiamo l'esecuzione qui se è un passaggio
         }
@@ -244,6 +259,11 @@ export class PlayerAction {
         // --- POTENZA MAGGIORATA PER IL CALCIO D'ANGOLO ---
         if (this.isTakingCorner) {
             finalPower *= 1.2; // Aumenta la potenza del 60% per garantire che il cross arrivi in mezzo all'area
+        }
+
+        // --- POTENZA RIDOTTA PER LA RIMESSA DAL FONDO ---
+        if (this.isTakingGoalKick) {
+            finalPower *= 0.75; 
         }
 
         if (this.chargingAction === 'shoot' && (this.hasSuperShot || this.hasElectricShot)) {
@@ -344,6 +364,9 @@ export class PlayerAction {
 
         if (this.isTakingCorner) {
             this.isTakingCorner = false;
+        }
+        if (this.isTakingGoalKick) {
+            this.isTakingGoalKick = false;
         }
     }
 

@@ -41,7 +41,7 @@ export class Teammate {
             this.model = gltf.scene;
             this.model.scale.set(1.5, 1.5, 1.5);
             this.model.position.copy(this.startPosition);
-            this.model.rotation.y = this.yaw; // <--- Applichiamo la rotazione
+            this.model.rotation.y = #this.yaw; // <--- Applichiamo la rotazione
             
             this.model.traverse((child) => {
                 if (child.isMesh) { 

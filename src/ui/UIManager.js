@@ -48,7 +48,10 @@ export class UIManager {
                 
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: savedShirt } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: savedSkin } }));
-                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: savedHair } }));
+                // I capelli vengono applicati solo se c'è una scelta salvata diversa da '0'
+                if (savedHair !== '0') {
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: savedHair } }));
+                }
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: savedHairColor } }));
             }, 500);
         };
@@ -109,17 +112,17 @@ export class UIManager {
                                 <span style="font-size: 0.9rem; margin-top: 5px; color: white;">Nessuno</span>
                             </button>
                             <button class="menu-btn btn-hair" data-hair="1" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>  
+                                <model-viewer src="/models/hair_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>  
                             </button>
                             <button class="menu-btn btn-hair" data-hair="2" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_2.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
+                                <model-viewer src="/models/hair_2.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
                                 
                             </button>
                             <button class="menu-btn btn-hair" data-hair="3" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
+                                <model-viewer src="/models/hair_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
                             </button>
                             <button class="menu-btn btn-hair" data-hair="5" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
+                                <model-viewer src="/models/hair_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
                             </button>
                         </div>
                     </div>
@@ -141,6 +144,7 @@ export class UIManager {
                     </div>
 
                     <button id="btn-save-customization" class="${btnPlay.className}" style="margin-top: 20px; width: 100%;">SALVA E CONTINUA</button>
+                    <button id="btn-reset-customization" class="${btnPlay.className}" style="margin-top: 8px; width: 100%; background-color: #555; border-color: #555; font-size: 0.9rem;">↺ RESET PREDEFINITO</button>
                 </div>
                 <button id="btn-toggle-animation" class="${btnPlay.className}" style="position: absolute; bottom: 30px; right: 30px; font-size: 1.2rem; padding: 15px 30px; background-color: #f44336; border-color: #f44336; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">STOP ANIMAZIONE</button>
             `;
@@ -215,6 +219,40 @@ export class UIManager {
                 e.target.style.backgroundColor = isAnimationPaused ? '#4CAF50' : '#f44336';
                 e.target.style.borderColor = isAnimationPaused ? '#4CAF50' : '#f44336';
                 document.dispatchEvent(new CustomEvent('toggleCustomizationAnimation', { detail: { paused: isAnimationPaused } }));
+            });
+
+            document.getElementById('btn-reset-customization').addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                // Reset valori di default
+                const defaultShirt = '#ff0000';
+                const defaultSkin = '#ffccaa';
+                const defaultHairColor = '#000000';
+                selectedHair = '0';
+
+                // Aggiorna visivamente i color picker
+                document.getElementById('color-shirt').value = defaultShirt;
+                document.getElementById('color-skin').value = defaultSkin;
+                document.getElementById('color-hair').value = defaultHairColor;
+
+                // Applica le preview
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: defaultShirt } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: defaultSkin } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: '0' } }));
+
+                // Deseleziona tutti i bottoni capello e seleziona "Nessuno"
+                document.querySelectorAll('.btn-hair').forEach(b => {
+                    b.style.border = '2px solid transparent';
+                    b.style.backgroundColor = 'white';
+                });
+                const noneBtn = document.querySelector('.btn-hair[data-hair="0"]');
+                if (noneBtn) {
+                    noneBtn.style.border = '2px solid #4CAF50';
+                    noneBtn.style.backgroundColor = '#e8f5e9';
+                }
+
+                // Invia evento di reset al motore
+                document.dispatchEvent(new Event('resetCustomization'));
             });
 
             document.getElementById('btn-save-customization').addEventListener('click', (e) => {

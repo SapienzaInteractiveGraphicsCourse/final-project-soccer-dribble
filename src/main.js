@@ -103,22 +103,26 @@ document.addEventListener('wheel', (e) => {
 
 document.addEventListener('previewCustomization', (e) => {
     const { type, color, id } = e.detail;
-    // ... (shirt e skin rimangono uguali)
     
+    if (type === 'shirt') {
+        const hex = parseInt(color.replace('#', '0x'));
+        playerCustomizer.changeBaseColor('Ch38_Shirt', hex);
+    }
+    if (type === 'skin') {
+        const hex = parseInt(color.replace('#', '0x'));
+        playerCustomizer.changeBaseColor('Ch38_Body', hex);
+    }
     if (type === 'hair') {
-        playerCustomizer.toggleDefaultHair(false);
         if (id === "0") {
+            // Nessuno: rimuovi capello custom e nascondi anche quello di default → calvo
             playerCustomizer.removeAccessory('hair');
+            playerCustomizer.toggleDefaultHair(false);
         } else {
-            // 1. Posizione (usa i valori che hai sistemato prima)
+            // Capello custom: nascondi quello di default e equipaggia il custom
+            playerCustomizer.toggleDefaultHair(false);
             const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
-            
-            // 2. Rotazione (X, Y, Z). Es: per ruotarli di 180° sull'asse Y (destra/sinistra)
             const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
-            
-            // 3. Scala (Grandezza). Es: 1.2 li rende del 20% più grandi
             const hairScale = 1.3; 
-            
             playerCustomizer.equipAccessory(
                 '/models/hair_' + id + '.glb', 
                 'head', 
@@ -132,6 +136,14 @@ document.addEventListener('previewCustomization', (e) => {
     if (type === 'hairColor') {
         playerCustomizer.changeHairColor(color);
     }
+});
+
+document.addEventListener('resetCustomization', () => {
+    // Ripristina i valori di default
+    playerCustomizer.toggleDefaultHair(true);
+    playerCustomizer.removeAccessory('hair');
+    playerCustomizer.changeBaseColor('Ch38_Shirt', 0xff0000);
+    playerCustomizer.changeBaseColor('Ch38_Body', 0xffccaa);
 });
 
 document.addEventListener('customizePlayer', (e) => {

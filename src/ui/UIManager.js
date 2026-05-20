@@ -38,7 +38,13 @@ export class UIManager {
             
             setTimeout(() => {
                 this.loadingScreen.style.display = 'none';
-                this.mainMenu.style.display = 'flex';
+                this.customizationMenu.style.display = 'flex';
+                document.dispatchEvent(new Event('customizePlayerStart'));
+                
+                const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
+                const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: savedShirt } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: savedSkin } }));
             }, 500);
         };
     }
@@ -59,6 +65,77 @@ export class UIManager {
             trainingBtn.innerText = 'TRAINING';
             trainingBtn.style.marginTop = '15px';
             btnPlay.parentNode.insertBefore(trainingBtn, btnPlay.nextSibling);
+
+            const btnCustomize = document.createElement('button');
+            btnCustomize.id = 'btn-customize';
+            btnCustomize.className = btnPlay.className;
+            btnCustomize.innerText = 'PERSONALIZZA GIOCATORE';
+            btnCustomize.style.marginTop = '15px';
+            btnPlay.parentNode.insertBefore(btnCustomize, trainingBtn.nextSibling);
+
+            const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
+            const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
+
+            // --- MENU PERSONALIZZAZIONE ---
+            const customizationMenu = document.createElement('div');
+            customizationMenu.id = 'customization-menu';
+            customizationMenu.className = this.formationMenu.className;
+            customizationMenu.style.display = 'none';
+            customizationMenu.style.flexDirection = 'row';
+            customizationMenu.style.justifyContent = 'flex-start';
+            customizationMenu.style.alignItems = 'center';
+            customizationMenu.style.backgroundColor = 'transparent'; // Sfondo trasparente per l'anteprima 3D
+            customizationMenu.innerHTML = `
+                <div style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; gap: 25px; margin-left: 5vw; border: 2px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);">
+                    <h1 style="color: white; font-family: sans-serif; margin-bottom: 10px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">CREA IL TUO GIOCATORE</h1>
+                    <div style="display: flex; flex-direction: column; gap: 30px; font-family: sans-serif;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE MAGLIA</label>
+                            <input type="color" id="color-shirt" value="${savedShirt}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE PELLE</label>
+                            <input type="color" id="color-skin" value="${savedSkin}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
+                        </div>
+                    </div>
+                    <button id="btn-save-customization" class="${btnPlay.className}" style="margin-top: 20px;">SALVA E CONTINUA</button>
+                </div>
+            `;
+            this.mainMenu.parentNode.appendChild(customizationMenu);
+            this.customizationMenu = customizationMenu;
+
+            // --- EVENTI PREVIEW IN TEMPO REALE ---
+            document.getElementById('color-shirt').addEventListener('input', (e) => {
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: e.target.value } }));
+            });
+            document.getElementById('color-skin').addEventListener('input', (e) => {
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: e.target.value } }));
+            });
+
+            document.getElementById('btn-save-customization').addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                const shirtColor = document.getElementById('color-shirt').value;
+                const skinColor = document.getElementById('color-skin').value;
+
+                localStorage.setItem('customShirtColor', shirtColor);
+                localStorage.setItem('customSkinColor', skinColor);
+
+                document.dispatchEvent(new CustomEvent('customizePlayer', {
+                    detail: { shirtColor, skinColor }
+                }));
+                document.dispatchEvent(new Event('customizePlayerEnd'));
+
+                this.customizationMenu.style.display = 'none';
+                this.mainMenu.style.display = 'flex';
+            });
+
+            btnCustomize.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.mainMenu.style.display = 'none';
+                this.customizationMenu.style.display = 'flex';
+                document.dispatchEvent(new Event('customizePlayerStart'));
+            });
 
             const trainingMenu = document.createElement('div');
             trainingMenu.id = 'training-menu';

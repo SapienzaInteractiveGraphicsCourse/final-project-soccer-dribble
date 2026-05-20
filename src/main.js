@@ -21,6 +21,7 @@ import { BoostPadManager } from './game/BoostPadManager.js';
 import { ReplaySystem } from './core/ReplaySystem.js';
 import { BenchPlayer } from './entities/BenchPlayer.js';
 import { PossessionManager, MatchState } from './game/PossessionManager.js';
+import { PlayerCustomizer } from './effects/PlayerCustomizer.js';
 
 // --- INIZIALIZZAZIONE CORE ---
 const { scene, camera, renderer } = setupScene();
@@ -32,15 +33,47 @@ const clock = new THREE.Clock();
 const ball = new Ball(scene);
 const startYaw = Math.PI / 2;
 const player = new Player(camera, renderer.domElement, scene, ball, new THREE.Vector3(0, -100, 0), startYaw);
+const playerCustomizer = new PlayerCustomizer(player);
+
+let customizationAnimState = 'run';
+let customizationAnimTimer = 3;
+let customizationHeaderProgress = 0;
+
+let isCustomizing = false;
+
+document.addEventListener('customizePlayerStart', () => {
+    isCustomizing = true;
+});
+
+document.addEventListener('customizePlayerEnd', () => {
+    isCustomizing = false;
+});
+
+document.addEventListener('previewCustomization', (e) => {
+    const { type, color } = e.detail;
+    const hex = parseInt(color.replace('#', '0x'));
+    if (type === 'shirt') playerCustomizer.changeBaseColor('Ch38_Shirt', hex);
+    if (type === 'skin') playerCustomizer.changeBaseColor('Ch38_Body', hex);
+});
+
+document.addEventListener('customizePlayer', (e) => {
+    const { shirtColor, skinColor } = e.detail;
+    
+    const shirtHex = parseInt(shirtColor.replace('#', '0x'));
+    const skinHex = parseInt(skinColor.replace('#', '0x'));
+    
+    playerCustomizer.changeBaseColor('Ch38_Shirt', shirtHex);
+    playerCustomizer.changeBaseColor('Ch38_Body', skinHex);
+});
 
 const teammates = [
-    new Teammate(scene, new THREE.Vector3(0, -100, 0), startYaw),
-    new Teammate(scene, new THREE.Vector3(0, -100, 0), startYaw)
+    new Teammate(scene, new THREE.Vector3(10, -100, 0), startYaw),
+    new Teammate(scene, new THREE.Vector3(20, -100, 0), startYaw)
 ];
 const bots = [
-    new Bot(scene, ball, new THREE.Vector3(0, -100, 0), 0),
-    new Bot(scene, ball, new THREE.Vector3(0, -100, 0), 0),
-    new Bot(scene, ball, new THREE.Vector3(0, -100, 0), 0)
+    new Bot(scene, ball, new THREE.Vector3(-10, -100, 0), 0),
+    new Bot(scene, ball, new THREE.Vector3(-20, -100, 0), 0),
+    new Bot(scene, ball, new THREE.Vector3(-30, -100, 0), 0)
 ];
 
 const homeGK = new GoalKeeper(scene, ball, 'home', new THREE.Vector3(-48.5, 0, 0), Math.PI / 2);
@@ -179,9 +212,47 @@ function animate() {
     let deltaTime = rawDelta * timeScale;
 
     if (!matchManager.isGameStarted) {
-        const time = clock.getElapsedTime();
-        camera.position.set(Math.cos(time * 0.1) * 60, 30, Math.sin(time * 0.1) * 60);
-        camera.lookAt(0, 0, 0);
+        if (isCustomizing && player.model) {
+            const targetPos = player.model.position.clone();
+            const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + 1.2, targetPos.z + 3.5);
+            camera.position.lerp(previewCamPos, 0.1); // Movimento fluido della telecamera
+            
+            const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + 1.0, targetPos.z);
+            camera.lookAt(lookTarget);
+            
+            // --- NUOVA LOGICA ANIMAZIONE ---
+            customizationAnimTimer -= rawDelta;
+
+            if (customizationAnimTimer <= 0) {
+                if (customizationAnimState === 'run') {
+                    customizationAnimState = 'header';
+                    customizationAnimTimer = player.action.headerDuration * 3; // Esegui l'animazione di testa 3 volte
+                    customizationHeaderProgress = 0;
+                } else {
+                    customizationAnimState = 'run';
+                    customizationAnimTimer = 2 + Math.random() * 2; // Corri per 2-4 secondi
+                }
+            }
+
+            if (player.animator) {
+                player.model.rotation.y = Math.PI; // Mantieni il giocatore rivolto verso la telecamera
+
+                if (customizationAnimState === 'run') {
+                    player.animator.animate(rawDelta, false, true, true, false, null, 0, null, false, 0);
+                } else { // 'header'
+                    customizationHeaderProgress += rawDelta;
+                    let progress = (customizationHeaderProgress % player.action.headerDuration) / player.action.headerDuration;
+                    player.animator.animate(rawDelta, false, false, false, false, null, 0, null, true, progress);
+                }
+            }
+        } else {
+            const time = clock.getElapsedTime();
+            camera.position.set(Math.cos(time * 0.1) * 60, 30, Math.sin(time * 0.1) * 60);
+            camera.lookAt(0, 0, 0);
+            
+            // Resetta la rotazione se esci dalla customizzazione
+            if (player.model) player.model.rotation.y = startYaw;
+        }
     }
     else if (player.controls.isLocked) {
 

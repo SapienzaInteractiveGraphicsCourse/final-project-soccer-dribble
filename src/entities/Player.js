@@ -9,6 +9,7 @@ import { PlayerAnimator } from '../animation-action/PlayerAnimation.js';
 import { PlayerAction } from '../animation-action/PlayerAction.js';
 import { PhysicsWorld } from '../physics/PhysicsWorld.js';
 import { BoosterTrail } from '../effects/BoosTrail.js'; // Aggiusta il percorso se necessario
+import { PlayerCustomizer } from '../effects/PlayerCustomizer.js';
 
 export class Player {
     constructor(camera, domElement, scene, ball, startPos = new THREE.Vector3(0, 0, 0), startYaw = 0) {
@@ -33,6 +34,8 @@ export class Player {
         this.throwTimer = 0;
         this.ballThrown = false;
         this.kickButtonHeld = false;
+
+        this.customizer = new PlayerCustomizer(this);
 
         // 🎥 CAMERA SETTINGS
         this.cameraOffset = new THREE.Vector3(0, 3.5, -8);

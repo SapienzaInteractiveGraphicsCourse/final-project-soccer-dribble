@@ -161,13 +161,17 @@ document.addEventListener('customizePlayer', (e) => {
             playerCustomizer.removeAccessory('hair');
         } else {
             // Usa lo stesso offset che hai trovato funzionare nella preview
-            const hairOffsetPos = new THREE.Vector3(0, -0.15, 0); 
-            
+            playerCustomizer.toggleDefaultHair(false);
+            const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
+            const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
+            const hairScale = 1.3; 
             playerCustomizer.equipAccessory(
-                '/models/hair_' + hairId + '.glb', 
+                '/models/hair_' + id + '.glb', 
                 'head', 
                 'hair', 
-                hairOffsetPos
+                hairOffsetPos,
+                hairOffsetRot,
+                hairScale
             );
         }
     }

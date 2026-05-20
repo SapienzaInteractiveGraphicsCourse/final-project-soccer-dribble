@@ -79,8 +79,14 @@ export class PlayerAnimator {
         }
     }
 
-    animate(deltaTime, isThrowingInAnim, moving, isRunning, isThrowingInState, chargingAction, chargeRatio, dribbleTouchType) {
+    animate(deltaTime, isThrowingInAnim, moving, isRunning, isThrowingInState, chargingAction, chargeRatio, dribbleTouchType, isHeading, headerProgress) {
         if (!this.bones.leftUpLeg || !this.bones.leftArm) return;
+
+        // --- ESECUZIONE COLPO DI TESTA (Ha priorità massima come la scivolata) ---
+        if (isHeading) {
+            this.headerAnimation(headerProgress);
+            return;
+        }
 
         // --- ESECUZIONE SCIVOLATA ---
         if (this.isSliding) {
@@ -903,20 +909,67 @@ export class PlayerAnimator {
         this.passFollowThroughTimer = 0;
         this.resetToBasePose(); // Riporta il corpo dritto
     }
+    // ANIMAZIONE COLPO DI TESTA
+    headerAnimation(progress) {
+        this.resetToBasePose();
+
+        // Ora l'impatto fisico avviene al 42% dell'animazione
+        const impactRatio = 0.42;
+
+        // Parabola del salto (0 -> 1 -> 0)
+        const jumpCurve = Math.sin(progress * Math.PI);
+        const jumpHeight = jumpCurve * 1.7; // Alziamo leggermente l'elevazione
+
+        if (this.bones.hips) {
+            this.bones.hips.position.y = this.basePos.hips.y + jumpHeight;
+        }
+
+        if (progress < impactRatio) {
+            // FASE 1: Caricamento esplosivo
+            const windup = progress / impactRatio; // Va da 0 a 1
+
+            if (this.bones.spine) this.bones.spine.rotation.x = this.baseRot.spine.x - (windup * 0.5);
+            if (this.bones.head) this.bones.head.rotation.x = this.baseRot.head.x - (windup * 0.4);
+
+            if (this.bones.leftUpLeg) this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (windup * 0.8);
+            if (this.bones.rightUpLeg) this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (windup * 1.0);
+            if (this.bones.leftLeg) this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (windup * 1.2);
+            if (this.bones.rightLeg) this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x + (windup * 1.4);
+
+            if (this.bones.leftArm) this.bones.leftArm.rotation.z = this.baseRot.leftArm.z + (windup * 1.2);
+            if (this.bones.rightArm) this.bones.rightArm.rotation.z = this.baseRot.rightArm.z - (windup * 1.2);
+
+        } else {
+            // FASE 2: Frustata e Atterraggio
+            const recovery = (progress - impactRatio) / (1 - impactRatio);
+            const impactSnap = 1 - recovery; // Da 1 a 0
+
+            if (this.bones.spine) this.bones.spine.rotation.x = this.baseRot.spine.x + (impactSnap * 0.6);
+            if (this.bones.head) this.bones.head.rotation.x = this.baseRot.head.x + (impactSnap * 0.5);
+
+            if (this.bones.leftUpLeg) this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (impactSnap * 0.5);
+            if (this.bones.rightUpLeg) this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (impactSnap * 0.6);
+            if (this.bones.leftLeg) this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (impactSnap * 0.5);
+            if (this.bones.rightLeg) this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x + (impactSnap * 0.5);
+
+            if (this.bones.leftArm) this.bones.leftArm.rotation.x = this.baseRot.leftArm.x - (impactSnap * 0.8);
+            if (this.bones.rightArm) this.bones.rightArm.rotation.x = this.baseRot.rightArm.x - (impactSnap * 0.8);
+        }
+    }
 
     slideAnimation(duration) {
         const progress = Math.min(this.slideTimer / duration, 1.0);
-        
+
         // Fase 1: Scende a terra (0.0 - 0.2)
         // Fase 2: Scivola steso (0.2 - 0.7)
         // Fase 3: Si rialza (0.7 - 1.0)
         let currentAnim = 0;
         if (progress < 0.2) {
-            currentAnim = progress / 0.2; 
+            currentAnim = progress / 0.2;
         } else if (progress < 0.7) {
             currentAnim = 1.0;
         } else {
-            currentAnim = 1.0 - ((progress - 0.7) / 0.3); 
+            currentAnim = 1.0 - ((progress - 0.7) / 0.3);
         }
 
         // Curva morbida per un movimento più naturale
@@ -928,27 +981,27 @@ export class PlayerAnimator {
             // Abbassa il bacino a terra (1.15 è abbastanza per toccare l'erba senza sprofondare)
             this.bones.hips.position.y = this.basePos.hips.y - (easeCurve * 1.15);
             // Mantieni il corpo dritto frontale, inclinato solo all'indietro
-            this.bones.hips.rotation.z = this.baseRot.hips.z; 
-            this.bones.hips.rotation.x = this.baseRot.hips.x + (easeCurve * 0.5); 
+            this.bones.hips.rotation.z = this.baseRot.hips.z;
+            this.bones.hips.rotation.x = this.baseRot.hips.x + (easeCurve * 0.5);
         }
 
         if (this.bones.spine) {
             // Inclina il busto all'indietro per bilanciare il corpo, senza torsioni strane
-            this.bones.spine.rotation.x = this.baseRot.spine.x + (easeCurve * 0.4); 
-            this.bones.spine.rotation.z = this.baseRot.spine.z; 
+            this.bones.spine.rotation.x = this.baseRot.spine.x + (easeCurve * 0.4);
+            this.bones.spine.rotation.z = this.baseRot.spine.z;
         }
 
         if (this.bones.rightUpLeg && this.bones.rightLeg) {
             // Gamba destra stesa dritta e tesa in avanti
             this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (easeCurve * 1.3);
-            this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x; 
+            this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x;
         }
 
         if (this.bones.leftUpLeg && this.bones.leftLeg) {
             // Gamba sinistra piegata morbidamente sotto il corpo
             this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x + (easeCurve * 0.5);
-            this.bones.leftUpLeg.rotation.z = this.baseRot.leftUpLeg.z - (easeCurve * 0.5); 
-            this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x - (easeCurve * 2.0); 
+            this.bones.leftUpLeg.rotation.z = this.baseRot.leftUpLeg.z - (easeCurve * 0.5);
+            this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x - (easeCurve * 2.0);
         }
 
         if (this.bones.leftArm && this.bones.rightArm) {

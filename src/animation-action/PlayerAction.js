@@ -14,6 +14,14 @@ export class PlayerAction {
         this.passMaxPower = 24;
         this.passChargeSpeed = 35;
 
+        // --- COLPO DI TESTA ---
+        this.isHeading = false;
+        this.headerTimer = 0;
+        this.headerDuration = 0.55; // Durata totale del salto in secondi
+        this.headerImpactTime = 0.23; // Il momento in cui la testa tocca la palla (apice del salto)
+        this.headerType = null;
+        this.frozenBallPos = null;
+
         this.shootBasePower = 25;
         this.shootMaxPower = 55;  // 36 m/s = ~130 km/h (Tiro potentissimo)
         this.shootChargeSpeed = 60;
@@ -38,6 +46,79 @@ export class PlayerAction {
                 ball.mesh.position.set(0.30, 30, 0.0);
                 ball.mesh.rotation.set(0, 0, 0);
             }
+        }
+    }
+
+    // --- COLPO DI TESTA ---
+    startHeader(ball, type) {
+        this.isHeading = true;
+        this.headerTimer = 0;
+        this.headerType = type; // 'shoot', 'pass' o 'control'
+        
+        if (ball && ball.isLoaded) {
+            // Congeliamo la fisica della palla
+            ball.velocity.set(0, 0, 0);
+            this.frozenBallPos = ball.position.clone();
+        }
+    }
+
+    updateHeader(deltaTime, ball, yaw, pitch) {
+        if (!this.isHeading) return 0;
+
+        this.headerTimer += deltaTime;
+
+        // Effetto "Time-Freeze": mantiene la palla bloccata esattamente dov'era
+        if (ball && this.frozenBallPos && this.headerTimer < this.headerImpactTime) {
+            ball.position.copy(this.frozenBallPos);
+            ball.velocity.set(0, 0, 0);
+        }
+
+        // Momento dell'impatto (colpo frustato)
+        if (this.headerTimer >= this.headerImpactTime && (this.headerTimer - deltaTime) < this.headerImpactTime) {
+            this.executeHeaderHit(ball, yaw, pitch);
+        }
+
+        // Fine salto
+        if (this.headerTimer >= this.headerDuration) {
+            this.isHeading = false;
+            this.frozenBallPos = null;
+        }
+
+        return this.headerTimer / this.headerDuration; // Ritorna il progresso per l'animatore (0.0 -> 1.0)
+    }
+
+    executeHeaderHit(ball, yaw, pitch) {
+        if (!ball || !ball.isLoaded) return;
+        
+        let power = 0;
+        let kickDir = new THREE.Vector3(0, 0, 1);
+        
+        // Calibriamo la potenza e l'angolo in base a cosa sta facendo il giocatore
+        if (this.headerType === 'shoot') {
+            power = 35; 
+            pitch = -0.15; // Schiaccia la palla verso il basso in porta
+        } else if (this.headerType === 'pass') {
+            power = 18;
+            pitch = 0.1; // Passaggio morbido a campanile
+        } else {
+            // 'control': se ci corre semplicemente addosso, l'appoggia in avanti per continuare a correre
+            power = 7;
+            pitch = -0.4; 
+        }
+
+        kickDir.applyAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
+        kickDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+        kickDir.normalize();
+
+        // Riapplichiamo la fisica
+        ball.velocity.set(0, 0, 0);
+        ball.applyImpulse(kickDir.multiplyScalar(power));
+        
+        
+
+        // Eventuale effetto scia
+        if (this.headerType === 'shoot' && power > 30) {
+            ball.triggerPowerEffect && ball.triggerPowerEffect();
         }
     }
 

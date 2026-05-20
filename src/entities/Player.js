@@ -239,7 +239,8 @@ export class Player {
         let isChargingAnim = this.action.chargingAction;
 
         // Controlliamo se il giocatore può muoversi
-        const canMove = !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.action.chargingAction && !this.animator.isSliding;
+        // Controlliamo se il giocatore può muoversi (non può farlo mentre salta di testa)
+        const canMove = !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.action.chargingAction && !this.animator.isSliding && !this.action.isHeading;
 
         // --- LOGICA CONSUMO BOOST ---
         const isPressingMovement = (this.keys.forward || this.keys.backward || this.keys.left || this.keys.right) && canMove;
@@ -359,8 +360,63 @@ export class Player {
 
         // Interazioni con la Palla (MIRA E DRIBBLING)
         let currentDribbleTouch = null;
-        if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn) {
+        if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.throwAnimPlaying) {
 
+            // --- NUOVO: GESTIONE COOLDOWN COLPO DI TESTA ---
+            if (this.headerCooldown === undefined) this.headerCooldown = 0;
+            if (this.headerCooldown > 0) this.headerCooldown -= deltaTime;
+
+            const distanceToBall2D = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
+            const ballHeight = this.ball.position.y;
+
+            // --- TRIGGER COLPO DI TESTA ---
+            const isBallHigh = ballHeight > 1.3 && ballHeight < 3.5; 
+
+            // Aggiunto il controllo: this.headerCooldown <= 0
+            if (!this.action.isHeading && isBallHigh && distanceToBall2D < 3.5 && this.headerCooldown <= 0) {
+                
+                // 1. Tiro o Passaggio
+                if (this.kickButtonHeld && this.action.chargingAction) {
+                    const actionType = this.action.chargingAction; 
+                    this.action.cancelCharge(this.passArrow);      
+                    this.action.startHeader(this.ball, actionType);
+                    this.kickButtonHeld = false;
+                    this.headerCooldown = 1.2; // <-- COOLDOWN: Evita il loop!
+                } 
+                // 2. Controllo palla automatico
+                else if (distanceToBall2D < 2.8 && !this.action.chargingAction) {
+                    this.action.startHeader(this.ball, 'control');
+                    this.headerCooldown = 1.2; // <-- COOLDOWN: Evita il loop!
+                }
+            }
+
+            // --- AGGIORNAMENTO FISICO COLPO DI TESTA ---
+            let headerProgress = 0;
+            if (this.action.isHeading) {
+                headerProgress = this.action.updateHeader(deltaTime, this.ball, this.yaw, this.pitch);
+                
+                // 1. MAGNETISMO
+                if (headerProgress < 0.42 && this.action.frozenBallPos) {
+                    const targetPosXZ = new THREE.Vector3(this.action.frozenBallPos.x, this.model.position.y, this.action.frozenBallPos.z);
+                    this.model.position.lerp(targetPosXZ, deltaTime * 12); 
+                }
+
+                // 2. MIRA INTELLIGENTE
+                let targetAngle = this.yaw; 
+                
+                if (this.action.headerType === 'shoot') {
+                    const aimDir = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw);
+                    const targetGoalX = aimDir.x > 0 ? 49.5 : -49.5; 
+                    targetAngle = Math.atan2(targetGoalX - this.model.position.x, 0 - this.model.position.z);
+                }
+
+                // 3. APPLICA ROTAZIONE IN VOLO
+                const diff = targetAngle - this.model.rotation.y;
+                const shortestAngle = Math.atan2(Math.sin(diff), Math.cos(diff));
+                this.model.rotation.y += shortestAngle * deltaTime * 25;
+            }
+            
             // --- COLLISIONE FISICA CORPO INTERO ---
             if (!this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.animator.isSliding) {
                 const playerHeight = 1.8;
@@ -567,15 +623,18 @@ export class Player {
         const chargeRatio = this.action.getChargeRatio();
 
         // Aggiorniamo le animazioni (usando la nuova variabile isSprinting)
+        // Aggiorniamo le animazioni
         this.animator.animate(
             deltaTime,
             this.throwAnimPlaying,
             moving,
-            isSprinting, // Modifica qui
+            isSprinting,
             this.action.isThrowingIn,
             isChargingAnim,
             chargeRatio,
-            currentDribbleTouch
+            currentDribbleTouch,
+            this.action.isHeading,  // NUOVO PARAMETRO
+            this.action.isHeading ? (this.action.headerTimer / this.action.headerDuration) : 0 // NUOVO PARAMETRO
         );
 
     }

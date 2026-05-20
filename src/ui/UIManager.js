@@ -100,6 +100,7 @@ export class UIManager {
                     </div>
                     <button id="btn-save-customization" class="${btnPlay.className}" style="margin-top: 20px;">SALVA E CONTINUA</button>
                 </div>
+                <button id="btn-toggle-animation" class="${btnPlay.className}" style="position: absolute; bottom: 30px; right: 30px; font-size: 1.2rem; padding: 15px 30px; background-color: #f44336; border-color: #f44336; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">STOP ANIMAZIONE</button>
             `;
             this.mainMenu.parentNode.appendChild(customizationMenu);
             this.customizationMenu = customizationMenu;
@@ -110,6 +111,16 @@ export class UIManager {
             });
             document.getElementById('color-skin').addEventListener('input', (e) => {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: e.target.value } }));
+            });
+
+            let isAnimationPaused = false;
+            document.getElementById('btn-toggle-animation').addEventListener('click', (e) => {
+                e.stopPropagation();
+                isAnimationPaused = !isAnimationPaused;
+                e.target.innerText = isAnimationPaused ? 'RIPRENDI ANIMAZIONE' : 'STOP ANIMAZIONE';
+                e.target.style.backgroundColor = isAnimationPaused ? '#4CAF50' : '#f44336';
+                e.target.style.borderColor = isAnimationPaused ? '#4CAF50' : '#f44336';
+                document.dispatchEvent(new CustomEvent('toggleCustomizationAnimation', { detail: { paused: isAnimationPaused } }));
             });
 
             document.getElementById('btn-save-customization').addEventListener('click', (e) => {
@@ -135,6 +146,16 @@ export class UIManager {
                 this.mainMenu.style.display = 'none';
                 this.customizationMenu.style.display = 'flex';
                 document.dispatchEvent(new Event('customizePlayerStart'));
+                
+                // Reset bottone e stato animazione
+                isAnimationPaused = false;
+                const btnAnim = document.getElementById('btn-toggle-animation');
+                if (btnAnim) {
+                    btnAnim.innerText = 'STOP ANIMAZIONE';
+                    btnAnim.style.backgroundColor = '#f44336';
+                    btnAnim.style.borderColor = '#f44336';
+                }
+                document.dispatchEvent(new CustomEvent('toggleCustomizationAnimation', { detail: { paused: false } }));
             });
 
             const trainingMenu = document.createElement('div');

@@ -40,13 +40,65 @@ let customizationAnimTimer = 3;
 let customizationHeaderProgress = 0;
 
 let isCustomizing = false;
+let customizationRotation = Math.PI;
+let isDragging = false;
+let previousMouseX = 0;
+let customizationDistance = 3.5;
 
 document.addEventListener('customizePlayerStart', () => {
     isCustomizing = true;
+    customizationRotation = 0; // Reset frontale verso la telecamera
+    customizationDistance = 3.5; // Reset zoom
+    if (player.model) {
+        player.model.position.set(0, 0, 0); // Mettilo sul campo per vedere lo stadio!
+    }
+    if (ball && ball.mesh) {
+        ball.mesh.visible = false; // Nascondi la palla
+    }
 });
 
 document.addEventListener('customizePlayerEnd', () => {
     isCustomizing = false;
+    if (player.model) {
+        player.model.position.set(0, -100, 0); // Nascondilo di nuovo
+    }
+    if (ball && ball.mesh) {
+        ball.mesh.visible = true; // Mostra di nuovo la palla
+    }
+});
+
+// Aggiungiamo il drag per ruotare il personaggio
+document.addEventListener('pointerdown', (e) => {
+    if (isCustomizing && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        isDragging = true;
+        previousMouseX = e.clientX;
+    }
+});
+
+document.addEventListener('pointermove', (e) => {
+    if (isCustomizing && isDragging) {
+        const deltaX = e.clientX - previousMouseX;
+        customizationRotation += deltaX * 0.01;
+        previousMouseX = e.clientX;
+    }
+});
+
+document.addEventListener('pointerup', () => {
+    isDragging = false;
+});
+
+let isCustomizationPaused = false;
+document.addEventListener('toggleCustomizationAnimation', (e) => {
+    isCustomizationPaused = e.detail.paused;
+});
+
+// Aggiungiamo lo zoom con la rotellina del mouse
+document.addEventListener('wheel', (e) => {
+    if (isCustomizing) {
+        customizationDistance += e.deltaY * 0.005;
+        // Limitiamo lo zoom (min: 1.5, max: 7.0)
+        customizationDistance = Math.max(1.5, Math.min(customizationDistance, 7.0));
+    }
 });
 
 document.addEventListener('previewCustomization', (e) => {
@@ -214,35 +266,39 @@ function animate() {
     if (!matchManager.isGameStarted) {
         if (isCustomizing && player.model) {
             const targetPos = player.model.position.clone();
-            const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + 1.2, targetPos.z + 3.5);
+            const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + 1.2, targetPos.z + customizationDistance);
             camera.position.lerp(previewCamPos, 0.1); // Movimento fluido della telecamera
             
             const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + 1.0, targetPos.z);
             camera.lookAt(lookTarget);
             
             // --- NUOVA LOGICA ANIMAZIONE ---
-            customizationAnimTimer -= rawDelta;
+            if (!isCustomizationPaused) {
+                customizationAnimTimer -= rawDelta;
 
-            if (customizationAnimTimer <= 0) {
-                if (customizationAnimState === 'run') {
-                    customizationAnimState = 'header';
-                    customizationAnimTimer = player.action.headerDuration * 3; // Esegui l'animazione di testa 3 volte
-                    customizationHeaderProgress = 0;
-                } else {
-                    customizationAnimState = 'run';
-                    customizationAnimTimer = 2 + Math.random() * 2; // Corri per 2-4 secondi
+                if (customizationAnimTimer <= 0) {
+                    if (customizationAnimState === 'run') {
+                        customizationAnimState = 'header';
+                        customizationAnimTimer = player.action.headerDuration * 3; // Esegui l'animazione di testa 3 volte
+                        customizationHeaderProgress = 0;
+                    } else {
+                        customizationAnimState = 'run';
+                        customizationAnimTimer = 2 + Math.random() * 2; // Corri per 2-4 secondi
+                    }
                 }
             }
 
             if (player.animator) {
-                player.model.rotation.y = Math.PI; // Mantieni il giocatore rivolto verso la telecamera
+                player.model.rotation.y = customizationRotation; // Usa la rotazione interattiva
 
-                if (customizationAnimState === 'run') {
-                    player.animator.animate(rawDelta, false, true, true, false, null, 0, null, false, 0);
-                } else { // 'header'
-                    customizationHeaderProgress += rawDelta;
-                    let progress = (customizationHeaderProgress % player.action.headerDuration) / player.action.headerDuration;
-                    player.animator.animate(rawDelta, false, false, false, false, null, 0, null, true, progress);
+                if (!isCustomizationPaused) {
+                    if (customizationAnimState === 'run') {
+                        player.animator.animate(rawDelta, false, true, true, false, null, 0, null, false, 0);
+                    } else { // 'header'
+                        customizationHeaderProgress += rawDelta;
+                        let progress = (customizationHeaderProgress % player.action.headerDuration) / player.action.headerDuration;
+                        player.animator.animate(rawDelta, false, false, false, false, null, 0, null, true, progress);
+                    }
                 }
             }
         } else {

@@ -102,20 +102,66 @@ document.addEventListener('wheel', (e) => {
 });
 
 document.addEventListener('previewCustomization', (e) => {
-    const { type, color } = e.detail;
-    const hex = parseInt(color.replace('#', '0x'));
-    if (type === 'shirt') playerCustomizer.changeBaseColor('Ch38_Shirt', hex);
-    if (type === 'skin') playerCustomizer.changeBaseColor('Ch38_Body', hex);
+    const { type, color, id } = e.detail;
+    // ... (shirt e skin rimangono uguali)
+    
+    if (type === 'hair') {
+        playerCustomizer.toggleDefaultHair(false);
+        if (id === "0") {
+            playerCustomizer.removeAccessory('hair');
+        } else {
+            // 1. Posizione (usa i valori che hai sistemato prima)
+            const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
+            
+            // 2. Rotazione (X, Y, Z). Es: per ruotarli di 180° sull'asse Y (destra/sinistra)
+            const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
+            
+            // 3. Scala (Grandezza). Es: 1.2 li rende del 20% più grandi
+            const hairScale = 1.3; 
+            
+            playerCustomizer.equipAccessory(
+                '/models/hair_' + id + '.glb', 
+                'head', 
+                'hair', 
+                hairOffsetPos,
+                hairOffsetRot,
+                hairScale
+            );
+        }
+    }
+    if (type === 'hairColor') {
+        playerCustomizer.changeHairColor(color);
+    }
 });
 
 document.addEventListener('customizePlayer', (e) => {
-    const { shirtColor, skinColor } = e.detail;
+    const { shirtColor, skinColor, hairId, hairColor } = e.detail;
     
     const shirtHex = parseInt(shirtColor.replace('#', '0x'));
     const skinHex = parseInt(skinColor.replace('#', '0x'));
     
     playerCustomizer.changeBaseColor('Ch38_Shirt', shirtHex);
     playerCustomizer.changeBaseColor('Ch38_Body', skinHex);
+    
+    if (hairId !== undefined) {
+        playerCustomizer.toggleDefaultHair(false);
+        if (hairId === "0") {
+            playerCustomizer.removeAccessory('hair');
+        } else {
+            // Usa lo stesso offset che hai trovato funzionare nella preview
+            const hairOffsetPos = new THREE.Vector3(0, -0.15, 0); 
+            
+            playerCustomizer.equipAccessory(
+                '/models/hair_' + hairId + '.glb', 
+                'head', 
+                'hair', 
+                hairOffsetPos
+            );
+        }
+    }
+    if (hairColor) {
+        playerCustomizer.changeHairColor(hairColor);
+    }
 });
 
 const teammates = [

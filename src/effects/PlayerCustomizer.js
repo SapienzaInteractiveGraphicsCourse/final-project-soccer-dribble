@@ -57,37 +57,57 @@ export class PlayerCustomizer {
      * @param {THREE.Vector3} offsetPos - Offset opzionale per aggiustare il posizionamento
      * @param {THREE.Euler} offsetRot - Offset opzionale per aggiustare la rotazione
      */
-    equipAccessory(modelUrl, boneName, slotName, offsetPos = new THREE.Vector3(), offsetRot = new THREE.Euler()) {
+    /**
+     * AGGANCIO MODELLI MODULARI 3D (Capelli, Occhiali, Scarpini)
+     * Versione senza Box3: si affida a offset precisi passati come parametri
+     */
+    /**
+     * AGGANCIO MODELLI MODULARI 3D
+     * Con compensazione della scala dell'osso (Anti-Shrink)
+     */
+    equipAccessory(modelUrl, boneName, slotName, offsetPos = new THREE.Vector3(0, 0, 0), offsetRot = new THREE.Euler(0, 0, 0), customScale = 1.0) {
         const bone = this.player.animator.bones[boneName];
         if (!bone) {
             console.warn(`Osso ${boneName} non trovato nell'animatore.`);
             return;
         }
 
-        // 1. Rimuove l'accessorio precedente se lo slot è già occupato
+        // 1. Rimuove l'accessorio precedente
         this.removeAccessory(slotName);
 
         // 2. Carica il nuovo modello
         modelManager.load(modelUrl, (gltf) => {
             const accessoryMesh = gltf.scene;
 
-            // Assicuriamoci che l'accessorio proietti ombre
             accessoryMesh.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
+                    child.frustumCulled = false; // CRITICO: Impedisce alla telecamera di farli sparire
                 }
             });
 
-            // Applica eventuali offset di correzione
-            accessoryMesh.position.copy(offsetPos);
+            // 3. COMPENSAZIONE DELLA SCALA DELL'OSSO
+            // Troviamo la vera scala dell'osso (es. 0.01) e ne calcoliamo l'inverso (es. 100)
+            const boneWorldScale = new THREE.Vector3();
+            bone.getWorldScale(boneWorldScale);
+            const scaleMultiplier = 1.0 / (boneWorldScale.x > 0.0001 ? boneWorldScale.x : 1.0);
+
+            // Moltiplichiamo la scala scelta da te per l'inverso dell'osso
+            accessoryMesh.scale.setScalar(customScale * scaleMultiplier);
+            
+            // 4. Applichiamo posizione e rotazione forzate
+            accessoryMesh.position.copy(offsetPos).multiplyScalar(scaleMultiplier);
             accessoryMesh.rotation.copy(offsetRot);
 
-            // 3. Aggancia l'oggetto fisicamente allo scheletro
+            // 5. Agganciamo l'oggetto fisicamente allo scheletro
             bone.add(accessoryMesh);
             
-            // 4. Salva la reference per poterlo rimuovere in futuro
+            // 6. Salviamo in memoria
             this.equippedAccessories[slotName] = accessoryMesh;
+            if (slotName === 'hair') {
+            this.changeHairColor('#000000'); 
+        }
         });
     }
 
@@ -100,5 +120,34 @@ export class PlayerCustomizer {
             currentAccessory.parent.remove(currentAccessory);
             delete this.equippedAccessories[slotName];
         }
+    }
+    /**
+     * NASCONDI/MOSTRA CAPELLI DI DEFAULT
+     */
+    toggleDefaultHair(visible) {
+        if (!this.player.model) return;
+        this.player.model.traverse((child) => {
+            if (child.isMesh && child.name === 'Ch38_Hair') {
+                child.visible = visible;
+            }
+        });
+    }
+
+    /**
+     * CAMBIA COLORE CAPELLI EQUIPAGGIATI
+     * @param {string} hexString - Colore in formato '#rrggbb'
+     */
+    changeHairColor(hexString) {
+        const hairAccessory = this.equippedAccessories['hair'];
+        if (!hairAccessory) return;
+
+        const color = new THREE.Color(hexString);
+        hairAccessory.traverse((child) => {
+            if (child.isMesh) {
+                child.material = child.material.clone();
+                child.material.color.copy(color);
+                child.material.needsUpdate = true;
+            }
+        });
     }
 }

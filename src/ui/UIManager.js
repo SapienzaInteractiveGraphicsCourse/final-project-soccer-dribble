@@ -43,8 +43,13 @@ export class UIManager {
                 
                 const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
                 const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
+                const savedHair = localStorage.getItem('customHair') || '0';
+                const savedHairColor = localStorage.getItem('customHairColor') || '#000000';
+                
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: savedShirt } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: savedSkin } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: savedHair } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: savedHairColor } }));
             }, 500);
         };
     }
@@ -75,6 +80,7 @@ export class UIManager {
 
             const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
             const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
+            const savedHairColor = localStorage.getItem('customHairColor') || '#000000';
 
             // --- MENU PERSONALIZZAZIONE ---
             const customizationMenu = document.createElement('div');
@@ -86,9 +92,41 @@ export class UIManager {
             customizationMenu.style.alignItems = 'center';
             customizationMenu.style.backgroundColor = 'transparent'; // Sfondo trasparente per l'anteprima 3D
             customizationMenu.innerHTML = `
-                <div style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; gap: 25px; margin-left: 5vw; border: 2px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);">
-                    <h1 style="color: white; font-family: sans-serif; margin-bottom: 10px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">CREA IL TUO GIOCATORE</h1>
-                    <div style="display: flex; flex-direction: column; gap: 30px; font-family: sans-serif;">
+                <div style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; gap: 20px; margin-left: 5vw; border: 2px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); width: 400px; max-height: 80vh; overflow-y: auto;">
+                    <h1 style="color: white; font-family: sans-serif; margin-bottom: 5px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center;">CREA IL TUO GIOCATORE</h1>
+                    
+                    <!-- SEZIONI TABS -->
+                    <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 15px;">
+                        <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">CAPELLI</button>
+                        <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORI</button>
+                    </div>
+
+                    <!-- SEZIONE CAPELLI -->
+                    <div id="section-hair" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <button class="menu-btn btn-hair" data-hair="0" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
+                                <div style="width: 100%; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🧑‍🦲</div>
+                                <span style="font-size: 0.9rem; margin-top: 5px; color: white;">Nessuno</span>
+                            </button>
+                            <button class="menu-btn btn-hair" data-hair="1" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
+                                <model-viewer src="/models/hair_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>  
+                            </button>
+                            <button class="menu-btn btn-hair" data-hair="2" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
+                                <model-viewer src="/models/hair_2.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
+                                
+                            </button>
+                            <button class="menu-btn btn-hair" data-hair="3" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
+                                <model-viewer src="/models/hair_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
+                                
+                            </button>
+                            <button class="menu-btn btn-hair" data-hair="5" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
+                                <model-viewer src="/models/hair_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SEZIONE COLORI -->
+                    <div id="section-colors" style="display: none; flex-direction: column; gap: 20px; width: 100%; font-family: sans-serif;">
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE MAGLIA</label>
                             <input type="color" id="color-shirt" value="${savedShirt}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
@@ -97,13 +135,67 @@ export class UIManager {
                             <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE PELLE</label>
                             <input type="color" id="color-skin" value="${savedSkin}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
                         </div>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE CAPELLI</label>
+                            <input type="color" id="color-hair" value="${savedHairColor}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
+                        </div>
                     </div>
-                    <button id="btn-save-customization" class="${btnPlay.className}" style="margin-top: 20px;">SALVA E CONTINUA</button>
+
+                    <button id="btn-save-customization" class="${btnPlay.className}" style="margin-top: 20px; width: 100%;">SALVA E CONTINUA</button>
                 </div>
                 <button id="btn-toggle-animation" class="${btnPlay.className}" style="position: absolute; bottom: 30px; right: 30px; font-size: 1.2rem; padding: 15px 30px; background-color: #f44336; border-color: #f44336; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">STOP ANIMAZIONE</button>
             `;
             this.mainMenu.parentNode.appendChild(customizationMenu);
             this.customizationMenu = customizationMenu;
+
+            // --- FORZA IL COLORE NERO SUI MODEL VIEWER DEI CAPELLI ---
+            
+            const modelViewers = customizationMenu.querySelectorAll('model-viewer');
+            modelViewers.forEach(viewer => {
+                viewer.addEventListener('load', () => {
+                    if (viewer.model && viewer.model.materials) {
+                        viewer.model.materials.forEach(material => {
+                            if (material.pbrMetallicRoughness) {
+                                material.pbrMetallicRoughness.setBaseColorFactor([0, 0, 0, 1]); // R, G, B, A (Nero opaco)
+                            }
+                        });
+                    }
+                });
+            });
+
+            // --- EVENTI TABS ---
+            const tabHair = document.getElementById('tab-hair');
+            const tabColors = document.getElementById('tab-colors');
+            const sectionHair = document.getElementById('section-hair');
+            const sectionColors = document.getElementById('section-colors');
+
+            tabHair.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sectionHair.style.display = 'flex';
+                sectionColors.style.display = 'none';
+                tabHair.style.backgroundColor = '#4CAF50';
+                tabColors.style.backgroundColor = '#222';
+            });
+
+            tabColors.addEventListener('click', (e) => {
+                e.stopPropagation();
+                sectionHair.style.display = 'none';
+                sectionColors.style.display = 'flex';
+                tabColors.style.backgroundColor = '#4CAF50';
+                tabHair.style.backgroundColor = '#222';
+            });
+
+            // --- EVENTI SCELTA CAPELLI ---
+            let selectedHair = localStorage.getItem('customHair') || '0';
+            const hairButtons = document.querySelectorAll('.btn-hair');
+            hairButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const hairId = btn.getAttribute('data-hair');
+                    selectedHair = hairId;
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: hairId } }));
+                });
+            });
 
             // --- EVENTI PREVIEW IN TEMPO REALE ---
             document.getElementById('color-shirt').addEventListener('input', (e) => {
@@ -111,6 +203,9 @@ export class UIManager {
             });
             document.getElementById('color-skin').addEventListener('input', (e) => {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: e.target.value } }));
+            });
+            document.getElementById('color-hair').addEventListener('input', (e) => {
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: e.target.value } }));
             });
 
             let isAnimationPaused = false;
@@ -128,12 +223,15 @@ export class UIManager {
                 
                 const shirtColor = document.getElementById('color-shirt').value;
                 const skinColor = document.getElementById('color-skin').value;
+                const hairColor = document.getElementById('color-hair').value;
 
                 localStorage.setItem('customShirtColor', shirtColor);
                 localStorage.setItem('customSkinColor', skinColor);
+                localStorage.setItem('customHair', selectedHair);
+                localStorage.setItem('customHairColor', hairColor);
 
                 document.dispatchEvent(new CustomEvent('customizePlayer', {
-                    detail: { shirtColor, skinColor }
+                    detail: { shirtColor, skinColor, hairId: selectedHair, hairColor }
                 }));
                 document.dispatchEvent(new Event('customizePlayerEnd'));
 

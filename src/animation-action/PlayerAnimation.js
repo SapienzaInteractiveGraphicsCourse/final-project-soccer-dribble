@@ -24,6 +24,11 @@ export class PlayerAnimator {
     }
     initBones(model) {
         model.traverse((child) => {
+            if (child.isMesh){
+                const b = child.name.toLowerCase();
+
+                //console.log(b);
+            }
             if (child.isBone) {
                 const b = child.name.toLowerCase();
 
@@ -933,8 +938,8 @@ export class PlayerAnimator {
 
             if (this.bones.leftUpLeg) this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (windup * 0.8);
             if (this.bones.rightUpLeg) this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (windup * 1.0);
-            if (this.bones.leftLeg) this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x - (windup * 3);
-            if (this.bones.rightLeg) this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x - (windup * 3);
+            if (this.bones.leftLeg) this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x - (windup * 2);
+            if (this.bones.rightLeg) this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x - (windup * 2);
 
             if (this.bones.leftArm) this.bones.leftArm.rotation.z = this.baseRot.leftArm.z + (windup * 1.2);
             if (this.bones.rightArm) this.bones.rightArm.rotation.z = this.baseRot.rightArm.z - (windup * 1.2);

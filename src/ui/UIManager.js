@@ -117,7 +117,6 @@ export class UIManager {
                             </button>
                             <button class="menu-btn btn-hair" data-hair="3" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
                                 <model-viewer src="/models/hair_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>
-                                
                             </button>
                             <button class="menu-btn btn-hair" data-hair="5" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
                                 <model-viewer src="/models/hair_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom auto-rotate></model-viewer>

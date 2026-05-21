@@ -12,42 +12,42 @@ const FACE_HANDLES = [
         label: '👃 Naso',
         color: 0xff6b6b,
         offset: new THREE.Vector3(0, 0.06, 0.12),
-        radius: 0.12,
+        radius: 0.04,
     },
     {
         id: 'mouth',
         label: '👄 Bocca',
         color: 0xff2244,
         offset: new THREE.Vector3(0, 0.01, 0.11),
-        radius: 0.13,
+        radius: 0.045,
     },
     {
         id: 'eye_l',
         label: '👁 Occhio SX',
         color: 0x44aaff,
         offset: new THREE.Vector3(0.04, 0.11, 0.10),
-        radius: 0.08,
+        radius: 0.035,
     },
     {
         id: 'eye_r',
         label: '👁 Occhio DX',
         color: 0x44aaff,
         offset: new THREE.Vector3(-0.04, 0.11, 0.10),
-        radius: 0.08,
+        radius: 0.035,
     },
     {
         id: 'ear_l',
         label: '👂 Orecchio SX',
         color: 0xffaa44,
         offset: new THREE.Vector3(0.09, 0.06, 0.02),
-        radius: 0.10,
+        radius: 0.04,
     },
     {
         id: 'ear_r',
         label: '👂 Orecchio DX',
         color: 0xffaa44,
         offset: new THREE.Vector3(-0.09, 0.06, 0.02),
-        radius: 0.10,
+        radius: 0.04,
     },
 ];
 
@@ -59,12 +59,9 @@ export class FaceSculptor {
         this.canvas = canvas;
 
         this.isActive = false;
-        this.bodyMesh = null;
+        this.targetMeshes = [];
+        this.meshData = []; // { mesh, originalPositions, currentOffsets, headVertexIndices }
         this.headBone = null;
-
-        this.originalPositions = null;
-        this.currentOffsets = null;
-        this.headVertexIndices = [];
 
         this.handles = [];
 
@@ -87,38 +84,48 @@ export class FaceSculptor {
         if (!this.playerModel) { console.warn('[FS] playerModel null!'); return; }
 
         this.playerModel.traverse((child) => {
-            if (child.isMesh && child.name.toLowerCase() === 'ch38_body') {
-                this.bodyMesh = child;
+            const name = child.name ? child.name.toLowerCase() : '';
+            if (child.isMesh && (name.includes('body') || name.includes('eyelashes') || name.includes('hair'))) {
+                this.targetMeshes.push(child);
             }
-            if (child.isBone && child.name.toLowerCase().endsWith('head')) {
+            if (child.isBone && name.endsWith('head')) {
                 this.headBone = child;
             }
         });
 
-        if (!this.bodyMesh) { console.warn('[FS] ch38_body non trovata!'); return; }
+        if (this.targetMeshes.length === 0) { console.warn('[FS] Nessuna mesh facciale trovata!'); return; }
         if (!this.headBone) { console.warn('[FS] head bone non trovato, uso fallback'); }
 
-        // Salva posizioni originali
-        const posAttr = this.bodyMesh.geometry.getAttribute('position');
-        this.originalPositions = new Float32Array(posAttr.array);
-        this.currentOffsets    = new Float32Array(posAttr.count * 3);
+        this.targetMeshes.forEach(mesh => {
+            const posAttr = mesh.geometry.getAttribute('position');
+            const originalPositions = new Float32Array(posAttr.array);
+            const currentOffsets    = new Float32Array(posAttr.count * 3);
+            const headVertexIndices = [];
 
-        // Bounding box
-        this.bodyMesh.geometry.computeBoundingBox();
-        const bbox   = this.bodyMesh.geometry.boundingBox;
-        const yRange = bbox.max.y - bbox.min.y;
-        const headYThreshold = bbox.min.y + yRange * 0.82;
-
-        console.log('[FS] bbox min.y=', bbox.min.y.toFixed(3), ' max.y=', bbox.max.y.toFixed(3),
-                    ' headThreshold=', headYThreshold.toFixed(3),
-                    ' modelScale=', this.playerModel.scale.x);
-
-        for (let i = 0; i < posAttr.count; i++) {
-            if (posAttr.getY(i) >= headYThreshold) {
-                this.headVertexIndices.push(i);
+            mesh.geometry.computeBoundingBox();
+            const bbox = mesh.geometry.boundingBox;
+            const yRange = bbox.max.y - bbox.min.y;
+            
+            let headYThreshold = -Infinity;
+            if (mesh.name.toLowerCase().includes('body')) {
+                headYThreshold = bbox.min.y + yRange * 0.82;
             }
-        }
-        console.log('[FS] Vertici testa:', this.headVertexIndices.length);
+
+            for (let i = 0; i < posAttr.count; i++) {
+                if (posAttr.getY(i) >= headYThreshold) {
+                    headVertexIndices.push(i);
+                }
+            }
+
+            this.meshData.push({
+                mesh,
+                originalPositions,
+                currentOffsets,
+                headVertexIndices
+            });
+        });
+
+        console.log('[FS] Mesh caricate:', this.meshData.map(m => m.mesh.name));
 
         this._buildHandles();
         this.loadDeformations();
@@ -161,9 +168,9 @@ export class FaceSculptor {
 
     // ----------------------------------------------------------------
     activate() {
-        if (!this.bodyMesh) {
+        if (this.meshData.length === 0) {
             this.init();
-            if (!this.bodyMesh) return;
+            if (this.meshData.length === 0) return;
         }
         this.isActive = true;
         this.handles.forEach(h => { h.mesh.visible = true; });
@@ -251,14 +258,11 @@ export class FaceSculptor {
         const meshes = this.handles.map(h => h.mesh);
         const hits = this.raycaster.intersectObjects(meshes, false);
 
-        console.log('[FS] pointerdown ndc=', ndc.x.toFixed(3), ndc.y.toFixed(3), 'hits=', hits.length);
-
         if (hits.length > 0) {
             this.activeHandleIdx = hits[0].object.userData.handleIdx;
             this.isDragging = true;
             this.lastX = e.clientX;
             this.lastY = e.clientY;
-            console.log('[FS] drag START → handle', this.handles[this.activeHandleIdx].def.id);
             e.stopPropagation();
         }
     }
@@ -273,49 +277,39 @@ export class FaceSculptor {
 
         if (dx === 0 && dy === 0) return;
 
-        // Converti pixels → world units usando la distanza camera-handle e il FOV
         const handle = this.handles[this.activeHandleIdx];
         const dist = this.camera.position.distanceTo(handle.mesh.position);
         const fovRad = (this.camera.fov || 75) * Math.PI / 180;
         const screenH = this.canvas.clientHeight || this.canvas.height || 800;
         const worldPerPixel = (2 * dist * Math.tan(fovRad / 2)) / screenH;
 
-        // Direzioni camera-relative in world space
         const camRight = new THREE.Vector3();
         const camUp    = new THREE.Vector3();
         const camFwd   = new THREE.Vector3();
         this.camera.matrixWorld.extractBasis(camRight, camUp, camFwd);
 
-        // Delta world = destra * dx + su * (-dy perché Y schermo è invertito)
         const worldDelta = camRight.clone()
             .multiplyScalar(dx * worldPerPixel)
             .addScaledVector(camUp, -dy * worldPerPixel);
 
-        console.log('[FS] drag dx=', dx, 'dy=', dy, 'worldPerPixel=', worldPerPixel.toFixed(5),
-                    'worldDelta=', worldDelta.x.toFixed(4), worldDelta.y.toFixed(4), worldDelta.z.toFixed(4));
-
-        // Accumula spostamento handle in world space
         handle.deformAccum.add(worldDelta);
 
-        // --- CONVERSIONE IN BIND POSE (Local Space reale dei vertici) ---
-        // La mesh ch38_body è una SkinnedMesh. I vertici nella geometria (posAttr)
-        // sono definiti nel "bind pose". Per deormarli correttamente, dobbiamo mappare
-        // la posizione dell'handle (world space) nel bind pose space della testa.
         let worldToBind = new THREE.Matrix4();
-        if (this.bodyMesh.skeleton && this.headBone) {
-            const headIdx = this.bodyMesh.skeleton.bones.indexOf(this.headBone);
+        const primaryMesh = this.meshData.find(m => m.mesh.name.toLowerCase().includes('body'))?.mesh || this.meshData[0].mesh;
+        
+        if (primaryMesh.skeleton && this.headBone) {
+            const headIdx = primaryMesh.skeleton.bones.indexOf(this.headBone);
             if (headIdx !== -1) {
-                const boneInverse = this.bodyMesh.skeleton.boneInverses[headIdx];
-                // bindToWorld = headBone.matrixWorld * boneInverse
+                const boneInverse = primaryMesh.skeleton.boneInverses[headIdx];
                 const bindToWorld = new THREE.Matrix4().multiplyMatrices(this.headBone.matrixWorld, boneInverse);
                 worldToBind.copy(bindToWorld).invert();
             } else {
-                this.bodyMesh.updateWorldMatrix(true, false);
-                worldToBind.copy(this.bodyMesh.matrixWorld).invert();
+                primaryMesh.updateWorldMatrix(true, false);
+                worldToBind.copy(primaryMesh.matrixWorld).invert();
             }
         } else {
-            this.bodyMesh.updateWorldMatrix(true, false);
-            worldToBind.copy(this.bodyMesh.matrixWorld).invert();
+            primaryMesh.updateWorldMatrix(true, false);
+            worldToBind.copy(primaryMesh.matrixWorld).invert();
         }
 
         const handleWorldPos = handle.mesh.position.clone();
@@ -325,19 +319,14 @@ export class FaceSculptor {
         const deltaBindEnd   = worldEnd.clone().applyMatrix4(worldToBind);
         const deltaBind      = deltaBindEnd.clone().sub(centerBind);
 
-        // Calcoliamo il raggio convertendo un punto distante 'radius' in world space
         const radiusPt   = handleWorldPos.clone().add(new THREE.Vector3(handle.def.radius, 0, 0)).applyMatrix4(worldToBind);
         const radiusBind = centerBind.distanceTo(radiusPt);
-
-        console.log('[FS] centerBind=', centerBind.x.toFixed(3), centerBind.y.toFixed(3), centerBind.z.toFixed(3),
-                    'radiusBind=', radiusBind.toFixed(4), 'deltaBind=', deltaBind.x.toFixed(5), deltaBind.y.toFixed(5));
 
         this._applyGaussian(centerBind, deltaBind, radiusBind);
     }
 
     _onUp(e) {
         if (this.isDragging) {
-            console.log('[FS] drag END → salvato');
             this.isDragging = false;
             this.activeHandleIdx = -1;
             this.saveDeformations();
@@ -345,54 +334,64 @@ export class FaceSculptor {
     }
 
     // ----------------------------------------------------------------
-    _applyGaussian(centerLocal, deltaLocal, radiusLocal) {
-        const posAttr = this.bodyMesh.geometry.getAttribute('position');
-        const sigma2  = radiusLocal * radiusLocal * 2;
-        let affected  = 0;
+    _applyGaussian(centerBind, deltaBind, radiusBind) {
+        const sigma2 = radiusBind * radiusBind * 2;
 
-        for (const idx of this.headVertexIndices) {
-            const vx = posAttr.getX(idx);
-            const vy = posAttr.getY(idx);
-            const vz = posAttr.getZ(idx);
+        this.meshData.forEach(data => {
+            const { mesh, currentOffsets, headVertexIndices } = data;
+            const posAttr = mesh.geometry.getAttribute('position');
+            let affected = 0;
 
-            const d2 = (vx - centerLocal.x) ** 2 +
-                       (vy - centerLocal.y) ** 2 +
-                       (vz - centerLocal.z) ** 2;
-            const w  = Math.exp(-d2 / sigma2);
-            if (w < 0.002) continue;
-            affected++;
+            for (const idx of headVertexIndices) {
+                const vx = posAttr.getX(idx);
+                const vy = posAttr.getY(idx);
+                const vz = posAttr.getZ(idx);
 
-            posAttr.setXYZ(idx,
-                vx + deltaLocal.x * w,
-                vy + deltaLocal.y * w,
-                vz + deltaLocal.z * w,
-            );
-            this.currentOffsets[idx * 3]     += deltaLocal.x * w;
-            this.currentOffsets[idx * 3 + 1] += deltaLocal.y * w;
-            this.currentOffsets[idx * 3 + 2] += deltaLocal.z * w;
-        }
+                const dx = vx - centerBind.x;
+                const dy = vy - centerBind.y;
+                const dz = vz - centerBind.z;
 
-        if (affected > 0) {
-            posAttr.needsUpdate = true;
-            this.bodyMesh.geometry.computeVertexNormals();
-        }
-        console.log('[FS] vertici deformati:', affected, '/', this.headVertexIndices.length);
+                // Anisotropia: moltiplichiamo dz per 0.3. 
+                // Questo rende il "pennello" molto più profondo sull'asse Z (entrando nel viso)
+                // senza allargarlo sull'asse X/Y. Permette di prendere i bulbi oculari e i denti.
+                const d2 = dx*dx + dy*dy + (dz * 0.3)*(dz * 0.3);
+                
+                const w  = Math.exp(-d2 / sigma2);
+                if (w < 0.002) continue;
+                affected++;
+
+                posAttr.setXYZ(idx,
+                    vx + deltaBind.x * w,
+                    vy + deltaBind.y * w,
+                    vz + deltaBind.z * w,
+                );
+                currentOffsets[idx * 3]     += deltaBind.x * w;
+                currentOffsets[idx * 3 + 1] += deltaBind.y * w;
+                currentOffsets[idx * 3 + 2] += deltaBind.z * w;
+            }
+
+            if (affected > 0) {
+                posAttr.needsUpdate = true;
+                mesh.geometry.computeVertexNormals();
+            }
+        });
     }
 
     // ----------------------------------------------------------------
     reset() {
-        if (!this.bodyMesh) return;
-        const posAttr = this.bodyMesh.geometry.getAttribute('position');
-        for (const idx of this.headVertexIndices) {
-            posAttr.setXYZ(idx,
-                this.originalPositions[idx * 3],
-                this.originalPositions[idx * 3 + 1],
-                this.originalPositions[idx * 3 + 2],
-            );
-        }
-        posAttr.needsUpdate = true;
-        this.bodyMesh.geometry.computeVertexNormals();
-        this.currentOffsets.fill(0);
+        this.meshData.forEach(md => {
+            const posAttr = md.mesh.geometry.getAttribute('position');
+            for (const idx of md.headVertexIndices) {
+                posAttr.setXYZ(idx,
+                    md.originalPositions[idx * 3],
+                    md.originalPositions[idx * 3 + 1],
+                    md.originalPositions[idx * 3 + 2],
+                );
+            }
+            posAttr.needsUpdate = true;
+            md.mesh.geometry.computeVertexNormals();
+            md.currentOffsets.fill(0);
+        });
         this.handles.forEach(h => h.deformAccum.set(0, 0, 0));
         localStorage.removeItem(LOCALSTORAGE_KEY);
         console.log('[FS] reset effettuato');
@@ -400,43 +399,60 @@ export class FaceSculptor {
 
     // ----------------------------------------------------------------
     saveDeformations() {
-        const sparse = [];
-        const n = this.currentOffsets.length / 3;
-        for (let i = 0; i < n; i++) {
-            const ox = this.currentOffsets[i * 3];
-            const oy = this.currentOffsets[i * 3 + 1];
-            const oz = this.currentOffsets[i * 3 + 2];
-            if (Math.abs(ox) + Math.abs(oy) + Math.abs(oz) > 1e-7) {
-                sparse.push([i, ox, oy, oz]);
+        const meshesSave = this.meshData.map(data => {
+            const sparse = [];
+            const n = data.currentOffsets.length / 3;
+            for (let i = 0; i < n; i++) {
+                const ox = data.currentOffsets[i * 3];
+                const oy = data.currentOffsets[i * 3 + 1];
+                const oz = data.currentOffsets[i * 3 + 2];
+                if (Math.abs(ox) + Math.abs(oy) + Math.abs(oz) > 1e-7) {
+                    sparse.push([i, ox, oy, oz]);
+                }
             }
-        }
+            return { name: data.mesh.name, sparse };
+        });
+
         const accums = this.handles.map(h => [h.deformAccum.x, h.deformAccum.y, h.deformAccum.z]);
-        localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ sparse, accums }));
+        localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify({ meshesSave, accums }));
     }
 
     loadDeformations() {
         const raw = localStorage.getItem(LOCALSTORAGE_KEY);
-        if (!raw || !this.bodyMesh) return;
+        if (!raw || this.meshData.length === 0) return;
         try {
-            const { sparse, accums } = JSON.parse(raw);
-            const posAttr = this.bodyMesh.geometry.getAttribute('position');
-            for (const [i, ox, oy, oz] of sparse) {
-                if (i >= posAttr.count) continue;
-                posAttr.setXYZ(i,
-                    this.originalPositions[i * 3] + ox,
-                    this.originalPositions[i * 3 + 1] + oy,
-                    this.originalPositions[i * 3 + 2] + oz,
-                );
-                this.currentOffsets[i * 3]     = ox;
-                this.currentOffsets[i * 3 + 1] = oy;
-                this.currentOffsets[i * 3 + 2] = oz;
+            const parsed = JSON.parse(raw);
+            if (parsed.sparse) {
+                console.warn('[FS] Vecchio formato salvataggio incompatibile, reset...');
+                localStorage.removeItem(LOCALSTORAGE_KEY);
+                return;
             }
+
+            const { meshesSave, accums } = parsed;
+
+            meshesSave.forEach(saveData => {
+                const md = this.meshData.find(m => m.mesh.name === saveData.name);
+                if (!md) return;
+                const posAttr = md.mesh.geometry.getAttribute('position');
+                for (const [i, ox, oy, oz] of saveData.sparse) {
+                    if (i >= posAttr.count) continue;
+                    posAttr.setXYZ(i,
+                        md.originalPositions[i * 3] + ox,
+                        md.originalPositions[i * 3 + 1] + oy,
+                        md.originalPositions[i * 3 + 2] + oz,
+                    );
+                    md.currentOffsets[i * 3]     = ox;
+                    md.currentOffsets[i * 3 + 1] = oy;
+                    md.currentOffsets[i * 3 + 2] = oz;
+                }
+                posAttr.needsUpdate = true;
+                md.mesh.geometry.computeVertexNormals();
+            });
+
             if (accums) accums.forEach(([x, y, z], i) => {
                 if (this.handles[i]) this.handles[i].deformAccum.set(x, y, z);
             });
-            posAttr.needsUpdate = true;
-            this.bodyMesh.geometry.computeVertexNormals();
-            console.log('[FS] deformazioni caricate:', sparse.length, 'vertici');
+            console.log('[FS] deformazioni caricate per', meshesSave.length, 'mesh');
         } catch (err) {
             console.warn('[FS] errore load:', err);
         }

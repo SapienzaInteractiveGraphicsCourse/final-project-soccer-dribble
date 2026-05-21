@@ -90,6 +90,11 @@ document.addEventListener('pointerup', () => {
 let isCustomizationPaused = false;
 document.addEventListener('toggleCustomizationAnimation', (e) => {
     isCustomizationPaused = e.detail.paused;
+    if (!isCustomizationPaused) {
+        // Quando riprende l'animazione, riparti dalla corsa per una transizione più pulita
+        customizationAnimState = 'run';
+        customizationAnimTimer = 2 + Math.random() * 2;
+    }
 });
 
 // Aggiungiamo lo zoom con la rotellina del mouse
@@ -362,6 +367,9 @@ function animate() {
                         let progress = (customizationHeaderProgress % player.action.headerDuration) / player.action.headerDuration;
                         player.animator.animate(rawDelta, false, false, false, false, null, 0, null, true, progress);
                     }
+                } else {
+                    // Esegui l'animazione idle (fermo) quando l'animazione di customizzazione è in pausa
+                    player.animator.animate(rawDelta, false, false, false, false, null, 0, null, false, 0);
                 }
             }
         } else {

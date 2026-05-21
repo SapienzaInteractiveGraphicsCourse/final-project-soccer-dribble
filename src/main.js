@@ -156,17 +156,18 @@ document.addEventListener('customizePlayer', (e) => {
     playerCustomizer.changeBaseColor('Ch38_Body', skinHex);
     
     if (hairId !== undefined) {
-        playerCustomizer.toggleDefaultHair(false);
         if (hairId === "0") {
+            // Nessun capello custom: mostra il capello di default del modello
             playerCustomizer.removeAccessory('hair');
+            playerCustomizer.toggleDefaultHair(true);
         } else {
-            
+            // Capello custom: nasconde il default e carica il modello scelto
             playerCustomizer.toggleDefaultHair(false);
             const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
             const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
             const hairScale = 1.3; 
             playerCustomizer.equipAccessory(
-                '/models/hair_' + id + '.glb', 
+                '/models/hair_' + hairId + '.glb', 
                 'head', 
                 'hair', 
                 hairOffsetPos,

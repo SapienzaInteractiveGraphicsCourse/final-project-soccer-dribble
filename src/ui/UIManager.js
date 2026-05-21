@@ -35,24 +35,37 @@ export class UIManager {
         THREE.DefaultLoadingManager.onLoad = () => {
             if (!isFirstLoad) return; // Evita che il menu riappaia quando si carica il meteo in background
             isFirstLoad = false;
-            
+
+            const savedShirt = localStorage.getItem('customShirtColor');
+            const alreadyCustomized = savedShirt !== null; // true se esiste già una personalizzazione salvata
+
             setTimeout(() => {
                 this.loadingScreen.style.display = 'none';
-                this.customizationMenu.style.display = 'flex';
-                document.dispatchEvent(new Event('customizePlayerStart'));
-                
-                const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
-                const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
-                const savedHair = localStorage.getItem('customHair') || '0';
-                const savedHairColor = localStorage.getItem('customHairColor') || '#000000';
-                
-                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: savedShirt } }));
-                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: savedSkin } }));
-                // I capelli vengono applicati solo se c'è una scelta salvata diversa da '0'
-                if (savedHair !== '0') {
-                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: savedHair } }));
+
+                const shirtColor = savedShirt || '#ff0000';
+                const skinColor = localStorage.getItem('customSkinColor') || '#ffccaa';
+                const hairId = localStorage.getItem('customHair') || '0';
+                const hairColor = localStorage.getItem('customHairColor') || '#000000';
+
+                if (alreadyCustomized) {
+                    // Personalizzazione già presente: applica in background e vai al main menu
+                    document.dispatchEvent(new CustomEvent('customizePlayer', {
+                        detail: { shirtColor, skinColor, hairId, hairColor }
+                    }));
+                    this.mainMenu.style.display = 'flex';
+                } else {
+                    // Prima volta: apri il menu di personalizzazione
+                    this.customizationMenu.style.display = 'flex';
+                    document.dispatchEvent(new Event('customizePlayerStart'));
+
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: shirtColor } }));
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: skinColor } }));
+                    // I capelli vengono applicati solo se c'è una scelta salvata diversa da '0'
+                    if (hairId !== '0') {
+                        document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: hairId } }));
+                    }
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: hairColor } }));
                 }
-                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: savedHairColor } }));
             }, 500);
         };
     }

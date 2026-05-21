@@ -6,6 +6,7 @@ export class PlayerCustomizer {
         this.player = player; // Riferimento all'istanza della classe Player
         this.equippedAccessories = {}; // Mappa per tracciare cosa indossa in ogni "slot"
         this.textureLoader = new THREE.TextureLoader();
+        this._pendingHairColor = null; // Colore capelli da applicare dopo il caricamento asincrono
     }
 
     /**
@@ -105,9 +106,13 @@ export class PlayerCustomizer {
             
             // 6. Salviamo in memoria
             this.equippedAccessories[slotName] = accessoryMesh;
+
+            // 7. Applica il colore capelli pendente (salvato prima del caricamento asincrono)
             if (slotName === 'hair') {
-            this.changeHairColor('#000000'); 
-        }
+                const colorToApply = this._pendingHairColor || '#000000';
+                this.changeHairColor(colorToApply);
+                this._pendingHairColor = null;
+            }
         });
     }
 
@@ -138,16 +143,39 @@ export class PlayerCustomizer {
      * @param {string} hexString - Colore in formato '#rrggbb'
      */
     changeHairColor(hexString) {
-        const hairAccessory = this.equippedAccessories['hair'];
-        if (!hairAccessory) return;
-
         const color = new THREE.Color(hexString);
-        hairAccessory.traverse((child) => {
-            if (child.isMesh) {
-                child.material = child.material.clone();
-                child.material.color.copy(color);
-                child.material.needsUpdate = true;
-            }
-        });
+        let applied = false;
+
+        // Colora il capello custom (accessorio equipaggiato)
+        const hairAccessory = this.equippedAccessories['hair'];
+        if (hairAccessory) {
+            hairAccessory.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = child.material.clone();
+                    child.material.color.copy(color);
+                    child.material.needsUpdate = true;
+                }
+            });
+            applied = true;
+        }
+
+        // Colora il capello di default del modello (Ch38_Hair),
+        // ma solo se è visibile: se è nascosto (capello custom in caricamento)
+        // lasciamo applied = false così _pendingHairColor viene impostato correttamente.
+        if (this.player.model) {
+            this.player.model.traverse((child) => {
+                if (child.isMesh && child.name === 'Ch38_Hair' && child.visible) {
+                    child.material = child.material.clone();
+                    child.material.color.copy(color);
+                    child.material.needsUpdate = true;
+                    applied = true;
+                }
+            });
+        }
+
+        // Se il modello custom non è ancora caricato, salva il colore per dopo
+        if (!applied) {
+            this._pendingHairColor = hexString;
+        }
     }
 }

@@ -192,18 +192,22 @@ document.addEventListener('previewCustomization', (e) => {
     if (type === 'hairColor') {
         playerCustomizer.changeHairColor(color);
     }
+    if (type === 'accessory') {
+        playerCustomizer.equipGlasses(id);
+    }
 });
 
 document.addEventListener('resetCustomization', () => {
     // Ripristina i valori di default
     playerCustomizer.toggleDefaultHair(true);
     playerCustomizer.removeAccessory('hair');
+    playerCustomizer.equipGlasses('0');
     playerCustomizer.changeBaseColor('Ch38_Shirt', 0xff0000);
     playerCustomizer.changeBaseColor('Ch38_Body', 0xffccaa);
 });
 
 document.addEventListener('customizePlayer', (e) => {
-    const { shirtColor, skinColor, hairId, hairColor } = e.detail;
+    const { shirtColor, skinColor, hairId, accessoryId, hairColor } = e.detail;
     
     const shirtHex = parseInt(shirtColor.replace('#', '0x'));
     const skinHex = parseInt(skinColor.replace('#', '0x'));
@@ -234,6 +238,9 @@ document.addEventListener('customizePlayer', (e) => {
     }
     if (hairColor) {
         playerCustomizer.changeHairColor(hairColor);
+    }
+    if (accessoryId !== undefined) {
+        playerCustomizer.equipGlasses(accessoryId);
     }
 });
 

@@ -45,12 +45,13 @@ export class UIManager {
                 const shirtColor = savedShirt || '#ff0000';
                 const skinColor = localStorage.getItem('customSkinColor') || '#ffccaa';
                 const hairId = localStorage.getItem('customHair') || '0';
+                const accessoryId = localStorage.getItem('customAccessory') || '0';
                 const hairColor = localStorage.getItem('customHairColor') || '#000000';
 
                 if (alreadyCustomized) {
                     // Personalizzazione già presente: applica in background e vai al main menu
                     document.dispatchEvent(new CustomEvent('customizePlayer', {
-                        detail: { shirtColor, skinColor, hairId, hairColor }
+                        detail: { shirtColor, skinColor, hairId, accessoryId, hairColor }
                     }));
                     this.mainMenu.style.display = 'flex';
                 } else {
@@ -63,6 +64,9 @@ export class UIManager {
                     // I capelli vengono applicati solo se c'è una scelta salvata diversa da '0'
                     if (hairId !== '0') {
                         document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: hairId } }));
+                    }
+                    if (accessoryId !== '0') {
+                        document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: accessoryId } }));
                     }
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: hairColor } }));
                 }
@@ -99,7 +103,7 @@ export class UIManager {
 
             // --- FORZA IL COLORE NERO SUI MODEL VIEWER DEI CAPELLI ---
             
-            const modelViewers = customizationMenu.querySelectorAll('model-viewer');
+            const modelViewers = customizationMenu.querySelectorAll('.btn-hair model-viewer');
             modelViewers.forEach(viewer => {
                 viewer.addEventListener('load', () => {
                     if (viewer.model && viewer.model.materials) {
@@ -114,18 +118,22 @@ export class UIManager {
 
             // --- EVENTI TABS ---
             const tabHair = document.getElementById('tab-hair');
+            const tabAccessories = document.getElementById('tab-accessories');
             const tabColors = document.getElementById('tab-colors');
             const tabFace = document.getElementById('tab-face');
             const sectionHair = document.getElementById('section-hair');
+            const sectionAccessories = document.getElementById('section-accessories');
             const sectionColors = document.getElementById('section-colors');
             const sectionFace = document.getElementById('section-face');
 
             const _setActiveTab = (activeTab) => {
                 // Reset tutti
                 tabHair.style.backgroundColor = '#222';
+                tabAccessories.style.backgroundColor = '#222';
                 tabColors.style.backgroundColor = '#222';
                 tabFace.style.backgroundColor = '#222';
                 sectionHair.style.display = 'none';
+                sectionAccessories.style.display = 'none';
                 sectionColors.style.display = 'none';
                 sectionFace.style.display = 'none';
                 // Attiva quello scelto
@@ -138,6 +146,11 @@ export class UIManager {
             tabHair.addEventListener('click', (e) => {
                 e.stopPropagation();
                 _setActiveTab({ btn: tabHair, section: sectionHair, id: 'hair' });
+            });
+
+            tabAccessories.addEventListener('click', (e) => {
+                e.stopPropagation();
+                _setActiveTab({ btn: tabAccessories, section: sectionAccessories, id: 'accessories' });
             });
 
             tabColors.addEventListener('click', (e) => {
@@ -162,6 +175,18 @@ export class UIManager {
                     const hairId = btn.getAttribute('data-hair');
                     selectedHair = hairId;
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: hairId } }));
+                });
+            });
+
+            // --- EVENTI SCELTA ACCESSORI ---
+            let selectedAccessory = localStorage.getItem('customAccessory') || '0';
+            const accessoryButtons = document.querySelectorAll('.btn-accessory');
+            accessoryButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const accId = btn.getAttribute('data-accessory');
+                    selectedAccessory = accId;
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: accId } }));
                 });
             });
 
@@ -194,6 +219,7 @@ export class UIManager {
                 const defaultSkin = '#ffccaa';
                 const defaultHairColor = '#000000';
                 selectedHair = '0';
+                selectedAccessory = '0';
 
                 // Aggiorna visivamente i color picker
                 document.getElementById('color-shirt').value = defaultShirt;
@@ -204,6 +230,7 @@ export class UIManager {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: defaultShirt } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: defaultSkin } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: '0' } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: '0' } }));
 
                 // Deseleziona tutti i bottoni capello e seleziona "Nessuno"
                 document.querySelectorAll('.btn-hair').forEach(b => {
@@ -214,6 +241,17 @@ export class UIManager {
                 if (noneBtn) {
                     noneBtn.style.border = '2px solid #4CAF50';
                     noneBtn.style.backgroundColor = '#e8f5e9';
+                }
+
+                // Deseleziona tutti gli accessori e seleziona "Nessuno"
+                document.querySelectorAll('.btn-accessory').forEach(b => {
+                    b.style.border = '2px solid transparent';
+                    b.style.backgroundColor = 'white';
+                });
+                const noneAccBtn = document.querySelector('.btn-accessory[data-accessory="0"]');
+                if (noneAccBtn) {
+                    noneAccBtn.style.border = '2px solid #4CAF50';
+                    noneAccBtn.style.backgroundColor = '#e8f5e9';
                 }
 
                 // Invia evento di reset al motore
@@ -239,10 +277,11 @@ export class UIManager {
                 localStorage.setItem('customShirtColor', shirtColor);
                 localStorage.setItem('customSkinColor', skinColor);
                 localStorage.setItem('customHair', selectedHair);
+                localStorage.setItem('customAccessory', selectedAccessory);
                 localStorage.setItem('customHairColor', hairColor);
 
                 document.dispatchEvent(new CustomEvent('customizePlayer', {
-                    detail: { shirtColor, skinColor, hairId: selectedHair, hairColor }
+                    detail: { shirtColor, skinColor, hairId: selectedHair, accessoryId: selectedAccessory, hairColor }
                 }));
                 document.dispatchEvent(new Event('customizePlayerEnd'));
 

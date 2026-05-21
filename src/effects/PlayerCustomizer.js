@@ -178,4 +178,71 @@ export class PlayerCustomizer {
             this._pendingHairColor = hexString;
         }
     }
+
+    /**
+     * EQUIPAGGIA OCCHIALI DA SOLE
+     * Utilizza la mesh delle ciglia per un posizionamento più preciso come richiesto
+     */
+    equipGlasses(id) {
+        const slotName = 'accessory';
+        if (!id || id === '0') {
+            this.removeAccessory(slotName);
+            return;
+        }
+
+        // =======================================================
+        // MAPPATURA CONFIGURAZIONE OCCHIALI DA SOLE
+        // Puoi modificare questi valori per ogni singolo occhiale:
+        // - position: [asse_x (destra/sinistra), asse_y (su/giù), asse_z (avanti/indietro)]
+        // - rotation: [asse_x, asse_y, asse_z] (rotazione in radianti, es. Math.PI/2)
+        // - scale: grandezza generale del modello
+        // =======================================================
+        
+        const GLASSES_CONFIG = {
+            '1': { position: [0, 0.1, 0.2], rotation: [0, 2*Math.PI, 0], scale: 0.015 },
+            '2': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 },
+            '3': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 },
+            '4': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 },
+            '5': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 }
+        };
+
+        const modelUrl = `/models/sunglasses_${id}.glb`;
+
+        this.removeAccessory(slotName);
+
+        modelManager.load(modelUrl, (gltf) => {
+            const accessoryMesh = gltf.scene;
+
+            accessoryMesh.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    child.frustumCulled = false;
+                }
+            });
+
+            // Attacchiamo all'osso della testa (metodo più sicuro per i modelli animati)
+            const bone = this.player.animator.bones['head'];
+            if (bone) {
+                const config = GLASSES_CONFIG[id] || { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 };
+                console.log(`Applicazione occhiali ID ${id} con scala:`, config.scale);
+
+                const boneWorldScale = new THREE.Vector3();
+                bone.getWorldScale(boneWorldScale);
+                const scaleMultiplier = 1.0 / (boneWorldScale.x > 0.0001 ? boneWorldScale.x : 1.0);
+                
+                // Applica scala
+                accessoryMesh.scale.setScalar(config.scale * scaleMultiplier);
+                
+                // Applica posizione e rotazione
+                accessoryMesh.position.set(config.position[0], config.position[1], config.position[2]).multiplyScalar(scaleMultiplier);
+                accessoryMesh.rotation.set(config.rotation[0], config.rotation[1], config.rotation[2]);
+
+                bone.add(accessoryMesh);
+                this.equippedAccessories[slotName] = accessoryMesh;
+            } else {
+                console.warn("Osso 'head' non trovato sul personaggio!");
+            }
+        });
+    }
 }

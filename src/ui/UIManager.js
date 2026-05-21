@@ -77,110 +77,25 @@ export class UIManager {
             this.settingsMenu.style.display = 'flex';
         });
 
-        // Crea dinamicamente il tasto "TRAINING" e il relativo sottomenu
         const btnPlay = document.getElementById('btn-play');
-        if (btnPlay && btnPlay.parentNode) {
-            const trainingBtn = document.createElement('button');
-            trainingBtn.id = 'btn-training';
-            trainingBtn.className = btnPlay.className; // Usa lo stesso stile di CSS
-            trainingBtn.innerText = 'TRAINING';
-            trainingBtn.style.marginTop = '15px';
-            btnPlay.parentNode.insertBefore(trainingBtn, btnPlay.nextSibling);
+        const trainingBtn = document.getElementById('btn-training');
+        const btnCustomize = document.getElementById('btn-customize');
 
-            const btnCustomize = document.createElement('button');
-            btnCustomize.id = 'btn-customize';
-            btnCustomize.className = btnPlay.className;
-            btnCustomize.innerText = 'PERSONALIZZA GIOCATORE';
-            btnCustomize.style.marginTop = '15px';
-            btnPlay.parentNode.insertBefore(btnCustomize, trainingBtn.nextSibling);
-
+        if (btnPlay && trainingBtn && btnCustomize) {
             const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
             const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
             const savedHairColor = localStorage.getItem('customHairColor') || '#000000';
 
-            // --- MENU PERSONALIZZAZIONE ---
-            const customizationMenu = document.createElement('div');
-            customizationMenu.id = 'customization-menu';
-            customizationMenu.className = this.formationMenu.className;
-            customizationMenu.style.display = 'none';
-            customizationMenu.style.flexDirection = 'row';
-            customizationMenu.style.justifyContent = 'flex-start';
-            customizationMenu.style.alignItems = 'center';
-            customizationMenu.style.backgroundColor = 'transparent'; // Sfondo trasparente per l'anteprima 3D
-            customizationMenu.innerHTML = `
-                <style>
-                    #customization-container::-webkit-scrollbar {
-                        width: 12px;
-                    }
-                    #customization-container::-webkit-scrollbar-track {
-                        background: rgba(0, 0, 0, 0.3);
-                        border-radius: 10px;
-                        margin-block: 10px;
-                    }
-                    #customization-container::-webkit-scrollbar-thumb {
-                        background: linear-gradient(180deg, #4CAF50, #8BC34A);
-                        border-radius: 10px;
-                        border: 3px solid rgba(0,0,0,0.8);
-                    }
-                    #customization-container::-webkit-scrollbar-thumb:hover {
-                        background: linear-gradient(180deg, #66BB6A, #AED581);
-                    }
-                </style>
-                <div id="customization-container" style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; gap: 20px; margin-left: 5vw; border: 2px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); width: 400px; max-height: 80vh; overflow-y: auto; overflow-x: hidden;">
-                    <h1 style="color: white; font-family: sans-serif; margin-bottom: 5px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center;">CREA IL TUO GIOCATORE</h1>
-                    
-                    <!-- SEZIONI TABS -->
-                    <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 15px;">
-                        <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">CAPELLI</button>
-                        <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORI</button>
-                    </div>
-
-                    <!-- SEZIONE CAPELLI -->
-                    <div id="section-hair" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <button class="menu-btn btn-hair" data-hair="0" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <div style="width: 100%; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🧑‍🦲</div>
-        
-                            </button>
-                            <button class="menu-btn btn-hair" data-hair="1" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>  
-                            </button>
-                            <button class="menu-btn btn-hair" data-hair="2" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_2.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
-                                
-                            </button>
-                            <button class="menu-btn btn-hair" data-hair="3" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
-                            </button>
-                            <button class="menu-btn btn-hair" data-hair="5" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
-                                <model-viewer src="/models/hair_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- SEZIONE COLORI -->
-                    <div id="section-colors" style="display: none; flex-direction: column; gap: 20px; width: 100%; font-family: sans-serif;">
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE MAGLIA</label>
-                            <input type="color" id="color-shirt" value="${savedShirt}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE PELLE</label>
-                            <input type="color" id="color-skin" value="${savedSkin}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <label style="color: white; margin-bottom: 10px; font-size: 1.2rem; font-weight: bold;">COLORE CAPELLI</label>
-                            <input type="color" id="color-hair" value="${savedHairColor}" style="width: 60px; height: 60px; cursor: pointer; border: 2px solid white; border-radius: 8px; background: none;">
-                        </div>
-                    </div>
-
-                    <button id="btn-save-customization" class="${btnPlay.className}" style="margin-top: 20px; width: 100%;">SALVA E CONTINUA</button>
-                    <button id="btn-reset-customization" class="${btnPlay.className}" style="margin-top: 8px; width: 100%; background-color: #555; border-color: #555; font-size: 0.9rem;">↺ RESET PREDEFINITO</button>
-                </div>
-                <button id="btn-toggle-animation" class="${btnPlay.className}" style="position: absolute; bottom: 30px; right: 30px; font-size: 1.2rem; padding: 15px 30px; background-color: #f44336; border-color: #f44336; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">STOP ANIMAZIONE</button>
-            `;
-            this.mainMenu.parentNode.appendChild(customizationMenu);
+            const customizationMenu = document.getElementById('customization-menu');
             this.customizationMenu = customizationMenu;
+
+            const colorShirtInput = document.getElementById('color-shirt');
+            const colorSkinInput = document.getElementById('color-skin');
+            const colorHairInput = document.getElementById('color-hair');
+            
+            if(colorShirtInput) colorShirtInput.value = savedShirt;
+            if(colorSkinInput) colorSkinInput.value = savedSkin;
+            if(colorHairInput) colorHairInput.value = savedHairColor;
 
             // --- FORZA IL COLORE NERO SUI MODEL VIEWER DEI CAPELLI ---
             
@@ -324,20 +239,7 @@ export class UIManager {
                 document.dispatchEvent(new CustomEvent('toggleCustomizationAnimation', { detail: { paused: false } }));
             });
 
-            const trainingMenu = document.createElement('div');
-            trainingMenu.id = 'training-menu';
-            trainingMenu.className = this.formationMenu.className;
-            trainingMenu.style.display = 'none';
-            trainingMenu.style.flexDirection = 'column';
-            trainingMenu.style.alignItems = 'center';
-            trainingMenu.style.gap = '20px';
-            trainingMenu.innerHTML = `
-                <h1 style="color: white; font-family: sans-serif; margin-bottom: 20px; font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">TRAINING MODE</h1>
-                <button id="btn-train-freekick" class="${btnPlay.className}">PUNIZIONE</button>
-                <button id="btn-train-penalty" class="${btnPlay.className}">RIGORE</button>
-                <button id="btn-back-training" class="${btnPlay.className}" style="margin-top: 20px;">INDIETRO</button>
-            `;
-            this.mainMenu.parentNode.appendChild(trainingMenu);
+            const trainingMenu = document.getElementById('training-menu');
 
             trainingBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -363,38 +265,8 @@ export class UIManager {
                 this.startGame('penalty');
             });
             
-            // --- NUOVO: MENU IMPOSTAZIONI METEO E ORARIO ---
-            const settingsMenu = document.createElement('div');
-            settingsMenu.id = 'settings-menu';
-            settingsMenu.className = this.formationMenu.className;
-            settingsMenu.style.display = 'none';
-            settingsMenu.style.flexDirection = 'column';
-            settingsMenu.style.alignItems = 'center';
-            settingsMenu.style.gap = '20px';
-            settingsMenu.innerHTML = `
-                <h1 style="color: white; font-family: sans-serif; margin-bottom: 20px; font-size: 3rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">IMPOSTAZIONI PARTITA</h1>
-                <div style="display: flex; gap: 30px; font-family: sans-serif; margin-bottom: 20px;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">ORARIO</label>
-                        <select id="select-time" style="padding: 10px 20px; font-size: 18px; border-radius: 8px; border: 2px solid #4CAF50; background: rgba(0,0,0,0.7); color: white; cursor: pointer; outline: none;">
-                            <option value="day">Giorno (Day)</option>
-                            <option value="night">Notte (Night)</option>
-                        </select>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">METEO</label>
-                        <select id="select-weather" style="padding: 10px 20px; font-size: 18px; border-radius: 8px; border: 2px solid #4CAF50; background: rgba(0,0,0,0.7); color: white; cursor: pointer; outline: none;">
-                            <option value="clear">Sereno (Clear)</option>
-                            <option value="fog">Nebbia (Fog)</option>
-                            <option value="rain">Pioggia (Rain)</option>
-                            <option value="snow">Neve (Snow)</option>
-                        </select>
-                    </div>
-                </div>
-                <button id="btn-next-settings" class="${btnPlay.className}">AVANTI</button>
-                <button id="btn-back-settings" class="${btnPlay.className}" style="margin-top: 10px;">INDIETRO</button>
-            `;
-            this.mainMenu.parentNode.appendChild(settingsMenu);
+            // --- MENU IMPOSTAZIONI METEO E ORARIO ---
+            const settingsMenu = document.getElementById('settings-menu');
             this.settingsMenu = settingsMenu;
 
             document.getElementById('btn-next-settings').addEventListener('click', (e) => {
@@ -484,33 +356,14 @@ export class UIManager {
 
     showInGameMessage(text) {
         let msg = document.getElementById('ingame-message-box');
-        if (!msg) {
-            msg = document.createElement('div');
-            msg.id = 'ingame-message-box';
-            document.body.appendChild(msg);
-        }
+        if (!msg) return;
+        
         msg.innerHTML = text;
-        msg.style.cssText = `
-        position: fixed; 
-        bottom: 10%; 
-        left: 50%; 
-        transform: translateX(-50%);
-        color: white; 
-        font-size: 50px; 
-        font-weight: bold; 
-        text-shadow: 2px 2px 10px black;
-        pointer-events: none; 
-        transition: opacity 1s; 
-        z-index: 100; 
-        font-family: sans-serif;
-        opacity: 1; 
-    `;
+        msg.style.opacity = '1';
 
         if (msg.fadeTimer) clearTimeout(msg.fadeTimer);
-        if (msg.removeTimer) clearTimeout(msg.removeTimer);
 
         msg.fadeTimer = setTimeout(() => { msg.style.opacity = '0'; }, 1000);
-        msg.removeTimer = setTimeout(() => { msg.remove(); }, 2000);
     }
 
     updateHUD(stamina, matchTime, homeScore, awayScore) {
@@ -648,29 +501,7 @@ export class UIManager {
         
         if (isActive) {
             // --- MOSTRA SCRITTA REPLAY ---
-            if (!replayIcon) {
-                replayIcon = document.createElement('div');
-                replayIcon.id = 'replay-indicator';
-                replayIcon.innerHTML = '<span style="animation: blinker 1s linear infinite; display: inline-block;">🔴 REPLAY</span><br><span style="font-size: 16px; color: white; font-weight: normal; text-shadow: 1px 1px 0 #000;">PRESS SPACEBAR TO SKIP</span>';
-                replayIcon.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    left: 20px;
-                    color: red;
-                    font-size: 30px;
-                    font-weight: bold;
-                    font-family: sans-serif;
-                    text-shadow: 2px 2px 0 #000;
-                    z-index: 1000;
-                `;
-                const style = document.createElement('style');
-                style.innerHTML = `@keyframes blinker { 50% { opacity: 0; } }`;
-                document.head.appendChild(style);
-                document.body.appendChild(replayIcon);
-            } else {
-                replayIcon.innerHTML = '<span style="animation: blinker 1s linear infinite; display: inline-block;">🔴 REPLAY</span><br><span style="font-size: 16px; color: white; font-weight: normal; text-shadow: 1px 1px 0 #000;">PRESS SPACEBAR TO SKIP</span>';
-            }
-            replayIcon.style.display = 'block';
+            if (replayIcon) replayIcon.style.display = 'block';
 
             // --- NASCONDI L'HUD ---
             if (radar) radar.style.display = 'none';

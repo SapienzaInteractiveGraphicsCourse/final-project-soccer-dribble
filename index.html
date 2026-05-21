@@ -22,6 +22,8 @@
     <div id="main-menu" class="menu-screen">
       <h1>SOCCER DRIBBLE</h1>
       <button id="btn-play" class="menu-btn">PLAY</button>
+      <button id="btn-training" class="menu-btn" style="margin-top: 15px;">TRAINING</button>
+      <button id="btn-customize" class="menu-btn" style="margin-top: 15px;">PERSONALIZZA GIOCATORE</button>
       <button id="btn-commands" class="menu-btn">COMANDI</button>
     </div>
 
@@ -119,6 +121,88 @@
       </div>
       <button id="btn-back-formation" class="menu-btn" style="margin-top:20px;">INDIETRO</button>
     </div>
+
+    <div id="customization-menu" class="menu-screen customization-menu-style" style="display: none;">
+        <div id="customization-container" class="customization-container-style">
+            <h1 class="customization-h1-style">CREA IL TUO GIOCATORE</h1>
+            
+            <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 15px;">
+                <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">CAPELLI</button>
+                <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORI</button>
+            </div>
+
+            <div id="section-hair" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <button class="menu-btn btn-hair" data-hair="0">
+                        <div style="width: 100%; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🧑‍🦲</div>
+                    </button>
+                    <button class="menu-btn btn-hair" data-hair="1">
+                        <model-viewer src="/models/hair_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>  
+                    </button>
+                    <button class="menu-btn btn-hair" data-hair="2">
+                        <model-viewer src="/models/hair_2.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                    <button class="menu-btn btn-hair" data-hair="3">
+                        <model-viewer src="/models/hair_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                    <button class="menu-btn btn-hair" data-hair="5">
+                        <model-viewer src="/models/hair_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                </div>
+            </div>
+
+            <div id="section-colors" style="display: none; flex-direction: column; gap: 20px; width: 100%; font-family: sans-serif;">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <label class="color-label">COLORE MAGLIA</label>
+                    <input type="color" id="color-shirt" value="#ff0000" class="color-picker">
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <label class="color-label">COLORE PELLE</label>
+                    <input type="color" id="color-skin" value="#ffccaa" class="color-picker">
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <label class="color-label">COLORE CAPELLI</label>
+                    <input type="color" id="color-hair" value="#000000" class="color-picker">
+                </div>
+            </div>
+
+            <button id="btn-save-customization" class="menu-btn" style="margin-top: 20px; width: 100%;">SALVA E CONTINUA</button>
+            <button id="btn-reset-customization" class="menu-btn reset-btn">↺ RESET PREDEFINITO</button>
+        </div>
+        <button id="btn-toggle-animation" class="menu-btn toggle-anim-btn">STOP ANIMAZIONE</button>
+    </div>
+
+    <div id="training-menu" class="menu-screen training-menu-style" style="display: none;">
+        <h1 class="training-h1-style">TRAINING MODE</h1>
+        <button id="btn-train-freekick" class="menu-btn">PUNIZIONE</button>
+        <button id="btn-train-penalty" class="menu-btn">RIGORE</button>
+        <button id="btn-back-training" class="menu-btn" style="margin-top: 20px;">INDIETRO</button>
+    </div>
+
+    <div id="settings-menu" class="menu-screen settings-menu-style" style="display: none;">
+        <h1 class="settings-h1-style">IMPOSTAZIONI PARTITA</h1>
+        <div style="display: flex; gap: 30px; font-family: sans-serif; margin-bottom: 20px;">
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">ORARIO</label>
+                <select id="select-time" class="settings-select">
+                    <option value="day">Giorno (Day)</option>
+                    <option value="night">Notte (Night)</option>
+                </select>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">METEO</label>
+                <select id="select-weather" class="settings-select">
+                    <option value="clear">Sereno (Clear)</option>
+                    <option value="fog">Nebbia (Fog)</option>
+                    <option value="rain">Pioggia (Rain)</option>
+                    <option value="snow">Neve (Snow)</option>
+                </select>
+            </div>
+        </div>
+        <button id="btn-next-settings" class="menu-btn">AVANTI</button>
+        <button id="btn-back-settings" class="menu-btn" style="margin-top: 10px;">INDIETRO</button>
+    </div>
+
   </div>
 
   <div id="blocker" style="display: none;">
@@ -164,6 +248,13 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div id="ingame-message-box" class="ingame-message-style" style="opacity: 0; pointer-events: none;"></div>
+  
+  <div id="replay-indicator" class="replay-indicator-style" style="display: none;">
+      <span class="blinker-text">🔴 REPLAY</span><br>
+      <span class="replay-skip-text">PRESS SPACEBAR TO SKIP</span>
   </div>
 
   <script type="module" src="/src/main.js"></script>

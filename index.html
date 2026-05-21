@@ -129,6 +129,7 @@
             <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 15px;">
                 <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">CAPELLI</button>
                 <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORI</button>
+                <button id="tab-face" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">VISO 🧬</button>
             </div>
 
             <div id="section-hair" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
@@ -164,6 +165,24 @@
                     <label class="color-label">COLORE CAPELLI</label>
                     <input type="color" id="color-hair" value="#000000" class="color-picker">
                 </div>
+            </div>
+
+            <!-- SEZIONE VISO: sculpting interattivo -->
+            <div id="section-face" style="display: none; flex-direction: column; gap: 12px; width: 100%;">
+                <div class="face-sculpt-info">
+                    <span class="face-sculpt-icon">👆</span>
+                    <p>Fai <strong>zoom col mouse</strong> sul viso, poi <strong>trascina</strong> uno degli handle colorati per modellare il viso.</p>
+                </div>
+                <div class="face-handles-legend">
+                    <span class="handle-dot" style="background:#ff6b6b;"></span><span>👃 Naso</span>
+                    <span class="handle-dot" style="background:#ff4444;"></span><span>👄 Bocca</span>
+                    <span class="handle-dot" style="background:#44aaff;"></span><span>👁 Occhi</span>
+                    <span class="handle-dot" style="background:#ffaa44;"></span><span>👂 Orecchie</span>
+                </div>
+                <div class="face-sculpt-tip">
+                    ℹ️ Scorri la rotella del mouse per avvicinarti al viso
+                </div>
+                <button id="btn-reset-face" class="menu-btn" style="background:#c0392b; border-color:#c0392b; width:100%; padding:12px; font-size:0.95rem;">🗑️ RESET VISO</button>
             </div>
 
             <button id="btn-save-customization" class="menu-btn" style="margin-top: 20px; width: 100%;">SALVA E CONTINUA</button>

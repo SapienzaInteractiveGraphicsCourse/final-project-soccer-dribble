@@ -700,3 +700,65 @@ canvas {
 @keyframes blinker {
     50% { opacity: 0; }
 }
+
+/* ============================================================
+   FACE SCULPTING UI
+   ============================================================ */
+
+.face-sculpt-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(68, 170, 255, 0.12);
+    border: 1px solid rgba(68, 170, 255, 0.4);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #cce6ff;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.face-sculpt-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.face-sculpt-info strong {
+    color: #44aaff;
+}
+
+.face-handles-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: #ddd;
+}
+
+.handle-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+    flex-shrink: 0;
+}
+
+.face-sculpt-tip {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #aaa;
+    padding: 6px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    letter-spacing: 0.5px;
+}
+
+/* Highlight sull'handle attivo durante drag */
+.face-active-handle {
+    filter: brightness(1.5) drop-shadow(0 0 8px white);
+}

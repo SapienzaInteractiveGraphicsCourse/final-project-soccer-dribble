@@ -115,24 +115,43 @@ export class UIManager {
             // --- EVENTI TABS ---
             const tabHair = document.getElementById('tab-hair');
             const tabColors = document.getElementById('tab-colors');
+            const tabFace = document.getElementById('tab-face');
             const sectionHair = document.getElementById('section-hair');
             const sectionColors = document.getElementById('section-colors');
+            const sectionFace = document.getElementById('section-face');
+
+            const _setActiveTab = (activeTab) => {
+                // Reset tutti
+                tabHair.style.backgroundColor = '#222';
+                tabColors.style.backgroundColor = '#222';
+                tabFace.style.backgroundColor = '#222';
+                sectionHair.style.display = 'none';
+                sectionColors.style.display = 'none';
+                sectionFace.style.display = 'none';
+                // Attiva quello scelto
+                activeTab.btn.style.backgroundColor = '#4CAF50';
+                activeTab.section.style.display = 'flex';
+                // Notifica cambio tab
+                document.dispatchEvent(new CustomEvent('customizationTabChanged', { detail: { tab: activeTab.id } }));
+            };
 
             tabHair.addEventListener('click', (e) => {
                 e.stopPropagation();
-                sectionHair.style.display = 'flex';
-                sectionColors.style.display = 'none';
-                tabHair.style.backgroundColor = '#4CAF50';
-                tabColors.style.backgroundColor = '#222';
+                _setActiveTab({ btn: tabHair, section: sectionHair, id: 'hair' });
             });
 
             tabColors.addEventListener('click', (e) => {
                 e.stopPropagation();
-                sectionHair.style.display = 'none';
-                sectionColors.style.display = 'flex';
-                tabColors.style.backgroundColor = '#4CAF50';
-                tabHair.style.backgroundColor = '#222';
+                _setActiveTab({ btn: tabColors, section: sectionColors, id: 'colors' });
             });
+
+            tabFace.addEventListener('click', (e) => {
+                e.stopPropagation();
+                _setActiveTab({ btn: tabFace, section: sectionFace, id: 'face' });
+            });
+
+            // Reset a CAPELLI all'apertura
+            _setActiveTab({ btn: tabHair, section: sectionHair, id: 'hair' });
 
             // --- EVENTI SCELTA CAPELLI ---
             let selectedHair = localStorage.getItem('customHair') || '0';
@@ -200,6 +219,15 @@ export class UIManager {
                 // Invia evento di reset al motore
                 document.dispatchEvent(new Event('resetCustomization'));
             });
+
+            // --- RESET VISO ---
+            const btnResetFace = document.getElementById('btn-reset-face');
+            if (btnResetFace) {
+                btnResetFace.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.dispatchEvent(new Event('resetFaceSculpting'));
+                });
+            }
 
             document.getElementById('btn-save-customization').addEventListener('click', (e) => {
                 e.stopPropagation();

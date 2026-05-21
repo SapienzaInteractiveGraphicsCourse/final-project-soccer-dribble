@@ -23,6 +23,7 @@ import { ReplaySystem } from './core/ReplaySystem.js';
 import { BenchPlayer } from './entities/BenchPlayer.js';
 import { PossessionManager, MatchState } from './game/PossessionManager.js';
 import { PlayerCustomizer } from './effects/PlayerCustomizer.js';
+import { FaceSculptor } from './effects/FaceSculptor.js';
 
 // --- INIZIALIZZAZIONE CORE ---
 const { scene, camera, renderer } = setupScene();
@@ -46,38 +47,58 @@ let isDragging = false;
 let previousMouseX = 0;
 let customizationDistance = 3.5;
 
+// --- FACE SCULPTING ---
+let faceSculptor = null;       // istanza FaceSculptor (creata dopo loadGLB)
+let isFaceTabActive = false;   // true quando il tab VISO è aperto
+let faceZoomDistance = 0.55;   // distanza camera quando in modalità viso
+let faceZoomTarget = 3.5;      // valore corrente di zoom (lerp verso faceZoomDistance o 3.5)
+
+// Crea il FaceSculptor appena il modello del player è pronto
+// Usiamo un piccolo polling: controlliamo ogni frame se player.model esiste
+let faceSculptorInited = false;
+
 document.addEventListener('customizePlayerStart', () => {
     isCustomizing = true;
-    customizationRotation = 0; // Reset frontale verso la telecamera
-    customizationDistance = 3.5; // Reset zoom
+    customizationRotation = 0;
+    customizationDistance = 3.5;
+    faceZoomTarget = 3.5;     // reset zoom
+    isFaceTabActive = false;
     if (player.model) {
-        player.model.position.set(0, 0, 0); // Mettilo sul campo per vedere lo stadio!
+        player.model.position.set(0, 0, 0);
     }
     if (ball && ball.mesh) {
-        ball.mesh.visible = false; // Nascondi la palla
+        ball.mesh.visible = false;
+    }
+    // Prova ad inizializzare il FaceSculptor ora (se il modello c'è già)
+    if (!faceSculptorInited && player.model) {
+        faceSculptor = new FaceSculptor(player.model, scene, camera, renderer.domElement);
+        faceSculptor.init();
+        faceSculptorInited = true;
     }
 });
 
 document.addEventListener('customizePlayerEnd', () => {
     isCustomizing = false;
+    isFaceTabActive = false;
+    if (faceSculptor) faceSculptor.deactivate();
     if (player.model) {
-        player.model.position.set(0, -100, 0); // Nascondilo di nuovo
+        player.model.position.set(0, -100, 0);
     }
     if (ball && ball.mesh) {
-        ball.mesh.visible = true; // Mostra di nuovo la palla
+        ball.mesh.visible = true;
     }
 });
 
-// Aggiungiamo il drag per ruotare il personaggio
+// Aggiungiamo il drag per ruotare il personaggio (solo quando NON siamo sul tab viso)
 document.addEventListener('pointerdown', (e) => {
-    if (isCustomizing && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+    if (isCustomizing && !isFaceTabActive && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
         isDragging = true;
         previousMouseX = e.clientX;
     }
 });
 
 document.addEventListener('pointermove', (e) => {
-    if (isCustomizing && isDragging) {
+    if (isCustomizing && !isFaceTabActive && isDragging) {
         const deltaX = e.clientX - previousMouseX;
         customizationRotation += deltaX * 0.01;
         previousMouseX = e.clientX;
@@ -98,13 +119,42 @@ document.addEventListener('toggleCustomizationAnimation', (e) => {
     }
 });
 
-// Aggiungiamo lo zoom con la rotellina del mouse
+// Zoom con la rotellina del mouse
 document.addEventListener('wheel', (e) => {
     if (isCustomizing) {
-        customizationDistance += e.deltaY * 0.005;
-        // Limitiamo lo zoom (min: 1.5, max: 7.0)
-        customizationDistance = Math.max(1.5, Math.min(customizationDistance, 7.0));
+        if (isFaceTabActive) {
+            // Zoom differenziato per la modalità viso (range più ravvicinato)
+            faceZoomDistance += e.deltaY * 0.001;
+            faceZoomDistance = Math.max(0.2, Math.min(faceZoomDistance, 1.5));
+        } else {
+            customizationDistance += e.deltaY * 0.005;
+            customizationDistance = Math.max(1.5, Math.min(customizationDistance, 7.0));
+        }
     }
+});
+
+// Cambio tab: attiva/disattiva FaceSculptor e gestisci zoom camera
+document.addEventListener('customizationTabChanged', (e) => {
+    const tab = e.detail.tab;
+    isFaceTabActive = (tab === 'face');
+
+    if (isFaceTabActive) {
+        // Prova init se non ancora fatto
+        if (!faceSculptorInited && player.model) {
+            faceSculptor = new FaceSculptor(player.model, scene, camera, renderer.domElement);
+            faceSculptor.init();
+            faceSculptorInited = true;
+        }
+        if (faceSculptor) faceSculptor.activate();
+        faceZoomDistance = 0.55; // Zoom ravvicinato iniziale sul viso
+    } else {
+        if (faceSculptor) faceSculptor.deactivate();
+    }
+});
+
+// Reset scultura viso
+document.addEventListener('resetFaceSculpting', () => {
+    if (faceSculptor) faceSculptor.reset();
 });
 
 document.addEventListener('previewCustomization', (e) => {
@@ -335,42 +385,69 @@ function animate() {
     if (!matchManager.isGameStarted) {
         if (isCustomizing && player.model) {
             const targetPos = player.model.position.clone();
-            const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + 1.2, targetPos.z + customizationDistance);
-            camera.position.lerp(previewCamPos, 0.1); // Movimento fluido della telecamera
-            
-            const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + 1.0, targetPos.z);
-            camera.lookAt(lookTarget);
-            
-            // --- NUOVA LOGICA ANIMAZIONE ---
-            if (!isCustomizationPaused) {
-                customizationAnimTimer -= rawDelta;
 
-                if (customizationAnimTimer <= 0) {
-                    if (customizationAnimState === 'run') {
-                        customizationAnimState = 'header';
-                        customizationAnimTimer = player.action.headerDuration * 3; // Esegui l'animazione di testa 3 volte
-                        customizationHeaderProgress = 0;
-                    } else {
-                        customizationAnimState = 'run';
-                        customizationAnimTimer = 2 + Math.random() * 2; // Corri per 2-4 secondi
+            if (isFaceTabActive) {
+                // --- MODALITÀ FACE SCULPTING: zoom sulla testa ---
+                // Troviamo la posizione della testa in world-space
+                let headWorldPos = targetPos.clone().add(new THREE.Vector3(0, 1.55, 0));
+                if (player.animator && player.animator.bones && player.animator.bones.head) {
+                    player.animator.bones.head.getWorldPosition(headWorldPos);
+                }
+                // Camera frontale ravvicinata al viso
+                const faceCamPos = new THREE.Vector3(
+                    headWorldPos.x,
+                    headWorldPos.y,
+                    headWorldPos.z + faceZoomDistance
+                );
+                camera.position.lerp(faceCamPos, 0.12);
+                camera.lookAt(headWorldPos);
+
+                // Aggiorna gli handle del scultor
+                if (faceSculptor) faceSculptor.update();
+
+                // Animazione idle fissa (non muovere il personaggio mentre scultiamo)
+                if (player.animator) {
+                    player.model.rotation.y = customizationRotation;
+                    player.animator.animate(rawDelta, false, false, false, false, null, 0, null, false, 0);
+                }
+            } else {
+                // --- MODALITÀ NORMALE ---
+                const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + 1.2, targetPos.z + customizationDistance);
+                camera.position.lerp(previewCamPos, 0.1);
+
+                const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + 1.0, targetPos.z);
+                camera.lookAt(lookTarget);
+
+                // --- LOGICA ANIMAZIONE ---
+                if (!isCustomizationPaused) {
+                    customizationAnimTimer -= rawDelta;
+
+                    if (customizationAnimTimer <= 0) {
+                        if (customizationAnimState === 'run') {
+                            customizationAnimState = 'header';
+                            customizationAnimTimer = player.action.headerDuration * 3;
+                            customizationHeaderProgress = 0;
+                        } else {
+                            customizationAnimState = 'run';
+                            customizationAnimTimer = 2 + Math.random() * 2;
+                        }
                     }
                 }
-            }
 
-            if (player.animator) {
-                player.model.rotation.y = customizationRotation; // Usa la rotazione interattiva
+                if (player.animator) {
+                    player.model.rotation.y = customizationRotation;
 
-                if (!isCustomizationPaused) {
-                    if (customizationAnimState === 'run') {
-                        player.animator.animate(rawDelta, false, true, true, false, null, 0, null, false, 0);
-                    } else { // 'header'
-                        customizationHeaderProgress += rawDelta;
-                        let progress = (customizationHeaderProgress % player.action.headerDuration) / player.action.headerDuration;
-                        player.animator.animate(rawDelta, false, false, false, false, null, 0, null, true, progress);
+                    if (!isCustomizationPaused) {
+                        if (customizationAnimState === 'run') {
+                            player.animator.animate(rawDelta, false, true, true, false, null, 0, null, false, 0);
+                        } else {
+                            customizationHeaderProgress += rawDelta;
+                            let progress = (customizationHeaderProgress % player.action.headerDuration) / player.action.headerDuration;
+                            player.animator.animate(rawDelta, false, false, false, false, null, 0, null, true, progress);
+                        }
+                    } else {
+                        player.animator.animate(rawDelta, false, false, false, false, null, 0, null, false, 0);
                     }
-                } else {
-                    // Esegui l'animazione idle (fermo) quando l'animazione di customizzazione è in pausa
-                    player.animator.animate(rawDelta, false, false, false, false, null, 0, null, false, 0);
                 }
             }
         } else {

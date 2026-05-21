@@ -26,7 +26,6 @@ export class PlayerAnimator {
         model.traverse((child) => {
             if (child.isMesh){
                 const b = child.name.toLowerCase();
-
                 //console.log(b);
             }
             if (child.isBone) {

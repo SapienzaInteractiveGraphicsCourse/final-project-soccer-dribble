@@ -160,7 +160,7 @@ document.addEventListener('customizePlayer', (e) => {
         if (hairId === "0") {
             playerCustomizer.removeAccessory('hair');
         } else {
-            // Usa lo stesso offset che hai trovato funzionare nella preview
+            
             playerCustomizer.toggleDefaultHair(false);
             const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
             const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 

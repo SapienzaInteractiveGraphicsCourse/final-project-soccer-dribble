@@ -11,42 +11,42 @@ const FACE_HANDLES = [
         id: 'nose',
         label: '👃 Naso',
         color: 0xff6b6b,
-        offset: new THREE.Vector3(0, 0.06, 0.12),
+        offset: new THREE.Vector3(0.01, 0.10, 0.12),
         radius: 0.04,
     },
     {
         id: 'mouth',
         label: '👄 Bocca',
         color: 0xff2244,
-        offset: new THREE.Vector3(0, 0.01, 0.11),
+        offset: new THREE.Vector3(0.01, 0.02, 0.11),
         radius: 0.045,
     },
     {
         id: 'eye_l',
         label: '👁 Occhio SX',
         color: 0x44aaff,
-        offset: new THREE.Vector3(0.04, 0.11, 0.10),
+        offset: new THREE.Vector3(0.06, 0.18, 0.10),
         radius: 0.035,
     },
     {
         id: 'eye_r',
         label: '👁 Occhio DX',
         color: 0x44aaff,
-        offset: new THREE.Vector3(-0.04, 0.11, 0.10),
+        offset: new THREE.Vector3(-0.02, 0.18, 0.10),
         radius: 0.035,
     },
     {
         id: 'ear_l',
         label: '👂 Orecchio SX',
         color: 0xffaa44,
-        offset: new THREE.Vector3(0.09, 0.06, 0.02),
+        offset: new THREE.Vector3(0.15, 0.13, 0.02),
         radius: 0.04,
     },
     {
         id: 'ear_r',
         label: '👂 Orecchio DX',
         color: 0xffaa44,
-        offset: new THREE.Vector3(-0.09, 0.06, 0.02),
+        offset: new THREE.Vector3(-0.15, 0.13, 0.02),
         radius: 0.04,
     },
 ];
@@ -138,7 +138,7 @@ export class FaceSculptor {
         this.handles = [];
 
         FACE_HANDLES.forEach((def, i) => {
-            const geo = new THREE.SphereGeometry(0.015, 16, 10);
+            const geo = new THREE.SphereGeometry(0.008, 16, 10);
             const mat = new THREE.MeshBasicMaterial({
                 color: def.color,
                 transparent: true,
@@ -152,7 +152,7 @@ export class FaceSculptor {
             sphere.visible = false;
 
             // Ring
-            const rGeo = new THREE.RingGeometry(0.018, 0.024, 32);
+            const rGeo = new THREE.RingGeometry(0.010, 0.014, 32);
             const rMat = new THREE.MeshBasicMaterial({
                 color: def.color, transparent: true, opacity: 0.55,
                 side: THREE.DoubleSide, depthTest: false, depthWrite: false,

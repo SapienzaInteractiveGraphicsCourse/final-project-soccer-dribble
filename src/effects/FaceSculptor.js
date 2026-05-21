@@ -25,14 +25,14 @@ const FACE_HANDLES = [
         id: 'eye_l',
         label: '👁 Occhio SX',
         color: 0x44aaff,
-        offset: new THREE.Vector3(0.06, 0.18, 0.10),
+        offset: new THREE.Vector3(0.11, 0.16, 0.10),
         radius: 0.035,
     },
     {
         id: 'eye_r',
         label: '👁 Occhio DX',
         color: 0x44aaff,
-        offset: new THREE.Vector3(-0.02, 0.18, 0.10),
+        offset: new THREE.Vector3(-0.09, 0.16, 0.10),
         radius: 0.035,
     },
     {

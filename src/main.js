@@ -408,7 +408,7 @@ function animate() {
                 // Animazione idle fissa (non muovere il personaggio mentre scultiamo)
                 if (player.animator) {
                     player.model.rotation.y = customizationRotation;
-                    player.animator.animate(rawDelta, false, false, false, false, null, 0, null, false, 0);
+                    player.animator.animate(0, false, false, false, false, null, 0, null, false, 0);
                 }
             } else {
                 // --- MODALITÀ NORMALE ---

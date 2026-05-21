@@ -218,8 +218,8 @@ export class PlayerCustomizer {
         const GLASSES_CONFIG = {
             '1': { position: [0, 0.1, 0.2], rotation: [0, 2 * Math.PI, 0], scale: 0.015 },
             '2': { position: [0, 0.180, 0.110], rotation: [0, Math.PI, 0], scale: 1.190 },
-            '3': { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 },
-            '4': { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 },
+            '3': { position: [0.135, 0.28, 0.22], rotation: [3/2*Math.PI, 2 * Math.PI, 0], scale: 0.02 },
+            '4': { position: [0, 0.07, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.0015 },
             '5': { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 }
         };
 

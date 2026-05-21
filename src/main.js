@@ -1,4 +1,5 @@
 import './style.css';
+import './customization-menu.css';
 import * as THREE from 'three';
 
 // Import moduli e refactor

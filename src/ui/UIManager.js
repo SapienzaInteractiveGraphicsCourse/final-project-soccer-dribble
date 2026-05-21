@@ -108,7 +108,25 @@ export class UIManager {
             customizationMenu.style.alignItems = 'center';
             customizationMenu.style.backgroundColor = 'transparent'; // Sfondo trasparente per l'anteprima 3D
             customizationMenu.innerHTML = `
-                <div style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; gap: 20px; margin-left: 5vw; border: 2px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); width: 400px; max-height: 80vh; overflow-y: auto;">
+                <style>
+                    #customization-container::-webkit-scrollbar {
+                        width: 12px;
+                    }
+                    #customization-container::-webkit-scrollbar-track {
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 10px;
+                        margin-block: 10px;
+                    }
+                    #customization-container::-webkit-scrollbar-thumb {
+                        background: linear-gradient(180deg, #4CAF50, #8BC34A);
+                        border-radius: 10px;
+                        border: 3px solid rgba(0,0,0,0.8);
+                    }
+                    #customization-container::-webkit-scrollbar-thumb:hover {
+                        background: linear-gradient(180deg, #66BB6A, #AED581);
+                    }
+                </style>
+                <div id="customization-container" style="background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; gap: 20px; margin-left: 5vw; border: 2px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); width: 400px; max-height: 80vh; overflow-y: auto; overflow-x: hidden;">
                     <h1 style="color: white; font-family: sans-serif; margin-bottom: 5px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center;">CREA IL TUO GIOCATORE</h1>
                     
                     <!-- SEZIONI TABS -->
@@ -122,7 +140,7 @@ export class UIManager {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             <button class="menu-btn btn-hair" data-hair="0" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
                                 <div style="width: 100%; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🧑‍🦲</div>
-                                <span style="font-size: 0.9rem; margin-top: 5px; color: white;">Nessuno</span>
+        
                             </button>
                             <button class="menu-btn btn-hair" data-hair="1" style="padding: 10px; font-size: 1rem; width: 100%; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; border-radius: 10px; border: 2px solid transparent; transition: 0.3s;">
                                 <model-viewer src="/models/hair_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>  

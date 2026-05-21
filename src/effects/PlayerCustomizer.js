@@ -96,14 +96,14 @@ export class PlayerCustomizer {
 
             // Moltiplichiamo la scala scelta da te per l'inverso dell'osso
             accessoryMesh.scale.setScalar(customScale * scaleMultiplier);
-            
+
             // 4. Applichiamo posizione e rotazione forzate
             accessoryMesh.position.copy(offsetPos).multiplyScalar(scaleMultiplier);
             accessoryMesh.rotation.copy(offsetRot);
 
             // 5. Agganciamo l'oggetto fisicamente allo scheletro
             bone.add(accessoryMesh);
-            
+
             // 6. Salviamo in memoria
             this.equippedAccessories[slotName] = accessoryMesh;
 
@@ -120,12 +120,29 @@ export class PlayerCustomizer {
      * RIMUOZIONE ACCESSORIO
      */
     removeAccessory(slotName) {
-        const currentAccessory = this.equippedAccessories[slotName];
-        if (currentAccessory && currentAccessory.parent) {
-            currentAccessory.parent.remove(currentAccessory);
-            delete this.equippedAccessories[slotName];
-        }
+    const currentAccessory = this.equippedAccessories[slotName];
+    if (currentAccessory && currentAccessory.parent) {
+        
+        // 1. Svuota la memoria della GPU
+        currentAccessory.traverse((child) => {
+            if (child.isMesh) {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    // Controlla se il materiale è un array (modelli con multi-materiale)
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.dispose());
+                    } else {
+                        child.material.dispose();
+                    }
+                }
+            }
+        });
+
+        // 2. Rimuovi dalla scena
+        currentAccessory.parent.remove(currentAccessory);
+        delete this.equippedAccessories[slotName];
     }
+}
     /**
      * NASCONDI/MOSTRA CAPELLI DI DEFAULT
      */
@@ -197,13 +214,13 @@ export class PlayerCustomizer {
         // - rotation: [asse_x, asse_y, asse_z] (rotazione in radianti, es. Math.PI/2)
         // - scale: grandezza generale del modello
         // =======================================================
-        
+
         const GLASSES_CONFIG = {
-            '1': { position: [0, 0.1, 0.2], rotation: [0, 2*Math.PI, 0], scale: 0.015 },
-            '2': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 },
-            '3': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 },
-            '4': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 },
-            '5': { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 }
+            '1': { position: [0, 0.1, 0.2], rotation: [0, 2 * Math.PI, 0], scale: 0.015 },
+            '2': { position: [0, 0.180, 0.110], rotation: [0, Math.PI, 0], scale: 1.190 },
+            '3': { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 },
+            '4': { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 },
+            '5': { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 }
         };
 
         const modelUrl = `/models/sunglasses_${id}.glb`;
@@ -217,23 +234,26 @@ export class PlayerCustomizer {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
-                    child.frustumCulled = false;
+                    
                 }
             });
 
             // Attacchiamo all'osso della testa (metodo più sicuro per i modelli animati)
             const bone = this.player.animator.bones['head'];
             if (bone) {
-                const config = GLASSES_CONFIG[id] || { position: [0, -2.05, 0.10], rotation: [0, 2*Math.PI, 0], scale: 0.15 };
-                console.log(`Applicazione occhiali ID ${id} con scala:`, config.scale);
+                const cleanId = String(id).trim();
+                const config = GLASSES_CONFIG[cleanId] || { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 };
+                console.log("ciao")
+                // Aggiungi questo log per confermare cosa sta leggendo davvero il motore
+                console.log(`[DEBUG] ID: "${cleanId}" | Configurazione trovata in mappa:`, GLASSES_CONFIG[cleanId] ? "SÌ" : "NO (Sto usando il Fallback!)");
 
                 const boneWorldScale = new THREE.Vector3();
                 bone.getWorldScale(boneWorldScale);
                 const scaleMultiplier = 1.0 / (boneWorldScale.x > 0.0001 ? boneWorldScale.x : 1.0);
-                
+
                 // Applica scala
                 accessoryMesh.scale.setScalar(config.scale * scaleMultiplier);
-                
+
                 // Applica posizione e rotazione
                 accessoryMesh.position.set(config.position[0], config.position[1], config.position[2]).multiplyScalar(scaleMultiplier);
                 accessoryMesh.rotation.set(config.rotation[0], config.rotation[1], config.rotation[2]);

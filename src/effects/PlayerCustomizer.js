@@ -280,9 +280,9 @@ export class PlayerCustomizer {
         // MAPPATURA CONFIGURAZIONE CAPPELLI
         // =======================================================
         const HAT_CONFIG = {
-            '1': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
-            '2': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
-            '3': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
+            '1': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.05 },
+            '2': { position: [0, 0.30, 0.05], rotation: [0, Math.PI / 2, 0], scale: 0.15 },
+            '3': { position: [0, -3.22, 0.05], rotation: [0, 0, 0], scale: 2 },
             '4': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
             '5': { position: [0, 0.10, 0.05], rotation: [0, 0, 0], scale: 0.009 }
         };

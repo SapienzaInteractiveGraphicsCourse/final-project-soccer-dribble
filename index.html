@@ -221,8 +221,14 @@
 
             <div id="section-colors" style="display: none; flex-direction: column; gap: 20px; width: 100%; font-family: sans-serif;">
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <label class="color-label">COLORE MAGLIA</label>
-                    <input type="color" id="color-shirt" value="#ff0000" class="color-picker">
+                    <label class="color-label">SQUADRA</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;">
+                        <button class="menu-btn btn-shirt" data-shirt="milan" style="padding: 10px; font-size: 0.9rem; background: #e74c3c;">MILAN</button>
+                        <button class="menu-btn btn-shirt" data-shirt="inter" style="padding: 10px; font-size: 0.9rem; background: #2980b9;">INTER</button>
+                        <button class="menu-btn btn-shirt" data-shirt="juve" style="padding: 10px; font-size: 0.9rem; background: #ecf0f1; color: #2c3e50;">JUVE</button>
+                        <button class="menu-btn btn-shirt" data-shirt="custom" style="padding: 10px; font-size: 0.9rem; background: #8e44ad;">CUSTOM</button>
+                    </div>
+                    <input type="color" id="color-shirt" value="#ff0000" class="color-picker" style="display: none;">
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center;">
                     <label class="color-label">COLORE PELLE</label>

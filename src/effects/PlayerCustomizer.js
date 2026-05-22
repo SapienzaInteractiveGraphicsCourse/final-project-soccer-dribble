@@ -20,15 +20,30 @@ export class PlayerCustomizer {
             return;
         }
 
+        if (!textureUrl) {
+            this.player.model.traverse((child) => {
+                if (child.isMesh && child.name === meshName) {
+                    child.material = child.material.clone();
+                    child.material.map = null;
+                    child.material.needsUpdate = true;
+                }
+            });
+            return;
+        }
+
         this.textureLoader.load(textureUrl, (newTexture) => {
             newTexture.flipY = false; // Spesso necessario con GLTF esportati da Blender
             newTexture.colorSpace = THREE.SRGBColorSpace; // Correzione colore per Three.js moderno
+            newTexture.wrapS = THREE.RepeatWrapping;
+            newTexture.wrapT = THREE.RepeatWrapping;
+            newTexture.repeat.set(4, 4); // Ripetizione per scalare le strisce sulla maglia
 
             this.player.model.traverse((child) => {
                 if (child.isMesh && child.name === meshName) {
                     // Clona il materiale per evitare che tutti i giocatori in campo cambino faccia
                     child.material = child.material.clone();
                     child.material.map = newTexture;
+                    child.material.color.setHex(0xffffff); // Resetta il colore
                     child.material.needsUpdate = true;
                 }
             });

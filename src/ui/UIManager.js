@@ -36,13 +36,14 @@ export class UIManager {
             if (!isFirstLoad) return; // Evita che il menu riappaia quando si carica il meteo in background
             isFirstLoad = false;
 
-            const savedShirt = localStorage.getItem('customShirtColor');
-            const alreadyCustomized = savedShirt !== null; // true se esiste già una personalizzazione salvata
+            const savedShirtColor = localStorage.getItem('customShirtColor');
+            const savedShirtTeam = localStorage.getItem('customShirtTeam') || 'custom';
+            const alreadyCustomized = savedShirtColor !== null; // true se esiste già una personalizzazione salvata
 
             setTimeout(() => {
                 this.loadingScreen.style.display = 'none';
 
-                const shirtColor = savedShirt || '#ff0000';
+                const shirtColor = savedShirtColor || '#ff0000';
                 const skinColor = localStorage.getItem('customSkinColor') || '#ffccaa';
                 const hairId = localStorage.getItem('customHair') || '0';
                 const accessoryId = localStorage.getItem('customAccessory') || '0';
@@ -52,7 +53,7 @@ export class UIManager {
                 if (alreadyCustomized) {
                     // Personalizzazione già presente: applica in background e vai al main menu
                     document.dispatchEvent(new CustomEvent('customizePlayer', {
-                        detail: { shirtColor, skinColor, hairId, accessoryId, hairColor, hatId }
+                        detail: { shirtTeam: savedShirtTeam, shirtColor, skinColor, hairId, accessoryId, hairColor, hatId }
                     }));
                     this.mainMenu.style.display = 'flex';
                 } else {
@@ -60,6 +61,7 @@ export class UIManager {
                     this.customizationMenu.style.display = 'flex';
                     document.dispatchEvent(new Event('customizePlayerStart'));
 
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirtTeam', id: savedShirtTeam } }));
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: shirtColor } }));
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: skinColor } }));
                     // I capelli vengono applicati solo se c'è una scelta salvata diversa da '0'
@@ -90,7 +92,8 @@ export class UIManager {
         const btnCustomize = document.getElementById('btn-customize');
 
         if (btnPlay && trainingBtn && btnCustomize) {
-            const savedShirt = localStorage.getItem('customShirtColor') || '#ff0000';
+            const savedShirtColor = localStorage.getItem('customShirtColor') || '#ff0000';
+            const savedShirtTeam = localStorage.getItem('customShirtTeam') || 'custom';
             const savedSkin = localStorage.getItem('customSkinColor') || '#ffccaa';
             const savedHairColor = localStorage.getItem('customHairColor') || '#000000';
 
@@ -101,7 +104,10 @@ export class UIManager {
             const colorSkinInput = document.getElementById('color-skin');
             const colorHairInput = document.getElementById('color-hair');
             
-            if(colorShirtInput) colorShirtInput.value = savedShirt;
+            if(colorShirtInput) {
+                colorShirtInput.value = savedShirtColor;
+                colorShirtInput.style.display = savedShirtTeam === 'custom' ? 'block' : 'none';
+            }
             if(colorSkinInput) colorSkinInput.value = savedSkin;
             if(colorHairInput) colorHairInput.value = savedHairColor;
 
@@ -215,9 +221,38 @@ export class UIManager {
                 });
             });
 
+            // --- EVENTI SCELTA MAGLIA SQUADRA ---
+            let selectedShirtTeam = localStorage.getItem('customShirtTeam') || 'custom';
+            const shirtButtons = document.querySelectorAll('.btn-shirt');
+            const colorShirtInputEl = document.getElementById('color-shirt');
+            
+            const updateShirtUI = () => {
+                shirtButtons.forEach(b => {
+                    b.style.border = b.getAttribute('data-shirt') === selectedShirtTeam ? '3px solid #000' : 'none';
+                });
+                if (colorShirtInputEl) {
+                    colorShirtInputEl.style.display = selectedShirtTeam === 'custom' ? 'block' : 'none';
+                }
+            };
+            updateShirtUI();
+
+            shirtButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedShirtTeam = btn.getAttribute('data-shirt');
+                    updateShirtUI();
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirtTeam', id: selectedShirtTeam } }));
+                    if (selectedShirtTeam === 'custom') {
+                        document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: colorShirtInputEl.value } }));
+                    }
+                });
+            });
+
             // --- EVENTI PREVIEW IN TEMPO REALE ---
             document.getElementById('color-shirt').addEventListener('input', (e) => {
-                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: e.target.value } }));
+                if (selectedShirtTeam === 'custom') {
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: e.target.value } }));
+                }
             });
             document.getElementById('color-skin').addEventListener('input', (e) => {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: e.target.value } }));
@@ -240,20 +275,24 @@ export class UIManager {
                 e.stopPropagation();
 
                 // Reset valori di default
-                const defaultShirt = '#ff0000';
+                const defaultShirtColor = '#ff0000';
+                const defaultShirtTeam = 'custom';
                 const defaultSkin = '#ffccaa';
                 const defaultHairColor = '#000000';
                 selectedHair = '0';
                 selectedAccessory = '0';
                 selectedHat = '0';
+                selectedShirtTeam = defaultShirtTeam;
 
-                // Aggiorna visivamente i color picker
-                document.getElementById('color-shirt').value = defaultShirt;
+                // Aggiorna visivamente i color picker e i bottoni
+                document.getElementById('color-shirt').value = defaultShirtColor;
+                updateShirtUI();
                 document.getElementById('color-skin').value = defaultSkin;
                 document.getElementById('color-hair').value = defaultHairColor;
 
                 // Applica le preview
-                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: defaultShirt } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirtTeam', id: defaultShirtTeam } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: defaultShirtColor } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: defaultSkin } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: '0' } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: '0' } }));
@@ -313,6 +352,7 @@ export class UIManager {
                 const hairColor = document.getElementById('color-hair').value;
 
                 localStorage.setItem('customShirtColor', shirtColor);
+                localStorage.setItem('customShirtTeam', selectedShirtTeam);
                 localStorage.setItem('customSkinColor', skinColor);
                 localStorage.setItem('customHair', selectedHair);
                 localStorage.setItem('customAccessory', selectedAccessory);
@@ -320,7 +360,7 @@ export class UIManager {
                 localStorage.setItem('customHat', selectedHat);
 
                 document.dispatchEvent(new CustomEvent('customizePlayer', {
-                    detail: { shirtColor, skinColor, hairId: selectedHair, accessoryId: selectedAccessory, hairColor, hatId: selectedHat }
+                    detail: { shirtTeam: selectedShirtTeam, shirtColor, skinColor, hairId: selectedHair, accessoryId: selectedAccessory, hairColor, hatId: selectedHat }
                 }));
                 document.dispatchEvent(new Event('customizePlayerEnd'));
 

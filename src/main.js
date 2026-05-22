@@ -168,6 +168,13 @@ document.addEventListener('resetFaceSculpting', () => {
 document.addEventListener('previewCustomization', (e) => {
     const { type, color, id } = e.detail;
     
+    if (type === 'shirtTeam') {
+        if (id === 'custom') {
+            playerCustomizer.changeTexture('Ch38_Shirt', null);
+        } else {
+            playerCustomizer.changeTexture('Ch38_Shirt', `/textures/shirts/${id}.png`);
+        }
+    }
     if (type === 'shirt') {
         const hex = parseInt(color.replace('#', '0x'));
         playerCustomizer.changeBaseColor('Ch38_Shirt', hex);
@@ -214,17 +221,25 @@ document.addEventListener('resetCustomization', () => {
     playerCustomizer.removeAccessory('hair');
     playerCustomizer.equipGlasses('0');
     playerCustomizer.equipHat('0');
+    playerCustomizer.changeTexture('Ch38_Shirt', null);
     playerCustomizer.changeBaseColor('Ch38_Shirt', 0xff0000);
     playerCustomizer.changeBaseColor('Ch38_Body', 0xffccaa);
 });
 
 document.addEventListener('customizePlayer', (e) => {
-    const { shirtColor, skinColor, hairId, accessoryId, hairColor, hatId } = e.detail;
+    const { shirtTeam, shirtColor, skinColor, hairId, accessoryId, hairColor, hatId } = e.detail;
     
-    const shirtHex = parseInt(shirtColor.replace('#', '0x'));
+    if (shirtTeam && shirtTeam !== 'custom') {
+        playerCustomizer.changeTexture('Ch38_Shirt', `/textures/shirts/${shirtTeam}.png`);
+    } else {
+        playerCustomizer.changeTexture('Ch38_Shirt', null);
+        if (shirtColor) {
+            const shirtHex = parseInt(shirtColor.replace('#', '0x'));
+            playerCustomizer.changeBaseColor('Ch38_Shirt', shirtHex);
+        }
+    }
+    
     const skinHex = parseInt(skinColor.replace('#', '0x'));
-    
-    playerCustomizer.changeBaseColor('Ch38_Shirt', shirtHex);
     playerCustomizer.changeBaseColor('Ch38_Body', skinHex);
     
     if (hairId !== undefined) {

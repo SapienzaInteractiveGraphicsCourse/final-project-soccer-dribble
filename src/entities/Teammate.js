@@ -65,6 +65,10 @@ export class Teammate {
 
     update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true, matchState = 'HOME_POSSESSION') {
         if (!this.model) return;
+        
+        // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
+        this.model.rotation.x = 0;
+        this.model.rotation.z = 0;
 
         this.isRunning = false;
         this.isMoving = false;

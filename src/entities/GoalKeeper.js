@@ -71,6 +71,10 @@ export class GoalKeeper {
         if (this.model === activePlayerModel) return;
 
         if (this.isSwappedOut) return;
+        
+        // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
+        this.model.rotation.x = 0;
+        this.model.rotation.z = 0;
 
         // --- LOGICA RIMESSA DAL FONDO (Goal Kick) ---
         if (this.isTakingGoalKick) {

@@ -213,6 +213,10 @@ export class Player {
     update(deltaTime) {
 
         if (!this.controls.isLocked || !this.model) return;
+        
+        // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
+        this.model.rotation.x = 0;
+        this.model.rotation.z = 0;
 
         // --- NUOVA LOGICA DIREZIONE MOVIMENTO (Lock-on sulla palla) ---
         let dir, right;

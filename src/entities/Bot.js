@@ -74,6 +74,10 @@ export class Bot {
     update(deltaTime, isMatchStarted = true, matchState = 'HOME_POSSESSION', defendDirX = 1, opponents = [], bots = []) {
         if (!this.model) return;
         
+        // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
+        this.model.rotation.x = 0;
+        this.model.rotation.z = 0;
+        
         // --- 1. GESTIONE BATTITORE RIMESSA ---
         if (this.isThrowingIn) {
             let receiverReady = true;

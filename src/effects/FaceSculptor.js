@@ -86,6 +86,7 @@ export class FaceSculptor {
         this.playerModel.traverse((child) => {
             const name = child.name ? child.name.toLowerCase() : '';
             if (child.isMesh && (name.includes('body') || name.includes('eyelashes') || name.includes('hair'))) {
+                child.geometry = child.geometry.clone(); // Clona la geometria per isolare le modifiche al main player
                 this.targetMeshes.push(child);
             }
             if (child.isBone && name.endsWith('head')) {

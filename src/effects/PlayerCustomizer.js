@@ -265,4 +265,64 @@ export class PlayerCustomizer {
             }
         });
     }
+
+    /**
+     * EQUIPAGGIA CAPPELLO
+     */
+    equipHat(id) {
+        const slotName = 'hat';
+        if (!id || id === '0') {
+            this.removeAccessory(slotName);
+            return;
+        }
+
+        // =======================================================
+        // MAPPATURA CONFIGURAZIONE CAPPELLI
+        // =======================================================
+        const HAT_CONFIG = {
+            '1': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
+            '2': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
+            '3': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
+            '4': { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 },
+            '5': { position: [0, 0.10, 0.05], rotation: [0, 0, 0], scale: 0.009 }
+        };
+
+        const modelUrl = `/models/hat_${id}.glb`;
+
+        this.removeAccessory(slotName);
+
+        modelManager.load(modelUrl, (gltf) => {
+            const accessoryMesh = gltf.scene;
+
+            accessoryMesh.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            // Attacchiamo all'osso della testa
+            const bone = this.player.animator.bones['head'];
+            if (bone) {
+                const cleanId = String(id).trim();
+                const config = HAT_CONFIG[cleanId] || { position: [0, 0.22, 0.05], rotation: [0, 0, 0], scale: 0.15 };
+
+                const boneWorldScale = new THREE.Vector3();
+                bone.getWorldScale(boneWorldScale);
+                const scaleMultiplier = 1.0 / (boneWorldScale.x > 0.0001 ? boneWorldScale.x : 1.0);
+
+                // Applica scala
+                accessoryMesh.scale.setScalar(config.scale * scaleMultiplier);
+
+                // Applica posizione e rotazione
+                accessoryMesh.position.set(config.position[0], config.position[1], config.position[2]).multiplyScalar(scaleMultiplier);
+                accessoryMesh.rotation.set(config.rotation[0], config.rotation[1], config.rotation[2]);
+
+                bone.add(accessoryMesh);
+                this.equippedAccessories[slotName] = accessoryMesh;
+            } else {
+                console.warn("Osso 'head' non trovato sul personaggio!");
+            }
+        });
+    }
 }

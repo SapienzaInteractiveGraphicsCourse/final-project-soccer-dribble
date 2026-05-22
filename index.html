@@ -128,6 +128,7 @@
             
             <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 15px; flex-wrap: wrap;">
                 <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">CAPELLI</button>
+                <button id="tab-hats" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">CAPPELLI</button>
                 <button id="tab-accessories" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">ACCESSORI</button>
                 <button id="tab-face" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">VISO</button>
                 <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORI</button>
@@ -172,6 +173,30 @@
                     </button>
                     <button class="menu-btn btn-accessory" data-accessory="5">
                         <model-viewer src="/models/sunglasses_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SEZIONE CAPPELLI -->
+            <div id="section-hats" style="display: none; flex-direction: column; gap: 15px; width: 100%;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <button class="menu-btn btn-hat" data-hat="0">
+                        <div style="width: 100%; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem;">🚫</div>
+                    </button>
+                    <button class="menu-btn btn-hat" data-hat="1">
+                        <model-viewer src="/models/hat_1.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>  
+                    </button>
+                    <button class="menu-btn btn-hat" data-hat="2">
+                        <model-viewer src="/models/hat_2.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                    <button class="menu-btn btn-hat" data-hat="3">
+                        <model-viewer src="/models/hat_3.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                    <button class="menu-btn btn-hat" data-hat="4">
+                        <model-viewer src="/models/hat_4.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
+                    </button>
+                    <button class="menu-btn btn-hat" data-hat="5">
+                        <model-viewer src="/models/hat_5.glb" style="width: 100%; height: 70px; background-color: transparent; pointer-events: none;" interaction-prompt="none" disable-zoom></model-viewer>
                     </button>
                 </div>
             </div>

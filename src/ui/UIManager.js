@@ -47,11 +47,12 @@ export class UIManager {
                 const hairId = localStorage.getItem('customHair') || '0';
                 const accessoryId = localStorage.getItem('customAccessory') || '0';
                 const hairColor = localStorage.getItem('customHairColor') || '#000000';
+                const hatId = localStorage.getItem('customHat') || '0';
 
                 if (alreadyCustomized) {
                     // Personalizzazione già presente: applica in background e vai al main menu
                     document.dispatchEvent(new CustomEvent('customizePlayer', {
-                        detail: { shirtColor, skinColor, hairId, accessoryId, hairColor }
+                        detail: { shirtColor, skinColor, hairId, accessoryId, hairColor, hatId }
                     }));
                     this.mainMenu.style.display = 'flex';
                 } else {
@@ -67,6 +68,9 @@ export class UIManager {
                     }
                     if (accessoryId !== '0') {
                         document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: accessoryId } }));
+                    }
+                    if (hatId !== '0') {
+                        document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hat', id: hatId } }));
                     }
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hairColor', color: hairColor } }));
                 }
@@ -103,7 +107,7 @@ export class UIManager {
 
             // --- FORZA IL COLORE NERO SUI MODEL VIEWER DEI CAPELLI ---
             
-            const modelViewers = customizationMenu.querySelectorAll('.btn-hair model-viewer');
+            const modelViewers = customizationMenu.querySelectorAll('.btn-hair model-viewer, .btn-hat model-viewer');
             modelViewers.forEach(viewer => {
                 viewer.addEventListener('load', () => {
                     if (viewer.model && viewer.model.materials) {
@@ -118,10 +122,12 @@ export class UIManager {
 
             // --- EVENTI TABS ---
             const tabHair = document.getElementById('tab-hair');
+            const tabHats = document.getElementById('tab-hats');
             const tabAccessories = document.getElementById('tab-accessories');
             const tabColors = document.getElementById('tab-colors');
             const tabFace = document.getElementById('tab-face');
             const sectionHair = document.getElementById('section-hair');
+            const sectionHats = document.getElementById('section-hats');
             const sectionAccessories = document.getElementById('section-accessories');
             const sectionColors = document.getElementById('section-colors');
             const sectionFace = document.getElementById('section-face');
@@ -129,10 +135,12 @@ export class UIManager {
             const _setActiveTab = (activeTab) => {
                 // Reset tutti
                 tabHair.style.backgroundColor = '#222';
+                tabHats.style.backgroundColor = '#222';
                 tabAccessories.style.backgroundColor = '#222';
                 tabColors.style.backgroundColor = '#222';
                 tabFace.style.backgroundColor = '#222';
                 sectionHair.style.display = 'none';
+                sectionHats.style.display = 'none';
                 sectionAccessories.style.display = 'none';
                 sectionColors.style.display = 'none';
                 sectionFace.style.display = 'none';
@@ -146,6 +154,11 @@ export class UIManager {
             tabHair.addEventListener('click', (e) => {
                 e.stopPropagation();
                 _setActiveTab({ btn: tabHair, section: sectionHair, id: 'hair' });
+            });
+
+            tabHats.addEventListener('click', (e) => {
+                e.stopPropagation();
+                _setActiveTab({ btn: tabHats, section: sectionHats, id: 'hats' });
             });
 
             tabAccessories.addEventListener('click', (e) => {
@@ -190,6 +203,18 @@ export class UIManager {
                 });
             });
 
+            // --- EVENTI SCELTA CAPPELLI ---
+            let selectedHat = localStorage.getItem('customHat') || '0';
+            const hatButtons = document.querySelectorAll('.btn-hat');
+            hatButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const hatId = btn.getAttribute('data-hat');
+                    selectedHat = hatId;
+                    document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hat', id: hatId } }));
+                });
+            });
+
             // --- EVENTI PREVIEW IN TEMPO REALE ---
             document.getElementById('color-shirt').addEventListener('input', (e) => {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: e.target.value } }));
@@ -220,6 +245,7 @@ export class UIManager {
                 const defaultHairColor = '#000000';
                 selectedHair = '0';
                 selectedAccessory = '0';
+                selectedHat = '0';
 
                 // Aggiorna visivamente i color picker
                 document.getElementById('color-shirt').value = defaultShirt;
@@ -231,6 +257,7 @@ export class UIManager {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: defaultSkin } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: '0' } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: '0' } }));
+                document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hat', id: '0' } }));
 
                 // Deseleziona tutti i bottoni capello e seleziona "Nessuno"
                 document.querySelectorAll('.btn-hair').forEach(b => {
@@ -252,6 +279,17 @@ export class UIManager {
                 if (noneAccBtn) {
                     noneAccBtn.style.border = '2px solid #4CAF50';
                     noneAccBtn.style.backgroundColor = '#e8f5e9';
+                }
+
+                // Deseleziona tutti i cappelli e seleziona "Nessuno"
+                document.querySelectorAll('.btn-hat').forEach(b => {
+                    b.style.border = '2px solid transparent';
+                    b.style.backgroundColor = 'white';
+                });
+                const noneHatBtn = document.querySelector('.btn-hat[data-hat="0"]');
+                if (noneHatBtn) {
+                    noneHatBtn.style.border = '2px solid #4CAF50';
+                    noneHatBtn.style.backgroundColor = '#e8f5e9';
                 }
 
                 // Invia evento di reset al motore
@@ -279,9 +317,10 @@ export class UIManager {
                 localStorage.setItem('customHair', selectedHair);
                 localStorage.setItem('customAccessory', selectedAccessory);
                 localStorage.setItem('customHairColor', hairColor);
+                localStorage.setItem('customHat', selectedHat);
 
                 document.dispatchEvent(new CustomEvent('customizePlayer', {
-                    detail: { shirtColor, skinColor, hairId: selectedHair, accessoryId: selectedAccessory, hairColor }
+                    detail: { shirtColor, skinColor, hairId: selectedHair, accessoryId: selectedAccessory, hairColor, hatId: selectedHat }
                 }));
                 document.dispatchEvent(new Event('customizePlayerEnd'));
 

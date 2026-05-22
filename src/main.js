@@ -45,7 +45,9 @@ let isCustomizing = false;
 let customizationRotation = Math.PI;
 let isDragging = false;
 let previousMouseX = 0;
+let previousMouseY = 0;
 let customizationDistance = 3.5;
+let customizationHeightOffset = 1.2;
 
 // --- FACE SCULPTING ---
 let faceSculptor = null;       // istanza FaceSculptor (creata dopo loadGLB)
@@ -61,6 +63,7 @@ document.addEventListener('customizePlayerStart', () => {
     isCustomizing = true;
     customizationRotation = 0;
     customizationDistance = 3.5;
+    customizationHeightOffset = 1.2;
     faceZoomTarget = 3.5;     // reset zoom
     isFaceTabActive = false;
     if (player.model) {
@@ -94,14 +97,19 @@ document.addEventListener('pointerdown', (e) => {
     if (isCustomizing && !isFaceTabActive && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
         isDragging = true;
         previousMouseX = e.clientX;
+        previousMouseY = e.clientY;
     }
 });
 
 document.addEventListener('pointermove', (e) => {
     if (isCustomizing && !isFaceTabActive && isDragging) {
         const deltaX = e.clientX - previousMouseX;
+        const deltaY = e.clientY - previousMouseY;
         customizationRotation += deltaX * 0.01;
+        customizationHeightOffset += deltaY * 0.01;
+        customizationHeightOffset = Math.max(0.2, Math.min(customizationHeightOffset, 2.5)); // Limiti visuale
         previousMouseX = e.clientX;
+        previousMouseY = e.clientY;
     }
 });
 
@@ -426,10 +434,10 @@ function animate() {
                 }
             } else {
                 // --- MODALITÀ NORMALE ---
-                const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + 1.2, targetPos.z + customizationDistance);
+                const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + customizationHeightOffset, targetPos.z + customizationDistance);
                 camera.position.lerp(previewCamPos, 0.1);
 
-                const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + 1.0, targetPos.z);
+                const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + customizationHeightOffset - 0.2, targetPos.z);
                 camera.lookAt(lookTarget);
 
                 // --- LOGICA ANIMAZIONE ---

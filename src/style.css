@@ -10,6 +10,8 @@ html, body {
   width: 100vw;
   height: 100vh;
   background-color: #000;
+  user-select: none; /* Prevent text highlighting */
+  -webkit-user-select: none; /* Safari */
 }
 
 /* Regole per il canvas creato dal motore 3D */

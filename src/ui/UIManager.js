@@ -518,14 +518,6 @@ export class UIManager {
         if (stamina > 50) this.staminaBarFill.style.backgroundColor = '#4CAF50';
         else if (stamina > 20) this.staminaBarFill.style.backgroundColor = '#FFEB3B';
         else this.staminaBarFill.style.backgroundColor = '#F44336';
-
-        // Tempo
-        const minutes = Math.floor(matchTime / 60).toString().padStart(2, '0');
-        const seconds = Math.floor(matchTime % 60).toString().padStart(2, '0');
-        this.timerElement.innerText = `${minutes}:${seconds}`;
-
-        // Score
-        this.scoreElement.innerText = `${homeScore} - ${awayScore}`;
     }
 
     updateRadar(playerModel, playerYaw, ballMesh, ballPosition, bots = []) {

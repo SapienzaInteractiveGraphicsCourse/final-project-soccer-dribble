@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
+import { Scoreboard } from '../environment/Scoreboard.js';
 
 let directionalLight;
 let ambientLight;
@@ -97,7 +98,10 @@ export function setupScene() {
     snowOverlay.receiveShadow = true;
     scene.add(snowOverlay);
 
-    return { scene, camera, renderer };
+    // Aggiungi il Tabellone Segnapunti
+    const scoreboard = new Scoreboard(scene);
+
+    return { scene, camera, renderer, scoreboard };
 }
 
 export function updateSceneEnvironment(scene, timeOfDay, weather) {

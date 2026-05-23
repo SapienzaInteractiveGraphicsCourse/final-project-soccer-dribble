@@ -26,7 +26,7 @@ import { PlayerCustomizer } from './effects/PlayerCustomizer.js';
 import { FaceSculptor } from './effects/FaceSculptor.js';
 
 // --- INIZIALIZZAZIONE CORE ---
-const { scene, camera, renderer } = setupScene();
+const { scene, camera, renderer, scoreboard } = setupScene();
 createEnvironment(scene);
 const effects = setupEffects(scene);
 const clock = new THREE.Clock();
@@ -531,6 +531,7 @@ function animate() {
 
             matchTime += deltaTime;
             uiManager.updateHUD(stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
+            scoreboard.updateScore(matchManager.homeScore, matchManager.awayScore, matchTime);
 
             // Aggiornamento Entità
             ball.update(deltaTime);

@@ -109,7 +109,8 @@ export class MatchManager {
 
     setupInputHandling() {
         document.addEventListener('keydown', (e) => {
-            if (!this.player.controls.isLocked) return;
+            const isGameActive = this.player.controls.isLocked || (this.player.isTouchDevice && document.getElementById('touch-controls').style.display !== 'none');
+            if (!isGameActive) return;
 
             // Tasto rapido per rimettere a posto la palla in allenamento
             if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick')) {

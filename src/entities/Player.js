@@ -25,6 +25,7 @@ export class Player {
         // --- CONTROLLI REINTEGRATI ---
         this.controls = new PointerLockControls(this.camera, domElement);
         this.keys = { forward: false, backward: false, left: false, right: false, run: false, boost: false };
+        this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
         this.boost = 0;
         this.pitch = 0;
@@ -164,6 +165,161 @@ export class Player {
                 }
             }
         });
+
+        // --- LOGICA TOUCH (MOBILE/IPAD) ---
+        const touchZone = document.getElementById('touch-joystick-zone');
+        const touchStick = document.getElementById('touch-joystick-stick');
+        const touchCameraZone = document.getElementById('touch-camera-zone');
+        const touchBase = document.getElementById('touch-joystick-base');
+
+        if (touchZone && touchStick && touchBase) {
+            let joystickCenter = { x: 0, y: 0 };
+            let joystickTouchId = null;
+            const maxRadius = 50;
+
+            touchZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (joystickTouchId === null) {
+                        joystickTouchId = touch.identifier;
+                        const rect = touchBase.getBoundingClientRect();
+                        joystickCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+                        this.updateJoystick(touch, joystickCenter, maxRadius, touchStick);
+                    }
+                }
+            }, {passive: false});
+
+            touchZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === joystickTouchId) {
+                        this.updateJoystick(touch, joystickCenter, maxRadius, touchStick);
+                    }
+                }
+            }, {passive: false});
+
+            const endJoystick = (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === joystickTouchId) {
+                        joystickTouchId = null;
+                        touchStick.style.transform = `translate(0px, 0px)`;
+                        this.keys.forward = false;
+                        this.keys.backward = false;
+                        this.keys.left = false;
+                        this.keys.right = false;
+                    }
+                }
+            };
+
+            touchZone.addEventListener('touchend', endJoystick);
+            touchZone.addEventListener('touchcancel', endJoystick);
+        }
+
+        if (touchCameraZone) {
+            let cameraTouchId = null;
+            let lastTouchX = 0;
+            let lastTouchY = 0;
+
+            touchCameraZone.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (cameraTouchId === null) {
+                        const touch = e.changedTouches[i];
+                        cameraTouchId = touch.identifier;
+                        lastTouchX = touch.clientX;
+                        lastTouchY = touch.clientY;
+                    }
+                }
+            }, {passive: false});
+
+            touchCameraZone.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === cameraTouchId) {
+                        const deltaX = touch.clientX - lastTouchX;
+                        const deltaY = touch.clientY - lastTouchY;
+                        
+                        this.yaw -= deltaX * 0.005;
+                        this.pitch -= deltaY * 0.005;
+                        this.pitch = Math.max(0, Math.min(Math.PI / 3, this.pitch));
+
+                        lastTouchX = touch.clientX;
+                        lastTouchY = touch.clientY;
+                    }
+                }
+            }, {passive: false});
+
+            const endCameraTouch = (e) => {
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === cameraTouchId) {
+                        cameraTouchId = null;
+                    }
+                }
+            };
+            touchCameraZone.addEventListener('touchend', endCameraTouch);
+            touchCameraZone.addEventListener('touchcancel', endCameraTouch);
+        }
+
+        const bindTouchButton = (id, onStart, onEnd) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); onStart(); }, {passive: false});
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); e.stopPropagation(); onEnd(); });
+            btn.addEventListener('touchcancel', (e) => { e.preventDefault(); e.stopPropagation(); onEnd(); });
+        };
+
+        bindTouchButton('btn-touch-pass', () => {
+            if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
+                this.action.startCharge('pass');
+                this.kickButtonHeld = true;
+            }
+        }, () => {
+            if (this.action.chargingAction === 'pass') {
+                this.kickButtonHeld = false;
+            }
+        });
+
+        bindTouchButton('btn-touch-shoot', () => {
+            if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
+                this.action.startCharge('shoot');
+                this.kickButtonHeld = true;
+            }
+        }, () => {
+            if (this.action.chargingAction === 'shoot') {
+                this.kickButtonHeld = false;
+            }
+        });
+
+        bindTouchButton('btn-touch-sprint', () => { this.keys.run = true; }, () => { this.keys.run = false; });
+        bindTouchButton('btn-touch-boost', () => { this.keys.boost = true; }, () => { this.keys.boost = false; });
+        
+        bindTouchButton('btn-touch-switch', () => {
+            document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }));
+        }, () => {
+            document.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyE' }));
+        });
+    }
+
+    updateJoystick(touch, center, maxRadius, stickElem) {
+        let dx = touch.clientX - center.x;
+        let dy = touch.clientY - center.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > maxRadius) {
+            dx = (dx / distance) * maxRadius;
+            dy = (dy / distance) * maxRadius;
+        }
+        
+        stickElem.style.transform = `translate(${dx}px, ${dy}px)`;
+        
+        const threshold = 15;
+        this.keys.forward = dy < -threshold;
+        this.keys.backward = dy > threshold;
+        this.keys.left = dx < -threshold;
+        this.keys.right = dx > threshold;
     }
 
     // Metodo che potrai chiamare da fuori per la rimessa
@@ -212,7 +368,8 @@ export class Player {
 
     update(deltaTime) {
 
-        if (!this.controls.isLocked || !this.model) return;
+        const isGameActive = this.controls.isLocked || (this.isTouchDevice && document.getElementById('touch-controls').style.display !== 'none');
+        if (!isGameActive || !this.model) return;
         
         // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
         this.model.rotation.x = 0;

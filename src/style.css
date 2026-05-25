@@ -763,4 +763,130 @@ canvas {
 /* Highlight sull'handle attivo durante drag */
 .face-active-handle {
     filter: brightness(1.5) drop-shadow(0 0 8px white);
+}
+
+/* ============================================================
+   TOUCH CONTROLS UI (MOBILE/IPAD)
+   ============================================================ */
+
+#touch-controls {
+    /* Mostrato tramite JS se touch o con media query, ora nascosto di default inline */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 50; /* Sopra UI base, sotto menu */
+    pointer-events: none; /* Lascia passare tocchi non intercettati */
+}
+
+/* Joystick area sinistra */
+#touch-joystick-zone {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 250px;
+    height: 250px;
+    pointer-events: auto; /* Intercetta i tocchi */
+}
+
+#touch-joystick-base {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    /* Centering */
+    transform: translate(-50%, 50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#touch-joystick-stick {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    position: absolute;
+    /* Spostato via JS rispetto al centro */
+}
+
+/* Area touch destra per muovere la visuale */
+#touch-camera-zone {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50vw;
+    height: 100vh;
+    pointer-events: auto; /* Intercetta per ruotare camera */
+    /* background: rgba(255,0,0,0.1); per debug */
+}
+
+/* Bottoni azione destra */
+#touch-buttons-zone {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-content: flex-end;
+    gap: 15px;
+    width: 250px;
+    pointer-events: none; /* Solo i bottoni prenderanno i tocchi */
+}
+
+.touch-action-btn {
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid white;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.touch-action-btn:active {
+    background: rgba(255, 255, 255, 0.8);
+    color: black;
+    transform: scale(0.9);
+}
+
+#btn-touch-shoot { width: 90px; height: 90px; font-size: 20px; border-color: #ff4444; }
+#btn-touch-pass { width: 80px; height: 80px; border-color: #4CAF50; }
+#btn-touch-sprint { border-color: #ffaa00; }
+#btn-touch-boost { border-color: #00ffff; }
+#btn-touch-switch { width: 50px; height: 50px; font-size: 14px; align-self: flex-start; }
+
+/* Adattamenti per schermi piccoli / landscape */
+@media (max-width: 800px) and (orientation: landscape) {
+    #touch-joystick-base {
+        width: 100px;
+        height: 100px;
+        bottom: 30px;
+        left: 30px;
+    }
+    #touch-joystick-stick {
+        width: 40px;
+        height: 40px;
+    }
+    .touch-action-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 12px;
+    }
+    #btn-touch-shoot { width: 80px; height: 80px; font-size: 16px; }
+    #btn-touch-pass { width: 70px; height: 70px; }
 }

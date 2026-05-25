@@ -305,7 +305,12 @@ const uiManager = new UIManager((mode) => {
     matchManager.isGameStarted = true;
     matchManager.startGame(mode);
     isBallInPlay = false; // <--- NUOVO: Reset all'inizio del match
-    player.controls.lock();
+    if (player.isTouchDevice) {
+        document.getElementById('touch-controls').style.display = 'block';
+        uiManager.blocker.style.display = 'none';
+    } else {
+        player.controls.lock();
+    }
 });
 
 // Ascolta l'evento per cambiare le condizioni meteo/orario
@@ -325,7 +330,14 @@ const boostPadManager = new BoostPadManager(scene);
 // Gestione Pointer Lock
 // Cliccando sullo sfondo (il blocker) riprende il gioco
 uiManager.blocker.addEventListener('click', () => {
-    if (matchManager.isGameStarted && !player.controls.isLocked) player.controls.lock();
+    if (matchManager.isGameStarted && !player.controls.isLocked) {
+        if (player.isTouchDevice) {
+            document.getElementById('touch-controls').style.display = 'block';
+            uiManager.blocker.style.display = 'none';
+        } else {
+            player.controls.lock();
+        }
+    }
 });
 
 // Intercettiamo in modo globale e forzato (useCapture = true) il click sul pulsante "RIPRENDI"
@@ -333,12 +345,31 @@ uiManager.blocker.addEventListener('click', () => {
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.menu-btn, button'); // Cerchiamo un bottone o un elemento con classe menu-btn
     if (btn && btn.innerText.trim().toUpperCase() === 'RIPRENDI') {
-        if (matchManager.isGameStarted && !player.controls.isLocked) player.controls.lock();
+        if (matchManager.isGameStarted && !player.controls.isLocked) {
+            if (player.isTouchDevice) {
+                document.getElementById('touch-controls').style.display = 'block';
+                uiManager.blocker.style.display = 'none';
+            } else {
+                player.controls.lock();
+            }
+        }
     }
 }, true);
 
 player.controls.addEventListener('lock', () => { uiManager.blocker.style.display = 'none'; });
 player.controls.addEventListener('unlock', () => { if (matchManager.isGameStarted) uiManager.blocker.style.display = 'flex'; });
+
+const touchPauseBtn = document.getElementById('btn-touch-pause');
+if (touchPauseBtn) {
+    touchPauseBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (player.isTouchDevice) {
+            document.getElementById('touch-controls').style.display = 'none';
+            uiManager.blocker.style.display = 'flex';
+        }
+    }, {passive: false});
+}
 
 // Stato Locale
 let stamina = 100;
@@ -496,7 +527,7 @@ function animate() {
             if (player.model) player.model.rotation.y = startYaw;
         }
     }
-    else if (player.controls.isLocked) {
+    else if (player.controls.isLocked || (player.isTouchDevice && document.getElementById('touch-controls').style.display !== 'none')) {
 
         // --- LOGICA REPLAY ---
         if (replaySystem.isPlaying) {

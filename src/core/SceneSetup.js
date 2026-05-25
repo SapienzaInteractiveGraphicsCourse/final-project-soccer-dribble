@@ -79,10 +79,10 @@ export function setupScene() {
     }
     const pitchGeo = new THREE.PlaneGeometry(1000, 1000);
     const pitchMat = new THREE.MeshStandardMaterial({
-        map: loadG('/textures/grass/color.jpg'),
-        normalMap: loadG('/textures/grass/normal.jpg'),
-        roughnessMap: loadG('/textures/grass/roughness.jpg'),
-        aoMap: loadG('/textures/grass/ao.jpg'),
+        map: loadG('./textures/grass/color.jpg'),
+        normalMap: loadG('./textures/grass/normal.jpg'),
+        roughnessMap: loadG('./textures/grass/roughness.jpg'),
+        aoMap: loadG('./textures/grass/ao.jpg'),
         normalScale: new THREE.Vector2(0.5, 0.5)
     });
     const pitch = new THREE.Mesh(pitchGeo, pitchMat);
@@ -114,7 +114,7 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
         scene.background = new THREE.Color(0x020205);
 
         // Carichiamo il file .exr che hai scaricato
-        exrLoader.load('/textures/skybox/night_sky.exr', (texture) => {
+        exrLoader.load('./textures/skybox/night_sky.exr', (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             scene.background = texture;
             scene.environment = texture;
@@ -134,7 +134,7 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
         scene.background = new THREE.Color(0x87CEEB);
 
         // Carichiamo il file .hdr per il giorno
-        rgbeLoader.load('/textures/skybox/sky.hdr', (texture) => {
+        rgbeLoader.load('./textures/skybox/sky.hdr', (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             scene.background = texture;
             scene.environment = texture;

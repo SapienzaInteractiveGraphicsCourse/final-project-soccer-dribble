@@ -55,7 +55,7 @@ export class Ball {
         
         // Carichiamo la texture dalla cartella "texture"
         const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load('../../public/textures/ball/qatar_07.jpg', () => {
+        const texture = textureLoader.load('./textures/ball/qatar_07.jpg', () => {
             this.isLoaded = true;
         });
 

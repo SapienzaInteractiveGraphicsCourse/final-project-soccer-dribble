@@ -86,7 +86,7 @@ export function createEnvironment(scene) {
 
     // --- 3. CARICAMENTO STADIO ---
     function loadRealStadium() {
-        modelManager.load('/models/stadium.glb', (gltf) => {
+        modelManager.load('./models/stadium.glb', (gltf) => {
             const model = gltf.scene;
             model.scale.set(1, 1, 1);
 

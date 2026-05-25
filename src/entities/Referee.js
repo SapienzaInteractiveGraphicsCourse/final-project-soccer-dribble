@@ -25,7 +25,7 @@ export class Referee {
     }
 
     loadGLB(startPos) {
-        modelManager.load('/models/player.glb', (gltf) => {
+        modelManager.load('./models/player.glb', (gltf) => {
             this.model = gltf.scene;
             this.model.scale.set(1.5, 1.5, 1.5);
             this.model.position.copy(startPos);

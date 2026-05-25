@@ -172,7 +172,7 @@ document.addEventListener('previewCustomization', (e) => {
         if (id === 'custom') {
             playerCustomizer.changeTexture('Ch38_Shirt', null);
         } else {
-            playerCustomizer.changeTexture('Ch38_Shirt', `/textures/shirts/${id}.png`);
+            playerCustomizer.changeTexture('Ch38_Shirt', `./textures/shirts/${id}.png`);
         }
     }
     if (type === 'shirt') {
@@ -195,7 +195,7 @@ document.addEventListener('previewCustomization', (e) => {
             const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
             const hairScale = 1.3; 
             playerCustomizer.equipAccessory(
-                '/models/hair_' + id + '.glb', 
+                './models/hair_' + id + '.glb', 
                 'head', 
                 'hair', 
                 hairOffsetPos,
@@ -230,7 +230,7 @@ document.addEventListener('customizePlayer', (e) => {
     const { shirtTeam, shirtColor, skinColor, hairId, accessoryId, hairColor, hatId } = e.detail;
     
     if (shirtTeam && shirtTeam !== 'custom') {
-        playerCustomizer.changeTexture('Ch38_Shirt', `/textures/shirts/${shirtTeam}.png`);
+        playerCustomizer.changeTexture('Ch38_Shirt', `./textures/shirts/${shirtTeam}.png`);
     } else {
         playerCustomizer.changeTexture('Ch38_Shirt', null);
         if (shirtColor) {
@@ -254,7 +254,7 @@ document.addEventListener('customizePlayer', (e) => {
             const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
             const hairScale = 1.3; 
             playerCustomizer.equipAccessory(
-                '/models/hair_' + hairId + '.glb', 
+                './models/hair_' + hairId + '.glb', 
                 'head', 
                 'hair', 
                 hairOffsetPos,

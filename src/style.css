@@ -783,7 +783,7 @@ canvas {
 /* Joystick area sinistra */
 #touch-joystick-zone {
     position: absolute;
-    bottom: 20px;
+    bottom: 180px; /* Alzato per non coprire il radar */
     left: 20px;
     width: 250px;
     height: 250px;
@@ -829,7 +829,7 @@ canvas {
 /* Bottoni azione destra */
 #touch-buttons-zone {
     position: absolute;
-    bottom: 30px;
+    bottom: 180px; /* Alzato per non coprire stamina/boost/bonus */
     right: 30px;
     display: flex;
     flex-wrap: wrap;

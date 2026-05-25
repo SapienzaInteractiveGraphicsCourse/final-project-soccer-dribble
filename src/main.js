@@ -308,6 +308,14 @@ const uiManager = new UIManager((mode) => {
     if (player.isTouchDevice) {
         document.getElementById('touch-controls').style.display = 'block';
         uiManager.blocker.style.display = 'none';
+        
+        // Richiesta Fullscreen per mobile/iPad
+        const docEl = document.documentElement;
+        if (docEl.requestFullscreen) {
+            docEl.requestFullscreen().catch(e => console.warn(e));
+        } else if (docEl.webkitRequestFullscreen) { /* Safari */
+            docEl.webkitRequestFullscreen().catch(e => console.warn(e));
+        }
     } else {
         player.controls.lock();
     }
@@ -334,6 +342,13 @@ uiManager.blocker.addEventListener('click', () => {
         if (player.isTouchDevice) {
             document.getElementById('touch-controls').style.display = 'block';
             uiManager.blocker.style.display = 'none';
+
+            // Ripristina Fullscreen se si era usciti
+            const docEl = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (docEl.requestFullscreen) docEl.requestFullscreen().catch(e=>console.warn(e));
+                else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen().catch(e=>console.warn(e));
+            }
         } else {
             player.controls.lock();
         }
@@ -349,6 +364,12 @@ document.addEventListener('click', (e) => {
             if (player.isTouchDevice) {
                 document.getElementById('touch-controls').style.display = 'block';
                 uiManager.blocker.style.display = 'none';
+
+                const docEl = document.documentElement;
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (docEl.requestFullscreen) docEl.requestFullscreen().catch(e=>console.warn(e));
+                    else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen().catch(e=>console.warn(e));
+                }
             } else {
                 player.controls.lock();
             }

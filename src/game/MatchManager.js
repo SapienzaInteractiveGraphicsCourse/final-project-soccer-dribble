@@ -243,6 +243,9 @@ export class MatchManager {
         this.ball.isGoal = false;
         this.ball.isOut = false;
         this.ball.isOutBaseline = false;
+        this.ball.isElectricShot = false;
+        this.ball.isPowerShot = false;
+        this.ball.spin = 0;
 
         if (this.player.model) {
             this.player.model.position.set(34, 0, 0);
@@ -279,6 +282,9 @@ export class MatchManager {
         this.ball.isGoal = false;
         this.ball.isOut = false;
         this.ball.isOutBaseline = false;
+        this.ball.isElectricShot = false;
+        this.ball.isPowerShot = false;
+        this.ball.spin = 0;
 
         if (this.player.model) {
             this.player.model.position.set(21.0, 0, ballZ - 2.0);
@@ -311,6 +317,9 @@ export class MatchManager {
         this.ball.isGoal = false;
         this.ball.isOut = false;
         this.ball.isOutBaseline = false;
+        this.ball.isElectricShot = false;
+        this.ball.isPowerShot = false;
+        this.ball.spin = 0;
 
         if (this.currentFormation === '2-1' || this.currentFormation === '1-2') {
             if (this.kickOffTeam === 'home') {
@@ -433,6 +442,9 @@ export class MatchManager {
         // Fuorigioco / Rimesse / Corner
         if (this.ball.isOutBaseline && !this.isCelebrating) {
             this.ball.isOutBaseline = false;
+            this.ball.isElectricShot = false;
+            this.ball.isPowerShot = false;
+            this.ball.spin = 0;
 
             // Se siamo in allenamento e la palla va fuori rimettila semplicemente a posto
             if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
@@ -589,6 +601,9 @@ export class MatchManager {
         // Aggiungi !isAnyBotThrowingIn alla condizione
         if (this.ball.isOut && !this.player.isThrowingIn && !isAnyBotThrowingIn && !this.ball.isGoal) {
             this.ball.isOut = false;
+            this.ball.isElectricShot = false;
+            this.ball.isPowerShot = false;
+            this.ball.spin = 0;
             // --- FINE FIX ---
 
             if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {

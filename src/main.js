@@ -309,12 +309,18 @@ const uiManager = new UIManager((mode) => {
         document.getElementById('touch-controls').style.display = 'block';
         uiManager.blocker.style.display = 'none';
         
-        // Richiesta Fullscreen per mobile/iPad
+        // Richiesta Fullscreen per mobile/iPad (sicuro per Safari)
         const docEl = document.documentElement;
-        if (docEl.requestFullscreen) {
-            docEl.requestFullscreen().catch(e => console.warn(e));
-        } else if (docEl.webkitRequestFullscreen) { /* Safari */
-            docEl.webkitRequestFullscreen().catch(e => console.warn(e));
+        try {
+            if (docEl.requestFullscreen) {
+                const p = docEl.requestFullscreen();
+                if (p) p.catch(e => console.warn(e));
+            } else if (docEl.webkitRequestFullscreen) {
+                const p = docEl.webkitRequestFullscreen();
+                if (p) p.catch(e => console.warn(e));
+            }
+        } catch (err) {
+            console.warn("Fullscreen API non supportata: ", err);
         }
     } else {
         player.controls.lock();
@@ -346,8 +352,15 @@ uiManager.blocker.addEventListener('click', () => {
             // Ripristina Fullscreen se si era usciti
             const docEl = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (docEl.requestFullscreen) docEl.requestFullscreen().catch(e=>console.warn(e));
-                else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen().catch(e=>console.warn(e));
+                try {
+                    if (docEl.requestFullscreen) {
+                        const p = docEl.requestFullscreen();
+                        if (p) p.catch(e=>console.warn(e));
+                    } else if (docEl.webkitRequestFullscreen) {
+                        const p = docEl.webkitRequestFullscreen();
+                        if (p) p.catch(e=>console.warn(e));
+                    }
+                } catch(err) { console.warn(err); }
             }
         } else {
             player.controls.lock();
@@ -367,8 +380,15 @@ document.addEventListener('click', (e) => {
 
                 const docEl = document.documentElement;
                 if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                    if (docEl.requestFullscreen) docEl.requestFullscreen().catch(e=>console.warn(e));
-                    else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen().catch(e=>console.warn(e));
+                    try {
+                        if (docEl.requestFullscreen) {
+                            const p = docEl.requestFullscreen();
+                            if (p) p.catch(e=>console.warn(e));
+                        } else if (docEl.webkitRequestFullscreen) {
+                            const p = docEl.webkitRequestFullscreen();
+                            if (p) p.catch(e=>console.warn(e));
+                        }
+                    } catch(err) { console.warn(err); }
                 }
             } else {
                 player.controls.lock();

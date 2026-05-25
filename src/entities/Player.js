@@ -269,10 +269,26 @@ export class Player {
         stickElem.style.transform = `translate(${dx}px, ${dy}px)`;
         
         const threshold = 15;
-        this.keys.forward = dy < -threshold;
-        this.keys.backward = dy > threshold;
-        this.keys.left = dx < -threshold;
-        this.keys.right = dx > threshold;
+        this.keys.forward = false;
+        this.keys.backward = false;
+        this.keys.left = false;
+        this.keys.right = false;
+
+        if (distance > threshold) {
+            let absX = Math.abs(dx);
+            let absY = Math.abs(dy);
+            
+            // Sensibilità ridotta: ignora movimenti diagonali lievi per evitare lo "strafe" o "orbita" involontario
+            // Devi muovere il dito nettamente verso i lati per girare, altrimenti andrà dritto verso la palla.
+            if (absY > absX * 0.4) {
+                if (dy < 0) this.keys.forward = true;
+                else this.keys.backward = true;
+            }
+            if (absX > absY * 0.4) {
+                if (dx < 0) this.keys.left = true;
+                else this.keys.right = true;
+            }
+        }
         
         // Auto-run su mobile quando il joystick è mosso oltre la soglia
         this.keys.run = this.keys.forward || this.keys.backward || this.keys.left || this.keys.right;

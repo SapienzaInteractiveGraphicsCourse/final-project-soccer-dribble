@@ -12,7 +12,7 @@ export class PlayerCustomizer {
     /**
      * CAMBIO TEXTURE (Viso, Maglia, Pelle)
      * @param {string} meshName - Il nome esatto della mesh nel tuo player.glb (es. 'Ch38_Shirt')
-     * @param {string} textureUrl - Il percorso dell'immagine (es. './textures/face_beards.png')
+     * @param {string} textureUrl - Il percorso dell'immagine (es. `${import.meta.env.BASE_URL}textures/face_beards.png`)
      */
     changeTexture(meshName, textureUrl) {
         if (!this.player.model) {
@@ -67,7 +67,7 @@ export class PlayerCustomizer {
 
     /**
      * AGGANCIO MODELLI MODULARI 3D (Capelli, Occhiali, Scarpini)
-     * @param {string} modelUrl - Percorso del file .glb accessorio (es. './models/hair_afro.glb')
+     * @param {string} modelUrl - Percorso del file .glb accessorio (es. `${import.meta.env.BASE_URL}models/hair_afro.glb`)
      * @param {string} boneName - Nome dell'osso a cui attaccarlo (es. 'head', 'leftFoot')
      * @param {string} slotName - Categoria per l'inventario (es. 'hair', 'glasses')
      * @param {THREE.Vector3} offsetPos - Offset opzionale per aggiustare il posizionamento
@@ -238,7 +238,7 @@ export class PlayerCustomizer {
             '5': { position: [0, 0.11, 0.15], rotation: [0, 2 * Math.PI, 0], scale: 0.121 }
         };
 
-        const modelUrl = `./models/sunglasses_${id}.glb`;
+        const modelUrl = `${import.meta.env.BASE_URL}models/sunglasses_${id}.glb`;
 
         this.removeAccessory(slotName);
 
@@ -302,7 +302,7 @@ export class PlayerCustomizer {
             '5': { position: [0, 0.10, 0.05], rotation: [0, 0, 0], scale: 0.009 }
         };
 
-        const modelUrl = `./models/hat_${id}.glb`;
+        const modelUrl = `${import.meta.env.BASE_URL}models/hat_${id}.glb`;
 
         this.removeAccessory(slotName);
 

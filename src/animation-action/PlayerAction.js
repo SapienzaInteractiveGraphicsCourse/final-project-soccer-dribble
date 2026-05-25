@@ -29,7 +29,7 @@ export class PlayerAction {
         this.hasElectricShot = false;
 
         // --- AUDIO ---
-        this.kickSound = new Audio('./sound/kick.mp3'); // Assicurati che kick.mp3 sia nella cartella "public" (o root)
+        this.kickSound = new Audio(`${import.meta.env.BASE_URL}sound/kick.mp3`); // Assicurati che kick.mp3 sia nella cartella "public" (o root)
         this.kickSound.volume = 1.0; // 1.0 è il volume massimo per l'elemento Audio HTML5
     }
     // --- RIMESSA LATERALE ---

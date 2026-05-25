@@ -13,7 +13,7 @@ export class BenchPlayer {
     }
 
     loadGLB() {
-        modelManager.load('./models/player.glb', (gltf) => {
+        modelManager.load(`${import.meta.env.BASE_URL}models/player.glb`, (gltf) => {
             this.model = gltf.scene;
             this.model.scale.set(1.5, 1.5, 1.5);
             this.model.position.copy(this.position);

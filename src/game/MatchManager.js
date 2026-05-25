@@ -42,7 +42,7 @@ export class MatchManager {
         this.setupAutoSwitchEvent(); // <--- AGGIUNGI QUESTO
 
         /* --- AUDIO DI SOTTOFONDO (STADIO / MUSICA) ---
-        // this.bgMusic = new Audio('./sound/confusion.mp3');
+        // this.bgMusic = new Audio(`${import.meta.env.BASE_URL}sound/confusion.mp3`);
         this.bgMusic.loop = true; // Va a ripetizione all'infinito
         this.bgMusic.volume = 0.4; // Volume al 40% per non coprire troppo il suono dei calci
         

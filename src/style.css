@@ -12,6 +12,9 @@ html, body {
   background-color: #000;
   user-select: none; /* Prevent text highlighting */
   -webkit-user-select: none; /* Safari */
+  touch-action: none; /* Prevents all default browser gestures (panning, swipe down to refresh/exit fullscreen) */
+  overscroll-behavior: none; /* Prevents bounce effect */
+  -webkit-touch-callout: none;
 }
 
 /* Regole per il canvas creato dal motore 3D */

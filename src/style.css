@@ -794,8 +794,8 @@ canvas {
     position: absolute;
     bottom: 50px;
     left: 50px;
-    width: 120px;
-    height: 120px;
+    width: 160px; /* Ingrandito */
+    height: 160px; /* Ingrandito */
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.5);
     border-radius: 50%;
@@ -807,24 +807,15 @@ canvas {
 }
 
 #touch-joystick-stick {
-    width: 50px;
-    height: 50px;
+    width: 70px; /* Ingrandito */
+    height: 70px; /* Ingrandito */
     background: rgba(255, 255, 255, 0.7);
     border-radius: 50%;
     position: absolute;
     /* Spostato via JS rispetto al centro */
 }
 
-/* Area touch destra per muovere la visuale */
-#touch-camera-zone {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 50vw;
-    height: 100vh;
-    pointer-events: auto; /* Intercetta per ruotare camera */
-    /* background: rgba(255,0,0,0.1); per debug */
-}
+
 
 /* Bottoni azione destra */
 #touch-buttons-zone {
@@ -866,21 +857,20 @@ canvas {
 
 #btn-touch-shoot { width: 90px; height: 90px; font-size: 20px; border-color: #ff4444; }
 #btn-touch-pass { width: 80px; height: 80px; border-color: #4CAF50; }
-#btn-touch-sprint { border-color: #ffaa00; }
 #btn-touch-boost { border-color: #00ffff; }
 #btn-touch-switch { width: 50px; height: 50px; font-size: 14px; align-self: flex-start; }
 
 /* Adattamenti per schermi piccoli / landscape */
 @media (max-width: 800px) and (orientation: landscape) {
     #touch-joystick-base {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
         bottom: 30px;
         left: 30px;
     }
     #touch-joystick-stick {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
     }
     .touch-action-btn {
         width: 60px;

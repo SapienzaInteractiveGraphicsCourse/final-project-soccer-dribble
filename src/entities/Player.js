@@ -169,13 +169,12 @@ export class Player {
         // --- LOGICA TOUCH (MOBILE/IPAD) ---
         const touchZone = document.getElementById('touch-joystick-zone');
         const touchStick = document.getElementById('touch-joystick-stick');
-        const touchCameraZone = document.getElementById('touch-camera-zone');
         const touchBase = document.getElementById('touch-joystick-base');
 
         if (touchZone && touchStick && touchBase) {
             let joystickCenter = { x: 0, y: 0 };
             let joystickTouchId = null;
-            const maxRadius = 50;
+            const maxRadius = 70; // Aumentato rispetto a prima per il joystick più grande
 
             touchZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -209,58 +208,13 @@ export class Player {
                         this.keys.backward = false;
                         this.keys.left = false;
                         this.keys.right = false;
+                        this.keys.run = false; // Ferma l'auto-corsa
                     }
                 }
             };
 
             touchZone.addEventListener('touchend', endJoystick);
             touchZone.addEventListener('touchcancel', endJoystick);
-        }
-
-        if (touchCameraZone) {
-            let cameraTouchId = null;
-            let lastTouchX = 0;
-            let lastTouchY = 0;
-
-            touchCameraZone.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (cameraTouchId === null) {
-                        const touch = e.changedTouches[i];
-                        cameraTouchId = touch.identifier;
-                        lastTouchX = touch.clientX;
-                        lastTouchY = touch.clientY;
-                    }
-                }
-            }, {passive: false});
-
-            touchCameraZone.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === cameraTouchId) {
-                        const deltaX = touch.clientX - lastTouchX;
-                        const deltaY = touch.clientY - lastTouchY;
-                        
-                        this.yaw -= deltaX * 0.005;
-                        this.pitch -= deltaY * 0.005;
-                        this.pitch = Math.max(0, Math.min(Math.PI / 3, this.pitch));
-
-                        lastTouchX = touch.clientX;
-                        lastTouchY = touch.clientY;
-                    }
-                }
-            }, {passive: false});
-
-            const endCameraTouch = (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    if (e.changedTouches[i].identifier === cameraTouchId) {
-                        cameraTouchId = null;
-                    }
-                }
-            };
-            touchCameraZone.addEventListener('touchend', endCameraTouch);
-            touchCameraZone.addEventListener('touchcancel', endCameraTouch);
         }
 
         const bindTouchButton = (id, onStart, onEnd) => {
@@ -293,7 +247,6 @@ export class Player {
             }
         });
 
-        bindTouchButton('btn-touch-sprint', () => { this.keys.run = true; }, () => { this.keys.run = false; });
         bindTouchButton('btn-touch-boost', () => { this.keys.boost = true; }, () => { this.keys.boost = false; });
         
         bindTouchButton('btn-touch-switch', () => {
@@ -320,6 +273,9 @@ export class Player {
         this.keys.backward = dy > threshold;
         this.keys.left = dx < -threshold;
         this.keys.right = dx > threshold;
+        
+        // Auto-run su mobile quando il joystick è mosso oltre la soglia
+        this.keys.run = this.keys.forward || this.keys.backward || this.keys.left || this.keys.right;
     }
 
     // Metodo che potrai chiamare da fuori per la rimessa
@@ -375,10 +331,19 @@ export class Player {
         this.model.rotation.x = 0;
         this.model.rotation.z = 0;
 
-        // --- NUOVA LOGICA DIREZIONE MOVIMENTO (Lock-on sulla palla) ---
+        // --- NUOVA LOGICA DIREZIONE MOVIMENTO E TELECAMERA (Lock-on sulla palla) ---
         let dir, right;
 
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick) {
+            // Se siamo su Touch, la telecamera segue automaticamente la palla (evita swipe involontari)
+            if (this.isTouchDevice) {
+                const angleToBall = Math.atan2(this.ball.position.x - this.model.position.x, this.ball.position.z - this.model.position.z);
+                const diff = angleToBall - this.yaw;
+                const shortestAngle = Math.atan2(Math.sin(diff), Math.cos(diff));
+                this.yaw += shortestAngle * deltaTime * 6; // Segue fluidamente la palla
+                this.pitch = Math.PI / 8; // Leggermente inclinato in basso
+            }
+
             // 1. Calcoliamo la direzione dal giocatore verso la palla sul piano XZ
             dir = new THREE.Vector3()
                 .subVectors(this.ball.position, this.model.position)

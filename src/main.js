@@ -433,18 +433,30 @@ document.addEventListener('triggerReplay', () => {
 // Ascoltatore per skippare il replay con SPAZIO
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && replaySystem.isPlaying) {
-        replaySystem.stopPlayback();
-        uiManager.showReplayUI(false);
-        matchManager.resetAfterGoal();
-        isBallInPlay = false;
-
-        // RIATTIVA GLI INDICATORI
-        if (effects) {
-            if (effects.playerIndicator) effects.playerIndicator.visible = true;
-            if (effects.targetGoalGroup) effects.targetGoalGroup.visible = true;
-        }
+        skipReplay();
     }
 });
+
+// Ascoltatore per skippare il replay col touch/click
+document.addEventListener('mousedown', (e) => {
+    if (replaySystem.isPlaying) skipReplay();
+});
+document.addEventListener('touchstart', (e) => {
+    if (replaySystem.isPlaying) skipReplay();
+}, {passive: true});
+
+function skipReplay() {
+    replaySystem.stopPlayback();
+    uiManager.showReplayUI(false);
+    matchManager.resetAfterGoal();
+    isBallInPlay = false;
+
+    // RIATTIVA GLI INDICATORI
+    if (effects) {
+        if (effects.playerIndicator) effects.playerIndicator.visible = true;
+        if (effects.targetGoalGroup) effects.targetGoalGroup.visible = true;
+    }
+}
 
 // --- GAME LOOP ---
 function animate() {

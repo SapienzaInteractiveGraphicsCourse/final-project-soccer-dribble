@@ -155,7 +155,7 @@ final-project-pierlucateam/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/SapienzaInteractiveGraphicsCourse/final-project-soccer-dribble.git
 cd final-project-pierlucateam
 
 # Install dependencies

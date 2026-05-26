@@ -594,14 +594,14 @@ export class MatchManager {
 
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
             this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);
-        }
-        // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---
-        const allBots = [this.currentO1, this.currentO2, this.currentO3, this.currentT1, this.currentT2];
-        const isAnyBotThrowingIn = allBots.some(bot => bot && bot.isThrowingIn);
+        } else {
+            // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---
+            const allBots = [this.currentO1, this.currentO2, this.currentO3, this.currentT1, this.currentT2];
+            const isAnyBotThrowingIn = allBots.some(bot => bot && bot.isThrowingIn);
 
-        // Aggiungi !isAnyBotThrowingIn alla condizione
-        if (this.ball.isOut && !this.player.isThrowingIn && !isAnyBotThrowingIn && !this.ball.isGoal) {
-            this.ball.isOut = false;
+            // Aggiungi !isAnyBotThrowingIn alla condizione
+            if (this.ball.isOut && !this.player.isThrowingIn && !isAnyBotThrowingIn && !this.ball.isGoal) {
+                this.ball.isOut = false;
             this.ball.isElectricShot = false;
             this.ball.isPowerShot = false;
             this.ball.spin = 0;
@@ -670,6 +670,7 @@ export class MatchManager {
 
                 this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
             }
+        }
         }
     }
 

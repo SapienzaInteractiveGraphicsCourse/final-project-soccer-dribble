@@ -201,47 +201,60 @@ export class Teammate {
         if (ball && ball.isLoaded) {
             this._idealPos.set(0, 0, 0);
             
-            // 1. Avanzamento offensivo
-            this._idealPos.x = ball.position.x + (attackDirX * 12); 
-            
-            // 2. Mantenimento della posizione larga (Fasce o Centro)
+            // 1. Identificazione Ruolo (Fascia o Centro)
             let laneZ = 0;
             if (this.startPosition.z > 5) laneZ = 14;
             else if (this.startPosition.z < -5) laneZ = -14;
-            
-            if (Math.abs(this.model.position.x) > 30) {
-                this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, 0, deltaTime * 1.5);
+
+            // 2. Calcolo Avanzamento Offensivo e Posizionamento Z
+            const isBallNearGoal = (attackDirX === 1 && ball.position.x > 30) ||
+                                   (attackDirX === -1 && ball.position.x < -30);
+
+            if (isBallNearGoal) {
+                // In zona d'attacco: i giocatori sulle fasce tagliano verso l'area, ma non si sovrappongono
+                let targetZ = laneZ * 0.5; // Stringono verso il centro (es. da 14 a 7)
+                
+                // Manteniamo una distanza di sicurezza dal portiere e creiamo opzioni di passaggio (cutback)
+                let targetX = ball.position.x + (attackDirX * 4); 
+                
+                // Limite massimo di profondità per non incollarsi al portiere
+                const maxDepth = 40; 
+                if (attackDirX === 1) targetX = Math.min(targetX, maxDepth);
+                else targetX = Math.max(targetX, -maxDepth);
+
+                this._idealPos.x = targetX;
+                this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, targetZ, deltaTime * 2.0);
             } else {
+                // Costruzione dell'azione a centrocampo/difesa
+                this._idealPos.x = ball.position.x + (attackDirX * 14); 
                 this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, laneZ, deltaTime * 1.5);
             }
 
-            // 3. SMARCAMENTO (Evita i bot e punta la porta)
-            const avoidanceRadius = 12.0; // Aumentato un po' per farli reagire in anticipo
+            // 3. SMARCAMENTO (Evita i bot avversari)
+            const avoidanceRadius = 15.0; 
             this._avoidanceVector.set(0, 0, 0);
             
             if (bots && bots.length > 0) {
-                const targetGoalX = 49.5 * attackDirX; // X della porta avversaria
-
                 bots.forEach(bot => {
                     if (bot && bot.model) {
                         const dist = this.model.position.distanceTo(bot.model.position);
                         if (dist < avoidanceRadius) {
-                            // A) Vettore di pura fuga dal bot
+                            // Fuga dal bot
                             this._pushAway.subVectors(this.model.position, bot.model.position);
                             this._pushAway.y = 0;
                             this._pushAway.normalize();
 
-                            // B) Vettore verso il centro della porta avversaria
-                            const dirToGoal = new THREE.Vector3(targetGoalX - this.model.position.x, 0, 0 - this.model.position.z).normalize();
+                            // Direzione verso la posizione ideale
+                            const dirToIdeal = new THREE.Vector3(this._idealPos.x - this.model.position.x, 0, this._idealPos.z - this.model.position.z);
+                            if (dirToIdeal.lengthSq() > 0.001) dirToIdeal.normalize();
+                            else dirToIdeal.set(1, 0, 0);
 
-                            // C) Blend intelligente: se il bot è vicinissimo (distanza vicina a 0) scappa e basta.
-                            // Se il bot è ai margini del raggio, curva pesantemente verso la porta.
-                            const evasionBlend = dist / avoidanceRadius; 
+                            // Blend intelligente: allontanati dal difensore ma cerca di andare verso la meta
+                            const evasionBlend = Math.min(dist / avoidanceRadius, 1.0); 
                             
-                            // lerpVectors miscela le due direzioni. Usa evasionBlend o un valore fisso tipo 0.5 o 0.6
-                            const escapeDir = new THREE.Vector3().lerpVectors(this._pushAway, dirToGoal, 0.6).normalize();
+                            const escapeDir = new THREE.Vector3().lerpVectors(this._pushAway, dirToIdeal, evasionBlend).normalize();
 
-                            // Scala l'intensità della fuga in base a quanto è vicino il bot
+                            // Più il bot è vicino, più forte è la repulsione
                             escapeDir.multiplyScalar(avoidanceRadius - dist);
                             this._avoidanceVector.add(escapeDir);
                         }
@@ -249,9 +262,10 @@ export class Teammate {
                 });
             }
             
+            // Applica il vettore di smarcamento
             this._idealPos.add(this._avoidanceVector);
 
-            // 4. Limiti del campo
+            // 4. Limiti del campo (non uscire dal campo)
             this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
             this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
 
@@ -260,6 +274,7 @@ export class Teammate {
             const distToBall = this.model.position.distanceTo(ball.position);
             
             if (distToBall < 3.5) {
+                // Scansa la palla se ci finisce troppo vicino per non disturbare il giocatore
                 this._pushFromBall.subVectors(this.model.position, ball.position);
                 this._pushFromBall.y = 0;
                 this._pushFromBall.normalize();
@@ -272,7 +287,8 @@ export class Teammate {
                 this._moveDir.y = 0;
                 this._moveDir.normalize();
 
-                const speed = distToIdeal > 8 ? 12 : 6;
+                // Regola la velocità in base a quanto sono lontani dalla meta
+                const speed = distToIdeal > 6 ? 12 : 7;
                 this.isRunning = speed > 8;
                 this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
             }

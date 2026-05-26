@@ -717,11 +717,19 @@ document.getElementById('btn-commands').addEventListener('click', () => {
 });
 
 // --- SISTEMA SOSTITUZIONI ---
+let subsRemaining = 5;
+
 document.addEventListener('openSubstitutions', () => {
     const activeContainer = document.getElementById('active-players-container');
     const benchContainer = document.getElementById('bench-players-container');
+    const subsText = document.getElementById('subs-remaining-text');
     if (!activeContainer || !benchContainer) return;
     
+    if (subsText) {
+        subsText.innerText = `Cambi disponibili: ${subsRemaining}`;
+        if (subsRemaining === 0) subsText.style.color = '#f44336';
+    }
+
     activeContainer.innerHTML = '';
     benchContainer.innerHTML = '';
 
@@ -785,11 +793,18 @@ function createPlayerCard(playerData, isActive, index) {
 }
 
 function performSubstitution(activePlayer, benchIndex) {
+    if (subsRemaining <= 0) {
+        uiManager.showInGameMessage("<span style='color:red'>CAMBI ESAURITI!</span>");
+        return;
+    }
+
     const myTeam = matchManager.playerTeam;
     const myBench = benchPlayers.filter(bp => bp.team === myTeam && !bp.isSubbed);
     const subPlayer = myBench[benchIndex];
 
     if (subPlayer) {
+        subsRemaining--;
+
         // Swap dati
         activePlayer.playerName = subPlayer.playerName;
         activePlayer.avatar = subPlayer.avatar;

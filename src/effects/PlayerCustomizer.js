@@ -258,9 +258,8 @@ export class PlayerCustomizer {
             if (bone) {
                 const cleanId = String(id).trim();
                 const config = GLASSES_CONFIG[cleanId] || { position: [0, -2.05, 0.10], rotation: [0, 2 * Math.PI, 0], scale: 0.15 };
-                console.log("ciao")
                 // Aggiungi questo log per confermare cosa sta leggendo davvero il motore
-                console.log(`[DEBUG] ID: "${cleanId}" | Configurazione trovata in mappa:`, GLASSES_CONFIG[cleanId] ? "SÌ" : "NO (Sto usando il Fallback!)");
+    
 
                 const boneWorldScale = new THREE.Vector3();
                 bone.getWorldScale(boneWorldScale);

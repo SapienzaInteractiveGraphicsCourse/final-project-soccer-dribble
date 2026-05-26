@@ -105,7 +105,7 @@ export function setupScene() {
 }
 
 export function updateSceneEnvironment(scene, timeOfDay, weather) {
-    const rgbeLoader = new RGBELoader();
+    const rgbeLoader = new HDRLoader();
     const exrLoader = new EXRLoader();
 
     // --- 1. GESTIONE ORARIO (LUCI E SKYBOX) ---

@@ -29,7 +29,7 @@ import { FaceSculptor } from './effects/FaceSculptor.js';
 const { scene, camera, renderer, scoreboard } = setupScene();
 createEnvironment(scene);
 const effects = setupEffects(scene);
-const clock = new THREE.Clock();
+const clock = new THREE.Timer();
 
 // --- INIZIALIZZAZIONE ENTITÀ ---
 const ball = new Ball(scene);
@@ -479,8 +479,9 @@ function skipReplay() {
 }
 
 // --- GAME LOOP ---
-function animate() {
+function animate(timestamp) {
     requestAnimationFrame(animate);
+    clock.update(timestamp);
     let rawDelta = Math.min(clock.getDelta(), 0.1);
 
     // --- SLOW MOTION UPDATE ---
@@ -572,7 +573,7 @@ function animate() {
                 }
             }
         } else {
-            const time = clock.getElapsedTime();
+            const time = clock.getElapsed();
             camera.position.set(Math.cos(time * 0.1) * 60, 30, Math.sin(time * 0.1) * 60);
             camera.lookAt(0, 0, 0);
             
@@ -644,7 +645,7 @@ function animate() {
             if (boostFill) boostFill.style.width = player.boost + '%';
 
             // Effetti, Regole e Radar
-            updateEffects(effects, player, matchManager.playerTeam, clock.getElapsedTime(), isRunning, deltaTime, camera);
+            updateEffects(effects, player, matchManager.playerTeam, clock.getElapsed(), isRunning, deltaTime, camera);
             matchManager.updateRules();
             uiManager.updateRadar(player.model, player.yaw, ball.mesh, ball.position, bots);
             

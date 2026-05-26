@@ -278,12 +278,33 @@
         <button id="btn-back-settings" class="menu-btn" style="margin-top: 10px;">INDIETRO</button>
     </div>
 
+    <div id="substitutions-menu" class="menu-screen substitutions-menu-style" style="display: none;">
+        <h1 class="subs-h1-style">SOSTITUZIONI</h1>
+        
+        <div class="pitch-container">
+            <h3 style="color: white; margin-bottom: 10px;">IN CAMPO (Trascina qui le riserve)</h3>
+            <div id="active-players-container" class="players-row">
+                <!-- Generato dinamicamente -->
+            </div>
+        </div>
+
+        <div class="bench-container">
+            <h3 style="color: white; margin-bottom: 10px;">PANCHINA</h3>
+            <div id="bench-players-container" class="players-row">
+                <!-- Generato dinamicamente -->
+            </div>
+        </div>
+
+        <button id="btn-close-substitutions" class="menu-btn" style="margin-top: 30px;">CHIUDI</button>
+    </div>
+
   </div>
 
   <div id="blocker" style="display: none;">
     <div id="pause-menu" style="display: flex; flex-direction: column; align-items: center; font-family: 'Arial', sans-serif;">
       <h1 style="font-size: 60px; margin-bottom: 40px; text-shadow: 0 0 20px #4CAF50; color: white;">PAUSA</h1>
       <button id="btn-resume" class="menu-btn">RIPRENDI</button>
+      <button id="btn-substitutions" class="menu-btn">MODIFICA FORMAZIONE</button>
       <button id="btn-pause-commands" class="menu-btn">COMANDI</button>
       <button id="btn-exit" class="menu-btn">ESCI</button>
     </div>
@@ -307,6 +328,12 @@
         <div id="radar-center-circle"></div> 
         <div id="radar-player"></div>
         <div id="radar-ball"></div>
+    </div>
+
+    <!-- Player Name HUD (Separato dal Bonus) -->
+    <div id="player-name-hud" style="position: absolute; bottom: 30px; left: 260px; background: rgba(0,0,0,0.8); border: 2px solid #4CAF50; padding: 10px 20px; border-radius: 8px; color: white; font-weight: bold; font-family: sans-serif; font-size: 18px; box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); z-index: 10;">
+        <span style="color: #ccc; font-size: 12px; display: block; margin-bottom: 5px; letter-spacing: 1px;">GIOCATORE ATTIVO</span>
+        <span id="hud-player-name" style="color: #4CAF50; font-size: 22px;"></span>
     </div>
 
     <div id="bonus-hud">

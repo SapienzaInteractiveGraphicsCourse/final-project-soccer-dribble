@@ -30,6 +30,11 @@ export class Player {
         this.boost = 0;
         this.pitch = 0;
 
+        // --- STATISTICHE GIOCATORE ---
+        this.stamina = 100;
+        this.playerName = "Giocatore";
+        this.avatar = "👤";
+
         // --- ANIMAZIONE RIMESSA LATERALE ---
         this.throwAnimPlaying = false;
         this.throwTimer = 0;

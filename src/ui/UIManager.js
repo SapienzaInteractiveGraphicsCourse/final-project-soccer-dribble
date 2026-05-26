@@ -18,6 +18,7 @@ export class UIManager {
         this.radarPlayer = document.getElementById('radar-player');
         this.radarBall = document.getElementById('radar-ball');
         this.scoreElement = document.querySelector('.score');
+        this.hudPlayerName = document.getElementById('hud-player-name');
 
         this.setupLoadingManager();
         this.setupEventListeners();
@@ -473,11 +474,31 @@ export class UIManager {
         const btnResume = document.getElementById('btn-resume');
         const btnPauseCommands = document.getElementById('btn-pause-commands');
         const btnExit = document.getElementById('btn-exit');
+        const btnSubstitutions = document.getElementById('btn-substitutions');
+        const btnCloseSubstitutions = document.getElementById('btn-close-substitutions');
         const pauseMenu = document.getElementById('pause-menu');
+        const substitutionsMenu = document.getElementById('substitutions-menu');
 
         if (btnResume) btnResume.addEventListener('click', (e) => {
             e.stopPropagation();
             document.dispatchEvent(new Event('resumeGame')); // Invia un segnale a main.js
+        });
+
+        if (btnSubstitutions) btnSubstitutions.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pauseMenu.style.display = 'none';
+            this.blocker.style.display = 'none';
+            document.getElementById('ui-layer').style.zIndex = '100';
+            substitutionsMenu.style.display = 'flex';
+            document.dispatchEvent(new Event('openSubstitutions'));
+        });
+
+        if (btnCloseSubstitutions) btnCloseSubstitutions.addEventListener('click', (e) => {
+            e.stopPropagation();
+            substitutionsMenu.style.display = 'none';
+            document.getElementById('ui-layer').style.zIndex = '10';
+            this.blocker.style.display = 'flex';
+            pauseMenu.style.display = 'flex';
         });
 
         if (btnPauseCommands) btnPauseCommands.addEventListener('click', (e) => {
@@ -512,7 +533,9 @@ export class UIManager {
         msg.fadeTimer = setTimeout(() => { msg.style.opacity = '0'; }, 1000);
     }
 
-    updateHUD(stamina, matchTime, homeScore, awayScore) {
+    updateHUD(playerName, stamina, matchTime, homeScore, awayScore) {
+        if (this.hudPlayerName) this.hudPlayerName.innerText = playerName;
+        
         // Stamina
         this.staminaBarFill.style.width = stamina + '%';
         if (stamina > 50) this.staminaBarFill.style.backgroundColor = '#4CAF50';

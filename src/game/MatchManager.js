@@ -174,6 +174,18 @@ export class MatchManager {
         this.player.model = teammate.model;
         teammate.model = tempModel;
 
+        const tempStamina = this.player.stamina;
+        this.player.stamina = teammate.stamina;
+        teammate.stamina = tempStamina;
+
+        const tempName = this.player.playerName;
+        this.player.playerName = teammate.playerName;
+        teammate.playerName = tempName;
+
+        const tempAvatar = this.player.avatar;
+        this.player.avatar = teammate.avatar;
+        teammate.avatar = tempAvatar;
+
 
         const tempAnimator = this.player.animator;
         this.player.animator = teammate.animator;

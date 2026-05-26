@@ -8,6 +8,11 @@ export class BenchPlayer {
         this.position = position;
         this.rotationY = rotationY;
         this.model = null;
+        
+        // --- STATISTICHE GIOCATORE ---
+        this.stamina = 100;
+        this.playerName = "Riserva";
+        this.avatar = "👤";
 
         this.loadGLB();
     }

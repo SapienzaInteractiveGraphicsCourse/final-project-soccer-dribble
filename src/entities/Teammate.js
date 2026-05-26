@@ -11,6 +11,11 @@ export class Teammate {
         this.startPosition = startPosition;
         this.yaw = startYaw; // <--- NUOVO
 
+        // --- STATISTICHE GIOCATORE ---
+        this.stamina = 100;
+        this.playerName = "Compagno";
+        this.avatar = "👤";
+
         this.radarDot = document.createElement('div');
         this.radarDot.style.position = 'absolute';
         this.radarDot.style.width = '8px';

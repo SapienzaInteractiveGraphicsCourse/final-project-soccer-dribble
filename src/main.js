@@ -280,6 +280,13 @@ const teammates = [
     new Teammate(scene, new THREE.Vector3(10, -100, 0), startYaw),
     new Teammate(scene, new THREE.Vector3(20, -100, 0), startYaw)
 ];
+
+const homeNames = ["L. Messi", "C. Ronaldo", "K. Mbappé", "N. Barella", "F. Chiesa", "G. Donnarumma", "M. Verratti", "A. Bastoni", "S. Tonali", "F. Dimarco", "G. Di Lorenzo"];
+const awayNames = ["K. De Bruyne", "E. Haaland", "V. Vinicius", "J. Bellingham", "H. Kane", "R. Lewandowski", "L. Modric", "M. Salah", "T. Kroos", "A. Griezmann", "P. Foden"];
+
+player.playerName = homeNames[0];
+teammates[0].playerName = homeNames[1];
+teammates[1].playerName = homeNames[2];
 const bots = [
     new Bot(scene, ball, new THREE.Vector3(-10, -100, 0), 0),
     new Bot(scene, ball, new THREE.Vector3(-20, -100, 0), 0),
@@ -294,12 +301,15 @@ const referee = new Referee(scene, ball, new THREE.Vector3(5, 0, 5));
 const benchPlayers = [];
 // Panchina Home (Rossa)
 for (let i = 0; i < 8; i++) {
-    // Coordinate indicative della panchina: Y alzato per seduta, Z fuori dal campo.
-    benchPlayers.push(new BenchPlayer(scene, 'home', new THREE.Vector3(-18 + (i * 1.5), -0.5, -35.1), 0));
+    const bp = new BenchPlayer(scene, 'home', new THREE.Vector3(-18 + (i * 1.5), -0.5, -35.1), 0);
+    bp.playerName = homeNames[3 + i];
+    benchPlayers.push(bp);
 }
 // Panchina Away (Blu)
 for (let i = 0; i < 8; i++) {
-    benchPlayers.push(new BenchPlayer(scene, 'away', new THREE.Vector3(7 + (i * 1.5), -0.5, -35.1), 0));
+    const bp = new BenchPlayer(scene, 'away', new THREE.Vector3(7 + (i * 1.5), -0.5, -35.1), 0);
+    bp.playerName = awayNames[i];
+    benchPlayers.push(bp);
 }
 
 // --- INIZIALIZZAZIONE MANAGER ---
@@ -606,18 +616,20 @@ function animate(timestamp) {
             if (!isBallInPlay && ball.velocity && ball.velocity.lengthSq() > 0.01) {
                 isBallInPlay = true;
             }
-            // Logica Stamina (Tuo codice originale)
+            // Logica Stamina
             const isMoving = player.keys.forward || player.keys.backward || player.keys.left || player.keys.right;
-            const isRunning = player.keys.run && isMoving && stamina > 0;
+            const isRunning = player.keys.run && isMoving && player.stamina > 0;
 
-            if (isRunning) stamina -= 0.001 * deltaTime;
-            else stamina += 100 * deltaTime;
+            if (isRunning) {
+                player.stamina -= 1.5 * deltaTime; // Consumo molto più lento
+            }
+            // Eliminata la ricarica: la stamina non risale più!
 
-            stamina = Math.max(0, Math.min(100, stamina));
-            if (stamina === 0) player.keys.run = false;
+            player.stamina = Math.max(0, Math.min(100, player.stamina));
+            if (player.stamina === 0) player.keys.run = false;
 
             matchTime += deltaTime;
-            uiManager.updateHUD(stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
+            uiManager.updateHUD(player.playerName, player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
             scoreboard.updateScore(matchManager.homeScore, matchManager.awayScore, matchTime);
 
             // Aggiornamento Entità
@@ -703,5 +715,98 @@ document.getElementById('btn-commands').addEventListener('click', () => {
   currentSlide = 0;
   showSlide(currentSlide);
 });
+
+// --- SISTEMA SOSTITUZIONI ---
+document.addEventListener('openSubstitutions', () => {
+    const activeContainer = document.getElementById('active-players-container');
+    const benchContainer = document.getElementById('bench-players-container');
+    if (!activeContainer || !benchContainer) return;
+    
+    activeContainer.innerHTML = '';
+    benchContainer.innerHTML = '';
+
+    const activePlayers = [player, ...teammates];
+    
+    // Genera carte giocatori in campo
+    activePlayers.forEach((p, index) => {
+        const card = createPlayerCard(p, true, index);
+        activeContainer.appendChild(card);
+    });
+
+    // Genera carte panchina
+    const myTeam = matchManager.playerTeam; 
+    const myBench = benchPlayers.filter(bp => bp.team === myTeam && !bp.isSubbed);
+    
+    myBench.forEach((bp, index) => {
+        const card = createPlayerCard(bp, false, index);
+        benchContainer.appendChild(card);
+    });
+});
+
+function createPlayerCard(playerData, isActive, index) {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+    if (!isActive) card.draggable = true;
+    
+    const staminaClass = playerData.stamina > 50 ? '' : (playerData.stamina > 20 ? 'medium' : 'low');
+    
+    card.innerHTML = `
+        <div class="player-avatar">${playerData.avatar || '👤'}</div>
+        <div class="player-name">${playerData.playerName || 'Giocatore'}</div>
+        <div class="player-stamina-bg">
+            <div class="player-stamina-fill ${staminaClass}" style="width: ${playerData.stamina}%"></div>
+        </div>
+    `;
+
+    if (!isActive) {
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', index); 
+        });
+    } else {
+        // Drop zone
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', () => {
+            card.classList.remove('drag-over');
+        });
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            card.classList.remove('drag-over');
+            const benchIndex = e.dataTransfer.getData('text/plain');
+            if (benchIndex !== "") {
+                performSubstitution(playerData, parseInt(benchIndex));
+            }
+        });
+    }
+
+    return card;
+}
+
+function performSubstitution(activePlayer, benchIndex) {
+    const myTeam = matchManager.playerTeam;
+    const myBench = benchPlayers.filter(bp => bp.team === myTeam && !bp.isSubbed);
+    const subPlayer = myBench[benchIndex];
+
+    if (subPlayer) {
+        // Swap dati
+        activePlayer.playerName = subPlayer.playerName;
+        activePlayer.avatar = subPlayer.avatar;
+        activePlayer.stamina = 100;
+        
+        subPlayer.isSubbed = true; // Rimuove dalla panchina
+
+        // Aggiorna HUD stamina del giocatore attivo (se è lui quello sostituito)
+        if (activePlayer === matchManager.player) {
+            uiManager.updateHUD(matchManager.player.playerName, matchManager.player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
+        }
+
+        uiManager.showInGameMessage(`CAMBIO EFFETTUATO<br><span style='font-size:20px'>Entra ${subPlayer.playerName}</span>`);
+        
+        // Ricarica la UI
+        document.dispatchEvent(new Event('openSubstitutions'));
+    }
+}
 
 animate();

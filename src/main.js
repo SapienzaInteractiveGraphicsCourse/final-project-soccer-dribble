@@ -676,15 +676,28 @@ function animate(timestamp) {
            
 
 
-            teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBallInPlay, currentMatchState, player, teammates));
+            const isBotActive = isBallInPlay && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick';
+
+            teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBotActive, currentMatchState, player, teammates));
             const opponents = [player, ...teammates]; 
-            bots.forEach(b => b.update(deltaTime, isBallInPlay, currentMatchState, attackDirX, opponents, bots));
+            bots.forEach(b => b.update(deltaTime, isBotActive, currentMatchState, attackDirX, opponents, bots));
             
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);
-            bonusManager.update(deltaTime, matchManager.player);
+            const isTraining = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick';
+            
+            if (isTraining !== window.isTrainingState) {
+                window.isTrainingState = isTraining;
+                bonusManager.setVisible(!isTraining);
+                boostPadManager.setVisible(!isTraining);
+            }
+            
+            if (!isTraining) {
+                bonusManager.update(deltaTime, matchManager.player);
+                boostPadManager.update(deltaTime, player);
+            }
+
             window.fireTrailEffect.update(deltaTime);
-            boostPadManager.update(deltaTime, player);
 
             const boostFill = document.getElementById('boost-bar-fill');
             if (boostFill) boostFill.style.width = player.boost + '%';

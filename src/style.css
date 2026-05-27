@@ -665,17 +665,27 @@ canvas {
 
 .ingame-message-style {
     position: fixed; 
-    bottom: 10%; 
-    left: 50%; 
-    transform: translateX(-50%);
-    color: white; 
-    font-size: 50px; 
+    top: 30px; 
+    left: 30px; 
+    background: rgba(10, 15, 20, 0.9);
+    color: #fff; 
+    font-size: 22px; 
     font-weight: bold; 
-    text-shadow: 2px 2px 10px black;
+    padding: 15px 25px;
+    border-radius: 8px;
+    border-left: 6px solid #4CAF50;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+    transform: translateX(-150%);
     pointer-events: none; 
-    transition: opacity 1s; 
-    z-index: 100; 
-    font-family: sans-serif;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s; 
+    z-index: 1000; 
+    font-family: 'Arial', sans-serif;
+    opacity: 0;
+}
+
+.ingame-message-style.show {
+    transform: translateX(0);
+    opacity: 1;
 }
 
 .replay-indicator-style {

@@ -183,4 +183,20 @@ export class BonusManager {
             }
         }
     }
+
+    setVisible(visible) {
+        if (!visible) {
+            // Rimuovi tutti i diamanti
+            for (let i = this.bonuses.length - 1; i >= 0; i--) {
+                this.scene.remove(this.bonuses[i].mesh);
+                this.bonuses.splice(i, 1);
+            }
+            // Rimuovi tutte le particelle
+            for (let i = this.particles.length - 1; i >= 0; i--) {
+                this.scene.remove(this.particles[i].mesh);
+                this.particles.splice(i, 1);
+            }
+            this.spawnTimer = 0;
+        }
+    }
 }

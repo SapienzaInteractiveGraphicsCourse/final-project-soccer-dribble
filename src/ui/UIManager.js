@@ -526,11 +526,14 @@ export class UIManager {
         if (!msg) return;
         
         msg.innerHTML = text;
-        msg.style.opacity = '1';
+        msg.style.opacity = ''; // Remove inline opacity to let CSS handle it
+        msg.classList.add('show');
 
         if (msg.fadeTimer) clearTimeout(msg.fadeTimer);
 
-        msg.fadeTimer = setTimeout(() => { msg.style.opacity = '0'; }, 1000);
+        msg.fadeTimer = setTimeout(() => { 
+            msg.classList.remove('show'); 
+        }, 2500); // 2.5s display time
     }
 
     updateHUD(playerName, stamina, matchTime, homeScore, awayScore) {

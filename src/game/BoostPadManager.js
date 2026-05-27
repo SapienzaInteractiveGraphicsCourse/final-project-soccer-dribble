@@ -94,4 +94,10 @@ export class BoostPadManager {
             }
         }
     }
+
+    setVisible(visible) {
+        for (let pad of this.pads) {
+            pad.group.visible = visible;
+        }
+    }
 }

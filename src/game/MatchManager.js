@@ -475,6 +475,10 @@ export class MatchManager {
             const isCornerKick = this.lastTouchedTeam === defendingTeam;
             const attackingTeam = isCornerKick ? (defendingTeam === 'home' ? 'away' : 'home') : defendingTeam;
 
+            let subHappened = false;
+            if (window.executePendingSubstitutions) {
+                subHappened = window.executePendingSubstitutions();
+            }
 
             const ballX = isCornerKick ? (isRightSide ? fieldEndX : -fieldEndX) : (isRightSide ? 44.0 : -44.0);
             // ... continua con il posizionamento della palla ...
@@ -605,7 +609,9 @@ export class MatchManager {
             }
 
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
-            this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);
+            if (!subHappened) {
+                this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);
+            }
         } else {
             // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---
             const allBots = [this.currentO1, this.currentO2, this.currentO3, this.currentT1, this.currentT2];
@@ -625,6 +631,11 @@ export class MatchManager {
                 return;
             }
 
+            let subHappened = false;
+            if (window.executePendingSubstitutions) {
+                subHappened = window.executePendingSubstitutions();
+            }
+
             this.restoreGoalkeeper(); // <--- AGGIUNGI QUI
             const throwInTeam = this.lastTouchedTeam === 'home' ? 'away' : 'home';
 
@@ -635,7 +646,7 @@ export class MatchManager {
                 this.player.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
                 this.player.yaw = side > 0 ? Math.PI : 0;
                 this.player.startThrowIn();
-                this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
+                if (!subHappened) this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
             } else {
                 // Rimessa Laterale Bot avversario
                 // --- INIZIO: Trova chi batte e chi riceve ---
@@ -680,7 +691,9 @@ export class MatchManager {
                 }
                 // --- FINE FIX RIMESSA IA ---
 
-                this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
+                if (!subHappened) {
+                    this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
+                }
             }
         }
         }
@@ -703,6 +716,7 @@ export class MatchManager {
 
     resetAfterGoal() {
         this.restoreGoalkeeper();
+        if (window.executePendingSubstitutions) window.executePendingSubstitutions();
 
         if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
             this.startGame(this.gameMode); // Resetta istantaneamente se fa gol in allenamento

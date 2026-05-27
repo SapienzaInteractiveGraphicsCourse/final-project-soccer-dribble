@@ -853,6 +853,8 @@ function createPlayerCard(playerData, isActive, index) {
     return card;
 }
 
+window.pendingSubstitutions = window.pendingSubstitutions || [];
+
 function performSubstitution(activePlayer, benchIndex) {
     if (subsRemaining <= 0) {
         uiManager.showInGameMessage("<span style='color:red'>CAMBI ESAURITI!</span>");
@@ -865,6 +867,34 @@ function performSubstitution(activePlayer, benchIndex) {
 
     if (subPlayer) {
         subsRemaining--;
+        subPlayer.isSubbed = true; // Rimuove dalla panchina temporaneamente
+        
+        window.pendingSubstitutions.push({
+            activePlayer: activePlayer,
+            subPlayer: subPlayer
+        });
+
+        uiManager.showInGameMessage(`
+            <div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">CAMBIO PRENOTATO</div>
+            <div style="font-size: 14px;">Avverrà alla prossima palla inattiva</div>
+        `);
+
+        // Ricarica la UI
+        document.dispatchEvent(new Event('openSubstitutions'));
+    }
+}
+
+window.executePendingSubstitutions = function() {
+    if (!window.pendingSubstitutions || window.pendingSubstitutions.length === 0) return false;
+
+    let messageHtml = `<div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">SOSTITUZIONE EFFETTUATA</div>`;
+
+    for (let sub of window.pendingSubstitutions) {
+        const activePlayer = sub.activePlayer;
+        const subPlayer = sub.subPlayer;
+
+        const oldName = activePlayer.playerName;
+        const newName = subPlayer.playerName;
 
         // Swap dati
         activePlayer.playerName = subPlayer.playerName;
@@ -872,19 +902,20 @@ function performSubstitution(activePlayer, benchIndex) {
         activePlayer.ovr = subPlayer.ovr;
         activePlayer.position = subPlayer.position;
         activePlayer.stamina = 100;
-        
-        subPlayer.isSubbed = true; // Rimuove dalla panchina
 
-        // Aggiorna HUD stamina del giocatore attivo (se è lui quello sostituito)
+        messageHtml += `
+            <div style="margin-top: 5px;"><span style="color: #ff4444; margin-right: 5px;">⬇</span> ${oldName}</div>
+            <div><span style="color: #4CAF50; margin-right: 5px;">⬆</span> ${newName}</div>
+        `;
+
         if (activePlayer === matchManager.player) {
             uiManager.updateHUD(matchManager.player.playerName, matchManager.player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
         }
-
-        
-        
-        // Ricarica la UI
-        document.dispatchEvent(new Event('openSubstitutions'));
     }
-}
+
+    uiManager.showInGameMessage(messageHtml);
+    window.pendingSubstitutions = [];
+    return true;
+};
 
 animate();

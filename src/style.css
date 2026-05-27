@@ -889,115 +889,230 @@ canvas {
    ============================================================ */
 
 .substitutions-menu-style {
-    background: rgba(10, 15, 30, 0.85); /* Sfondo dark premium */
-    backdrop-filter: blur(10px);
-}
-
-.subs-h1-style {
-    color: white;
-    font-size: 48px;
-    margin-bottom: 20px;
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-}
-
-.pitch-container, .bench-container {
-    width: 80%;
-    max-width: 800px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.pitch-container {
-    border-color: #4CAF50;
-    box-shadow: 0 8px 32px 0 rgba(76, 175, 80, 0.2);
-}
-
-.players-row {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    min-height: 140px; /* Spazio per il drop */
-}
-
-/* Player Card */
-.player-card {
-    width: 120px;
-    background: linear-gradient(145deg, #1e2535, #262e42);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 10px;
+    background: rgba(5, 8, 15, 0.95); /* Sfondo scuro e profondo */
+    backdrop-filter: blur(15px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: all 0.3s ease;
+    padding-top: 10px;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.subs-h1-style {
+    color: #fff;
+    font-size: 36px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* --- CAMPO (PITCH) --- */
+.fut-pitch-container {
+    width: 1000px;
+    height: 550px;
+    /* Un bel campo da calcio fatto con gradienti CSS al posto dell'immagine */
+    background: 
+        radial-gradient(circle 4px at center, rgba(255,255,255,0.4) 3px, transparent 4px), /* Punto centrale */
+        radial-gradient(circle 90px at center, transparent 88px, rgba(255,255,255,0.4) 88px, rgba(255,255,255,0.4) 90px, transparent 91px), /* Cerchio di centrocampo */
+        linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+        repeating-linear-gradient(
+            0deg,
+            #1e5f1e,
+            #1e5f1e 10%,
+            #236b23 10%,
+            #236b23 20%
+        );
+    position: relative;
+    border-radius: 12px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 50px rgba(0,0,0,0.5);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+/* Linee del campo per dare un tocco di realismo */
+.fut-pitch-container::before {
+    content: '';
+    position: absolute;
+    top: 15px; left: 15px; right: 15px; bottom: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+}
+.fut-pitch-container::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 15px; right: 15px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+}
+
+/* --- CARTE GIOCATORE (FUT STYLE CON EMOJI) --- */
+.fut-card {
+    width: 100px;
+    height: 145px;
+    background: linear-gradient(135deg, #e6c875, #c89c3c, #f5d787); /* Shiny Gold di default */
+    clip-path: polygon(10% 0, 90% 0, 100% 15%, 100% 85%, 50% 100%, 0 85%, 0 15%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding-top: 5px;
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.7);
+    transition: transform 0.2s, filter 0.2s;
     cursor: grab;
     user-select: none;
 }
 
-.player-card:active {
+.fut-card.theme-special {
+    background: linear-gradient(135deg, #7c2299, #4a155c, #9c2ebd); /* Viola per OVR >= 90 */
+}
+
+.fut-card.theme-silver {
+    background: linear-gradient(135deg, #c0c0c0, #909090, #e0e0e0); /* Argento per OVR < 80 */
+}
+
+.fut-card:active {
     cursor: grabbing;
 }
 
-.player-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-    border-color: #4CAF50;
+.fut-card:hover {
+    transform: translateX(-50%) translateY(-5px) scale(1.05); /* Mantieni il translateX per quelle posizionate */
+    filter: brightness(1.1);
 }
 
-.player-card.drag-over {
-    background: rgba(76, 175, 80, 0.3);
-    border-color: #4CAF50;
-    transform: scale(1.05);
+/* Per la panchina non c'è translateX(-50%) */
+.bench-slot:hover {
+    transform: translateY(-5px) scale(1.05);
 }
 
-.player-avatar {
-    font-size: 40px;
-    margin-bottom: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    width: 70px;
-    height: 70px;
+.fut-card.drag-over {
+    filter: brightness(1.3) sepia(1) hue-rotate(90deg); /* Diventa verdastra */
+    transform: translateX(-50%) scale(1.1);
+}
+
+.fut-card-top-left {
+    position: absolute;
+    top: 5px;
+    left: 10px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,0.2);
+    color: #333;
 }
 
-.player-name {
-    color: white;
+.theme-special .fut-card-top-left { color: white; }
+
+.fut-ovr {
+    font-size: 20px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.fut-pos {
+    font-size: 10px;
     font-weight: bold;
-    font-size: 14px;
-    margin-bottom: 8px;
+}
+
+.fut-avatar-huge {
+    font-size: 55px; /* Emoji più piccola */
+    line-height: 1;
+    margin-top: 10px;
+    filter: drop-shadow(0px 3px 3px rgba(0,0,0,0.4));
+}
+
+.fut-card-bottom-banner {
+    position: absolute;
+    bottom: 20px;
+    width: 85%;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 4px;
+    padding: 3px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.fut-name {
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
     text-align: center;
-    width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    width: 100%;
 }
 
-.player-stamina-bg {
-    width: 100%;
-    height: 8px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 4px;
+.fut-stamina-bar-container {
+    width: 90%;
+    height: 4px;
+    background: #444;
+    border-radius: 2px;
+    margin-top: 3px;
     overflow: hidden;
 }
 
-.player-stamina-fill {
+.fut-stamina-bar {
     height: 100%;
     background: #4CAF50;
-    transition: width 0.3s ease;
 }
 
-.player-stamina-fill.low {
-    background: #f44336;
+.stamina-med { background: #FFEB3B; }
+.stamina-low { background: #f44336; }
+
+/* --- POSIZIONI TATTICHE A DIAMANTE --- */
+.fut-card[class*="tactical-slot-"] {
+    position: absolute;
+    transform: translateX(-50%);
 }
 
-.player-stamina-fill.medium {
-    background: #FFEB3B;
+/* Attaccante (ATT) - Alto Centro */
+.tactical-slot-0 { top: 5%; left: 50%; z-index: 4; }
+
+/* Centrocampista (CEN) - Centro Sinistra */
+.tactical-slot-1 { top: 35%; left: 35%; z-index: 3; }
+
+/* Difensore (DIF) - Centro Destra */
+.tactical-slot-2 { top: 35%; left: 65%; z-index: 2; }
+
+/* Portiere (POR) - Estremo Basso Centro */
+.tactical-slot-3 { top: 65%; left: 50%; z-index: 1; }
+
+/* --- PANCHINA --- */
+.fut-bench-wrapper {
+    width: 90%;
+    max-width: 1000px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.fut-bench-container {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    gap: 15px;
+}
+
+/* Scrollbar per la panchina */
+.fut-bench-container::-webkit-scrollbar {
+    height: 8px;
+}
+.fut-bench-container::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+}
+.fut-bench-container::-webkit-scrollbar-thumb {
+    background: #b78a48;
+    border-radius: 4px;
+}
+
+.bench-slot {
+    flex-shrink: 0;
 }

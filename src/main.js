@@ -285,8 +285,20 @@ const homeNames = ["L. Messi", "C. Ronaldo", "K. Mbappé", "N. Barella", "F. Chi
 const awayNames = ["K. De Bruyne", "E. Haaland", "V. Vinicius", "J. Bellingham", "H. Kane", "R. Lewandowski", "L. Modric", "M. Salah", "T. Kroos", "A. Griezmann", "P. Foden"];
 
 player.playerName = homeNames[0];
+player.position = 'ATT';
+player.ovr = 91;
+player.avatar = '👤';
+
 teammates[0].playerName = homeNames[1];
+teammates[0].position = 'CEN';
+teammates[0].ovr = 86;
+teammates[0].avatar = '👤';
+
 teammates[1].playerName = homeNames[2];
+teammates[1].position = 'DIF';
+teammates[1].ovr = 84;
+teammates[1].avatar = '👤';
+
 const bots = [
     new Bot(scene, ball, new THREE.Vector3(-10, -100, 0), 0),
     new Bot(scene, ball, new THREE.Vector3(-20, -100, 0), 0),
@@ -297,18 +309,37 @@ const homeGK = new GoalKeeper(scene, ball, 'home', new THREE.Vector3(-48.5, 0, 0
 const awayGK = new GoalKeeper(scene, ball, 'away', new THREE.Vector3(48.5, 0, 0), 3 / 2 * Math.PI);
 const referee = new Referee(scene, ball, new THREE.Vector3(5, 0, 5));
 
+homeGK.playerName = homeNames[5];
+homeGK.position = 'POR';
+homeGK.ovr = 88;
+homeGK.avatar = '👤';
+homeGK.stamina = 100;
+
+awayGK.playerName = awayNames[5]; // Just for completeness
+awayGK.position = 'POR';
+awayGK.ovr = 88;
+awayGK.avatar = '👤';
+awayGK.stamina = 100;
+
 // --- INIZIALIZZAZIONE PANCHINA ---
 const benchPlayers = [];
+const benchPositions = ['ATT', 'CEN', 'CEN', 'DIF', 'DIF', 'DIF', 'POR', 'ATT'];
 // Panchina Home (Rossa)
 for (let i = 0; i < 8; i++) {
     const bp = new BenchPlayer(scene, 'home', new THREE.Vector3(-18 + (i * 1.5), -0.5, -35.1), 0);
-    bp.playerName = homeNames[3 + i];
+    bp.playerName = homeNames[3 + i] || "Riserva";
+    bp.position = benchPositions[i];
+    bp.ovr = Math.floor(Math.random() * 10) + 75; // 75-84
+    bp.avatar = '👤';
     benchPlayers.push(bp);
 }
 // Panchina Away (Blu)
 for (let i = 0; i < 8; i++) {
     const bp = new BenchPlayer(scene, 'away', new THREE.Vector3(7 + (i * 1.5), -0.5, -35.1), 0);
     bp.playerName = awayNames[i];
+    bp.position = benchPositions[i];
+    bp.ovr = Math.floor(Math.random() * 10) + 75;
+    bp.avatar = '👤';
     benchPlayers.push(bp);
 }
 
@@ -733,7 +764,9 @@ document.addEventListener('openSubstitutions', () => {
     activeContainer.innerHTML = '';
     benchContainer.innerHTML = '';
 
-    const activePlayers = [player, ...teammates];
+    const myTeam = matchManager.playerTeam; 
+    const myGK = myTeam === 'home' ? matchManager.homeGK : matchManager.awayGK;
+    const activePlayers = [player, teammates[0], teammates[1], myGK];
     
     // Genera carte giocatori in campo
     activePlayers.forEach((p, index) => {
@@ -742,7 +775,6 @@ document.addEventListener('openSubstitutions', () => {
     });
 
     // Genera carte panchina
-    const myTeam = matchManager.playerTeam; 
     const myBench = benchPlayers.filter(bp => bp.team === myTeam && !bp.isSubbed);
     
     myBench.forEach((bp, index) => {
@@ -753,16 +785,32 @@ document.addEventListener('openSubstitutions', () => {
 
 function createPlayerCard(playerData, isActive, index) {
     const card = document.createElement('div');
-    card.className = 'player-card';
+    // Assegna la classe tattica per posizionare i giocatori sul campo
+    const positionClass = isActive ? `tactical-slot-${index}` : 'bench-slot';
+    card.className = `fut-card ${positionClass}`;
     if (!isActive) card.draggable = true;
     
-    const staminaClass = playerData.stamina > 50 ? '' : (playerData.stamina > 20 ? 'medium' : 'low');
+    const staminaClass = playerData.stamina > 50 ? 'stamina-high' : (playerData.stamina > 20 ? 'stamina-med' : 'stamina-low');
+    const displayStamina = Math.floor(playerData.stamina || 100);
+    
+    // Assegna sfondi diversi per carte diverse in base all'OVR
+    let cardTheme = 'gold';
+    if (playerData.ovr >= 90) cardTheme = 'special';
+    else if (playerData.ovr < 80) cardTheme = 'silver';
+
+    card.classList.add(`theme-${cardTheme}`);
     
     card.innerHTML = `
-        <div class="player-avatar">${playerData.avatar || '👤'}</div>
-        <div class="player-name">${playerData.playerName || 'Giocatore'}</div>
-        <div class="player-stamina-bg">
-            <div class="player-stamina-fill ${staminaClass}" style="width: ${playerData.stamina}%"></div>
+        <div class="fut-card-top-left">
+            <div class="fut-ovr">${playerData.ovr || 85}</div>
+            <div class="fut-pos">${playerData.position || 'CEN'}</div>
+        </div>
+        <div class="fut-avatar-huge">${playerData.avatar || '👤'}</div>
+        <div class="fut-card-bottom-banner">
+            <div class="fut-name">${playerData.playerName}</div>
+            <div class="fut-stamina-bar-container">
+                <div class="fut-stamina-bar ${staminaClass}" style="width: ${displayStamina}%"></div>
+            </div>
         </div>
     `;
 
@@ -808,6 +856,8 @@ function performSubstitution(activePlayer, benchIndex) {
         // Swap dati
         activePlayer.playerName = subPlayer.playerName;
         activePlayer.avatar = subPlayer.avatar;
+        activePlayer.ovr = subPlayer.ovr;
+        activePlayer.position = subPlayer.position;
         activePlayer.stamina = 100;
         
         subPlayer.isSubbed = true; // Rimuove dalla panchina

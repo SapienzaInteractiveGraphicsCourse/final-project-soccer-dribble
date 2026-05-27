@@ -817,7 +817,7 @@ function performSubstitution(activePlayer, benchIndex) {
             uiManager.updateHUD(matchManager.player.playerName, matchManager.player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
         }
 
-        uiManager.showInGameMessage(`CAMBIO EFFETTUATO<br><span style='font-size:20px'>Entra ${subPlayer.playerName}</span>`);
+        
         
         // Ricarica la UI
         document.dispatchEvent(new Event('openSubstitutions'));

@@ -121,64 +121,74 @@ export class GoalKeeperAnimator {
         this.idleAnimation();
     }
     saveAnimation(duration) {
-        // Usiamo Math.min per fare in modo che progress si blocchi a 1.0.
-        // Così, anche se il timer continua ad andare avanti, l'animazione si ferma a terra.
         const progress = Math.min(this.saveTimer / duration, 1.0);
 
-        // Curva "ease-out": scatta veloce all'inizio e rallenta verso la fine
-        const easeOut = 1 - Math.pow(1 - progress, 3);
+        // Curva "ease-out" esplosiva: scatta velocissimo all'inizio e rallenta molto alla fine
+        const easeOut = 1 - Math.pow(1 - progress, 4);
 
-        // Curva a "parabola" per il salto: sale a 1 a metà tuffo e torna a 0 alla fine
-        const jumpArc = Math.sin(progress * Math.PI);
+        // Curva "hang-time" per il salto: sale veloce, resta in aria un attimo di più, cade
+        const jumpArc = Math.pow(Math.sin(progress * Math.PI), 0.7);
 
-        // dir: 1 per la sinistra, -1 per la destra (o viceversa in base a come lo hai orientato)
         const dir = this.saveSide === 'left' ? -1 : 1;
 
         // --- 1. IL VOLO (Spostamento del bacino) ---
         if (this.bones.hips) {
-            // Si lancia orizzontalmente sull'asse Z
-            const diveDistance = 2.5;
+            // Tuffo leggermente più lungo per maggiore epicità
+            const diveDistance = 2.8;
             this.bones.hips.position.z = this.basePos.hips.z + (easeOut * diveDistance * dir);
 
-            // Salta e poi cade. 
-            // Sottraiamo (-0.8 * progress) alla fine per far sprofondare un po' il bacino
-            // in modo che il modello sembri spiaccicato a terra e non in piedi.
-            const jumpHeight = 1.2;
-            this.bones.hips.position.y = this.basePos.hips.y + (jumpArc * jumpHeight) - (progress * 0.8);
+            // Salto leggermente più alto
+            const jumpHeight = 1.4;
+            this.bones.hips.position.y = this.basePos.hips.y + (jumpArc * jumpHeight) - (progress * 0.85);
 
-            // Ruota il bacino di quasi 90 gradi per stendersi lateralmente in volo
-            this.bones.hips.rotation.z = this.baseRot.hips.z + (easeOut * (Math.PI / 2.2) * dir);
+            // Ruota il bacino di 90 gradi ma con un extra twist per fargli guardare un po' in avanti/verso la palla
+            this.bones.hips.rotation.z = this.baseRot.hips.z + (easeOut * (Math.PI / 2) * dir);
 
-            // Inclina il busto leggermente in avanti
-            this.bones.hips.rotation.x = this.baseRot.hips.x + (easeOut * 0.4);
-        }
-
-        // --- 2. BRACCIA STESE ---
-        if (this.bones.leftArm && this.bones.rightArm) {
-            if (dir === -1) { // Tuffo a Sinistra
-                this.bones.leftArm.rotation.z = this.baseRot.leftArm.z + (easeOut * 2.5);
-                this.bones.rightArm.rotation.z = this.baseRot.rightArm.z + (easeOut * 1.5);
-                this.bones.leftArm.rotation.x = this.baseRot.leftArm.x - (easeOut * 1.2);
-            } else { // Tuffo a Destra
-                this.bones.rightArm.rotation.z = this.baseRot.rightArm.z - (easeOut * 2.5);
-                this.bones.leftArm.rotation.z = this.baseRot.leftArm.z - (easeOut * 1.5);
-                this.bones.rightArm.rotation.x = this.baseRot.rightArm.x - (easeOut * 1.2);
-            }
-        }
-
-        // --- 3. GAMBE (Una spinge, l'altra si stende) ---
-        if (this.bones.leftUpLeg && this.bones.rightUpLeg && this.bones.leftLeg && this.bones.rightLeg) {
-            if (dir === -1) {
-                this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (easeOut * 1.0);
-                this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x + (easeOut * 1.2);
-                this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x;
-            } else {
-                this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (easeOut * 1.0);
-                this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (easeOut * 1.2);
-                this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x;
-            }
+            // Inclina il busto per aerodinamicità
+            this.bones.hips.rotation.x = this.baseRot.hips.x + (easeOut * 0.5);
+            
+            // Aggiungiamo un leggero twist sull'asse Y per dare profondità al tuffo
+            this.bones.hips.rotation.y = this.baseRot.hips.y - (easeOut * 0.2 * dir);
         }
         
+        // --- EXTRA: SPINA DORSALE INARACATA (Plasticità del tuffo) ---
+        if (this.bones.spine) {
+            // Inarca la schiena all'indietro nel momento di massima estensione
+            this.bones.spine.rotation.x = this.baseRot.spine.x - (jumpArc * 0.3);
+            this.bones.spine.rotation.y = this.baseRot.spine.y + (easeOut * 0.2 * dir);
+        }
+
+        // --- 2. BRACCIA SUPER ESTESE ---
+        if (this.bones.leftArm && this.bones.rightArm) {
+            // Un braccio (quello inferiore) va giù a protezione, l'altro (superiore) si allunga al massimo
+            if (dir === -1) { // Tuffo a Sinistra
+                this.bones.leftArm.rotation.z = this.baseRot.leftArm.z + (easeOut * 2.8); // Braccio sotto si allunga verso la palla
+                this.bones.rightArm.rotation.z = this.baseRot.rightArm.z + (easeOut * 2.0); // Braccio sopra segue
+                this.bones.leftArm.rotation.x = this.baseRot.leftArm.x - (easeOut * 1.5);
+                this.bones.rightArm.rotation.x = this.baseRot.rightArm.x - (easeOut * 0.8);
+            } else { // Tuffo a Destra
+                this.bones.rightArm.rotation.z = this.baseRot.rightArm.z - (easeOut * 2.8);
+                this.bones.leftArm.rotation.z = this.baseRot.leftArm.z - (easeOut * 2.0);
+                this.bones.rightArm.rotation.x = this.baseRot.rightArm.x - (easeOut * 1.5);
+                this.bones.leftArm.rotation.x = this.baseRot.leftArm.x - (easeOut * 0.8);
+            }
+        }
+
+        // --- 3. GAMBE (A FORBICE DINAMICA) ---
+        if (this.bones.leftUpLeg && this.bones.rightUpLeg && this.bones.leftLeg && this.bones.rightLeg) {
+            // Diamo un effetto "forbice" plastico tipico dei portieri
+            if (dir === -1) { // Tuffo a sinistra
+                this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (easeOut * 0.5) - (jumpArc * 0.5); // Gamba sopra sale
+                this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x - (easeOut * 1.5); // Piega il ginocchio sopra
+                this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x + (easeOut * 0.3); // Gamba sotto dritta
+                this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x;
+            } else { // Tuffo a destra
+                this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (easeOut * 0.5) - (jumpArc * 0.5);
+                this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (easeOut * 1.5);
+                this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x + (easeOut * 0.3);
+                this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x;
+            }
+        }
     }
 
     idleAnimation() {

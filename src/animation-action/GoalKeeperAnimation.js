@@ -184,7 +184,7 @@ export class GoalKeeperAnimator {
                 this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x;
             } else { // Tuffo a destra
                 this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (easeOut * 0.5) - (jumpArc * 0.5);
-                this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (easeOut * 1.5);
+                this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x - (easeOut * 1.5);
                 this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x + (easeOut * 0.3);
                 this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x;
             }

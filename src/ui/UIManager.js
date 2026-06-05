@@ -659,6 +659,7 @@ export class UIManager {
         const radar = document.getElementById('radar');
         const stamina = document.getElementById('stamina-container');
         const boost = document.getElementById('boost-container');
+        const playerNameHud = document.getElementById('player-name-hud');
         
         // Opzionale: se vuoi nascondere anche i bonus e il tabellone durante il replay
         const bonusHud = document.getElementById('bonus-hud'); 
@@ -672,6 +673,7 @@ export class UIManager {
             if (stamina) stamina.style.display = 'none';
             if (boost) boost.style.display = 'none';
             if (bonusHud) bonusHud.style.display = 'none';
+            if (playerNameHud) playerNameHud.style.display = 'none';
 
         } else {
             // --- NASCONDI SCRITTA REPLAY ---
@@ -686,6 +688,7 @@ export class UIManager {
             if (stamina) stamina.style.display = '';
             if (boost) boost.style.display = '';
             if (bonusHud) bonusHud.style.display = '';
+            if (playerNameHud) playerNameHud.style.display = '';
         }
     }
 }

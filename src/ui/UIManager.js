@@ -24,6 +24,7 @@ export class UIManager {
         this.clickSound = new Audio(`${import.meta.env.BASE_URL}sound/click3.ogg`);
         this.switchSound = new Audio(`${import.meta.env.BASE_URL}sound/switch1.ogg`);
         this.bonusSound = new Audio(`${import.meta.env.BASE_URL}sound/Nintendo - Mario Kart Wii - Item Box - Sound Effect.mp3`);
+        this.popupSound = new Audio(`${import.meta.env.BASE_URL}sound/sadekhusein-pop-up-209378.mp3`);
 
         this.setupLoadingManager();
         this.setupEventListeners();
@@ -614,6 +615,26 @@ export class UIManager {
     showInGameMessage(text) {
         let msg = document.getElementById('ingame-message-box');
         if (!msg) return;
+
+        // Evita che lo stesso messaggio re-inneschi il suono a raffica
+        if (msg.innerHTML === text && msg.classList.contains('show')) {
+            if (msg.fadeTimer) clearTimeout(msg.fadeTimer);
+            msg.fadeTimer = setTimeout(() => { 
+                msg.classList.remove('show'); 
+            }, 2500);
+            return; 
+        }
+
+        if (this.popupSound) {
+            this.popupSound.currentTime = 0;
+            this.popupSound.play().catch(() => {});
+            
+            if (this.popupSoundTimeout) clearTimeout(this.popupSoundTimeout);
+            this.popupSoundTimeout = setTimeout(() => {
+                this.popupSound.pause();
+                this.popupSound.currentTime = 0;
+            }, 1000);
+        }
         
         msg.innerHTML = text;
         msg.style.opacity = ''; // Remove inline opacity to let CSS handle it

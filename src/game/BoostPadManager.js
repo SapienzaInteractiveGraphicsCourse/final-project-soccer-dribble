@@ -4,6 +4,7 @@ export class BoostPadManager {
     constructor(scene) {
         this.scene = scene;
         this.pads = [];
+        this.powerUpSound = new Audio(`${import.meta.env.BASE_URL}sound/lolo_s-power-up-474087.mp3`);
 
         // --- MATERIALI ---
         this.baseMaterial = new THREE.MeshStandardMaterial({
@@ -89,6 +90,10 @@ export class BoostPadManager {
                         pad.isActive = false; 
                         pad.cooldown = 10;    
                         pad.center.material = this.centerInactiveMaterial;
+                        if (this.powerUpSound) {
+                            this.powerUpSound.currentTime = 0;
+                            this.powerUpSound.play().catch(() => {});
+                        }
                     }
                 }
             }

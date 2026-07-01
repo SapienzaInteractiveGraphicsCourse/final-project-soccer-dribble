@@ -28,6 +28,12 @@ export class Player {
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
         this.boost = 0;
+        this.wasBoosting = false;
+        this.nitroSound = new Audio(`${import.meta.env.BASE_URL}sound/freesound_community-nitro-activation-48077.mp3`);
+        this.nitroSound.loop = true;
+
+        this.mixer = null;
+
         this.pitch = 0;
 
         // --- STATISTICHE GIOCATORE ---
@@ -397,6 +403,14 @@ export class Player {
         // --- LOGICA CONSUMO BOOST ---
         const isPressingMovement = (this.keys.forward || this.keys.backward || this.keys.left || this.keys.right) && canMove;
         const isBoosting = this.keys.boost && isPressingMovement && this.boost > 0;
+        
+        if (isBoosting && !this.wasBoosting && this.nitroSound) {
+            this.nitroSound.currentTime = 0;
+            this.nitroSound.play().catch(() => {});
+        } else if (!isBoosting && this.wasBoosting && this.nitroSound) {
+            this.nitroSound.pause();
+        }
+        this.wasBoosting = isBoosting;
 
         // 🔥 NUOVO: Un'unica variabile per sapere se il giocatore sta scattando (Shift o Spazio)
         const isSprinting = this.keys.run || isBoosting;

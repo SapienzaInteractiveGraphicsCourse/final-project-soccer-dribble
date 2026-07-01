@@ -21,6 +21,10 @@ export class UIManager {
         this.scoreElement = document.querySelector('.score');
         this.hudPlayerName = document.getElementById('hud-player-name');
 
+        this.clickSound = new Audio(`${import.meta.env.BASE_URL}sound/click3.ogg`);
+        this.switchSound = new Audio(`${import.meta.env.BASE_URL}sound/switch1.ogg`);
+        this.bonusSound = new Audio(`${import.meta.env.BASE_URL}sound/Nintendo - Mario Kart Wii - Item Box - Sound Effect.mp3`);
+
         this.setupLoadingManager();
         this.setupEventListeners();
     }
@@ -83,6 +87,13 @@ export class UIManager {
     }
 
     setupEventListeners() {
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-btn') || e.target.closest('.touch-action-btn')) {
+                this.clickSound.currentTime = 0;
+                this.clickSound.play().catch(() => {});
+            }
+        }, true);
+
         document.getElementById('btn-play').addEventListener('click', (e) => {
             e.stopPropagation();
             this.mainMenu.style.display = 'none';
@@ -487,6 +498,9 @@ export class UIManager {
         
         if (sliderGraphics) {
             sliderGraphics.addEventListener('input', (e) => {
+                this.switchSound.currentTime = 0;
+                this.switchSound.play().catch(() => {});
+                
                 const val = parseInt(e.target.value);
                 const labels = ["Bassa", "Media", "Alta"];
                 document.getElementById('val-graphics').innerText = labels[val];
@@ -501,6 +515,9 @@ export class UIManager {
         
         if (sliderSensX) {
             sliderSensX.addEventListener('input', (e) => {
+                this.switchSound.currentTime = 0;
+                this.switchSound.play().catch(() => {});
+                
                 const val = parseFloat(e.target.value).toFixed(1);
                 document.getElementById('val-sens-x').innerText = val;
                 if (window.gameSettings) window.gameSettings.sensitivityX = parseFloat(val);
@@ -509,6 +526,9 @@ export class UIManager {
         
         if (sliderSensY) {
             sliderSensY.addEventListener('input', (e) => {
+                this.switchSound.currentTime = 0;
+                this.switchSound.play().catch(() => {});
+                
                 const val = parseFloat(e.target.value).toFixed(1);
                 document.getElementById('val-sens-y').innerText = val;
                 if (window.gameSettings) window.gameSettings.sensitivityY = parseFloat(val);
@@ -706,11 +726,21 @@ export class UIManager {
         // 4. Forziamo il browser ad aggiornare la grafica prima di far partire l'animazione
         void roller.offsetWidth;
 
+        // Suona l'effetto della mystery box
+        let animDuration = 3;
+        if (this.bonusSound) {
+            if (!isNaN(this.bonusSound.duration) && this.bonusSound.duration > 0) {
+                animDuration = this.bonusSound.duration;
+            }
+            this.bonusSound.currentTime = 0;
+            this.bonusSound.play().catch(() => {});
+        }
+
         // 5. Facciamo partire l'animazione! (35px è l'altezza che abbiamo dato nel CSS)
         const scrollDistance = (totalItems - 1) * 35; 
         
         // Usiamo una curva "cubic-bezier" che parte veloce e rallenta molto dolcemente alla fine
-        roller.style.transition = 'transform 3s cubic-bezier(0.15, 0.85, 0.3, 1)'; 
+        roller.style.transition = `transform ${animDuration}s cubic-bezier(0.15, 0.85, 0.3, 1)`; 
         roller.style.transform = `translateY(-${scrollDistance}px)`;
     }
 

@@ -41,20 +41,10 @@ export class MatchManager {
         this.setupPassEvent();
         this.setupAutoSwitchEvent(); // <--- AGGIUNGI QUESTO
 
-        /* --- AUDIO DI SOTTOFONDO (STADIO / MUSICA) ---
-        // this.bgMusic = new Audio(`${import.meta.env.BASE_URL}sound/confusion.mp3`);
+        // --- AUDIO DI SOTTOFONDO (STADIO / MUSICA) ---
+        this.bgMusic = new Audio(`${import.meta.env.BASE_URL}sound/confusion.mp3`);
         this.bgMusic.loop = true; // Va a ripetizione all'infinito
         this.bgMusic.volume = 0.4; // Volume al 40% per non coprire troppo il suono dei calci
-        
-        this.bgMusic.play().catch(e => {
-            const startAudio = () => {
-                this.bgMusic.play().catch(() => {});
-                // Rimuoviamo tutti i listener una volta che l'audio è partito
-                ['click', 'mousedown', 'keydown'].forEach(evt => document.removeEventListener(evt, startAudio));
-            };
-            // Ci mettiamo in ascolto di qualsiasi interazione (tastiera o mouse)
-            ['click', 'mousedown', 'keydown'].forEach(evt => document.addEventListener(evt, startAudio));
-        });*/
     }
 
     setupAutoSwitchEvent() {
@@ -224,6 +214,11 @@ export class MatchManager {
 
     startGame(mode) {
         this.gameMode = mode;
+        
+        // Avvia la musica di sottofondo se non è già in riproduzione
+        if (this.bgMusic && this.bgMusic.paused) {
+            this.bgMusic.play().catch(() => {});
+        }
         this.player.isTraining = (mode === 'penalty' || mode === 'freekick'); // Imposta lo stato di allenamento
 
         if (mode === '2-1' || mode === '1-2') {

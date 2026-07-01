@@ -10,6 +10,7 @@ export class UIManager {
         this.loadingText = document.getElementById('loading-text');
         this.mainMenu = document.getElementById('main-menu');
         this.commandsMenu = document.getElementById('commands-menu');
+        this.globalSettingsMenu = document.getElementById('global-settings-menu');
         this.formationMenu = document.getElementById('formation-menu');
         this.gameUi = document.getElementById('game-ui');
         this.blocker = document.getElementById('blocker');
@@ -454,6 +455,66 @@ export class UIManager {
             }
         });
 
+        const btnGlobalSettings = document.getElementById('btn-global-settings');
+        if (btnGlobalSettings) {
+            btnGlobalSettings.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.mainMenu.style.display = 'none';
+                this.globalSettingsMenu.style.display = 'flex';
+            });
+        }
+
+        const btnBackGlobalSettings = document.getElementById('btn-back-global-settings');
+        if (btnBackGlobalSettings) {
+            btnBackGlobalSettings.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.globalSettingsMenu.style.display = 'none';
+                
+                if (this.globalSettingsMenu.dataset.fromPause === 'true') {
+                    document.getElementById('pause-menu').style.display = 'flex';
+                    document.getElementById('ui-layer').style.zIndex = '10'; // Ripristina lo z-index normale
+                    this.globalSettingsMenu.dataset.fromPause = 'false';
+                } else {
+                    this.mainMenu.style.display = 'flex';
+                }
+            });
+        }
+
+        // Event listeners for global settings sliders
+        const sliderGraphics = document.getElementById('slider-graphics');
+        const sliderSensX = document.getElementById('slider-sens-x');
+        const sliderSensY = document.getElementById('slider-sens-y');
+        
+        if (sliderGraphics) {
+            sliderGraphics.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                const labels = ["Bassa", "Media", "Alta"];
+                document.getElementById('val-graphics').innerText = labels[val];
+                if (window.gameSettings) {
+                    window.gameSettings.graphicsQuality = val;
+                    if (window.applyGraphicsQuality) {
+                        window.applyGraphicsQuality(val);
+                    }
+                }
+            });
+        }
+        
+        if (sliderSensX) {
+            sliderSensX.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value).toFixed(1);
+                document.getElementById('val-sens-x').innerText = val;
+                if (window.gameSettings) window.gameSettings.sensitivityX = parseFloat(val);
+            });
+        }
+        
+        if (sliderSensY) {
+            sliderSensY.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value).toFixed(1);
+                document.getElementById('val-sens-y').innerText = val;
+                if (window.gameSettings) window.gameSettings.sensitivityY = parseFloat(val);
+            });
+        }
+
         document.getElementById('btn-back-formation').addEventListener('click', (e) => {
             e.stopPropagation();
             this.formationMenu.style.display = 'none';
@@ -473,6 +534,7 @@ export class UIManager {
         // --- BOTTONI MENU DI PAUSA ---
         const btnResume = document.getElementById('btn-resume');
         const btnPauseCommands = document.getElementById('btn-pause-commands');
+        const btnPauseSettings = document.getElementById('btn-pause-settings');
         const btnExit = document.getElementById('btn-exit');
         const btnSubstitutions = document.getElementById('btn-substitutions');
         const btnCloseSubstitutions = document.getElementById('btn-close-substitutions');
@@ -507,6 +569,14 @@ export class UIManager {
             this.commandsMenu.style.display = 'flex';
             document.getElementById('ui-layer').style.zIndex = '100'; // Porta la UI in primissimo piano
             this.commandsMenu.dataset.fromPause = 'true';
+        });
+
+        if (btnPauseSettings) btnPauseSettings.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pauseMenu.style.display = 'none';
+            this.globalSettingsMenu.style.display = 'flex';
+            document.getElementById('ui-layer').style.zIndex = '100';
+            this.globalSettingsMenu.dataset.fromPause = 'true';
         });
 
         if (btnExit) btnExit.addEventListener('click', (e) => {

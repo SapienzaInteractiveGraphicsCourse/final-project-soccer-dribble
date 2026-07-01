@@ -4,8 +4,15 @@ import './customization-menu.css';
 
 import * as THREE from 'three';
 
+// --- INIZIALIZZAZIONE IMPOSTAZIONI GLOBALI ---
+window.gameSettings = {
+    graphicsQuality: 2, // 0 = Bassa, 1 = Media, 2 = Alta
+    sensitivityX: 1.0,
+    sensitivityY: 1.0
+};
+
 // Import moduli e refactor
-import { setupScene, updateSceneEnvironment, updateWeatherParticles } from './core/SceneSetup.js';
+import { setupScene, updateSceneEnvironment, updateWeatherParticles, setGraphicsQuality } from './core/SceneSetup.js';
 import { UIManager } from './ui/UIManager.js';
 import { setupEffects, updateEffects } from './effects/GameEffects.js';
 import { MatchManager } from './game/MatchManager.js';
@@ -30,6 +37,12 @@ import { FaceSculptor } from './effects/FaceSculptor.js';
 // --- INIZIALIZZAZIONE CORE ---
 const { scene, camera, renderer, scoreboard } = setupScene();
 createEnvironment(scene);
+
+window.applyGraphicsQuality = (quality) => {
+    setGraphicsQuality(quality, renderer);
+};
+// Applica impostazioni iniziali
+window.applyGraphicsQuality(window.gameSettings.graphicsQuality);
 const effects = setupEffects(scene);
 const clock = new THREE.Timer();
 

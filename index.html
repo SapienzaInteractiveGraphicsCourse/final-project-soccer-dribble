@@ -27,6 +27,7 @@
       <button id="btn-training" class="menu-btn" style="margin-top: 15px;">TRAINING</button>
       <button id="btn-customize" class="menu-btn" style="margin-top: 15px;">PERSONALIZZA GIOCATORE</button>
       <button id="btn-commands" class="menu-btn">COMANDI</button>
+      <button id="btn-global-settings" class="menu-btn" style="margin-top: 15px;">IMPOSTAZIONI GIOCO</button>
     </div>
 
     <div id="commands-menu" class="menu-screen" style="display: none;">
@@ -278,6 +279,30 @@
         <button id="btn-back-settings" class="menu-btn" style="margin-top: 10px;">INDIETRO</button>
     </div>
 
+    <div id="global-settings-menu" class="menu-screen global-settings-menu-style" style="display: none;">
+        <h1 class="settings-h1-style">IMPOSTAZIONI GIOCO</h1>
+        <div style="display: flex; flex-direction: column; gap: 25px; align-items: center; margin-top: 20px; width: 100%; max-width: 400px; font-family: sans-serif;">
+            
+            <div style="width: 100%; text-align: center;">
+                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Qualità Grafica: <span id="val-graphics" style="color: #4CAF50;">Alta</span></label>
+                <input type="range" id="slider-graphics" min="0" max="2" value="2" step="1" style="width: 80%;">
+                <small style="color: #ccc; font-size: 12px; display: block; margin-top: 5px;">Bassa (Più Fluido) | Media | Alta (Migliore)</small>
+            </div>
+
+            <div style="width: 100%; text-align: center;">
+                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Sensibilità Mouse X: <span id="val-sens-x" style="color: #4CAF50;">1.0</span>x</label>
+                <input type="range" id="slider-sens-x" min="0.1" max="3" value="1" step="0.1" style="width: 80%;">
+            </div>
+
+            <div style="width: 100%; text-align: center;">
+                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Sensibilità Mouse Y: <span id="val-sens-y" style="color: #4CAF50;">1.0</span>x</label>
+                <input type="range" id="slider-sens-y" min="0.1" max="3" value="1" step="0.1" style="width: 80%;">
+            </div>
+
+        </div>
+        <button id="btn-back-global-settings" class="menu-btn" style="margin-top: 30px;">INDIETRO</button>
+    </div>
+
     <div id="substitutions-menu" class="menu-screen substitutions-menu-style" style="display: none;">
         <h1 class="subs-h1-style" style="margin-bottom: 5px;">LA TUA SQUADRA</h1>
         <h3 id="subs-remaining-text" style="color: #FFEB3B; margin-bottom: 10px; font-size: 20px; text-shadow: 1px 1px 2px black;">Cambi disponibili: 5</h3>
@@ -306,6 +331,7 @@
       <button id="btn-resume" class="menu-btn">RIPRENDI</button>
       <button id="btn-substitutions" class="menu-btn">MODIFICA FORMAZIONE</button>
       <button id="btn-pause-commands" class="menu-btn">COMANDI</button>
+      <button id="btn-pause-settings" class="menu-btn">IMPOSTAZIONI GIOCO</button>
       <button id="btn-exit" class="menu-btn">ESCI</button>
     </div>
   </div>

@@ -134,8 +134,10 @@ export class Player {
 
         document.addEventListener('mousemove', (e) => {
             if (this.controls.isLocked) {
-                this.yaw -= e.movementX * 0.003;
-                this.pitch -= e.movementY * 0.003;
+                const sensX = window.gameSettings ? window.gameSettings.sensitivityX : 1.0;
+                const sensY = window.gameSettings ? window.gameSettings.sensitivityY : 1.0;
+                this.yaw -= e.movementX * 0.003 * sensX;
+                this.pitch -= e.movementY * 0.003 * sensY;
                 this.pitch = Math.max(0, Math.min(Math.PI / 3, this.pitch));
             }
         });

@@ -330,3 +330,29 @@ export function updateWeatherParticles(deltaTime, playerPosition) {
         snowSystem.geometry.attributes.position.needsUpdate = true;
     }
 }
+
+// --- IMPOSTAZIONI GRAFICHE ---
+export function setGraphicsQuality(quality, renderer) {
+    if (!renderer || !directionalLight) return;
+
+    if (quality === 0) {
+        // Qualità Bassa: niente ombre, pixel ratio base
+        renderer.shadowMap.enabled = false;
+        renderer.setPixelRatio(1);
+        directionalLight.castShadow = false;
+    } else if (quality === 1) {
+        // Qualità Media: ombre standard, pixel ratio base
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio(1);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+    } else {
+        // Qualità Alta: ombre alta risoluzione, pixel ratio retina
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+    }
+}

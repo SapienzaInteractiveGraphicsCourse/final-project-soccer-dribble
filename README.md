@@ -80,7 +80,6 @@ Before kick-off, you can customize your player:
 | `Right Click` | Shoot (diagonal curve) |
 | `Space` | Activate Boost |
 | `E` | Switch controlled player |
-| `C` | Switch team (1v1 mode) |
 | `T` | Defensive slide tackle |
 | `Esc` | Pause menu |
 

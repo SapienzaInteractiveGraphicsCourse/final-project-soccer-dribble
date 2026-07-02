@@ -146,7 +146,12 @@ export class Bot {
                 const distToSupport = this.model.position.distanceTo(this.throwInSupportPos);
                 if (distToSupport > 0.5) {
                     this.isMoving = true;
-                    this.isRunning = distToSupport > 4;
+                    // Isteresi per evitare flickering
+                    if (this.isRunning) {
+                        this.isRunning = distToSupport > 3;
+                    } else {
+                        this.isRunning = distToSupport > 5;
+                    }
                     this._moveDir.subVectors(this.throwInSupportPos, this.model.position);
                     this._moveDir.y = 0;
                     this._moveDir.normalize();
@@ -244,7 +249,12 @@ export class Bot {
                 const distToSupport = this.model.position.distanceTo(this.cornerSupportPos);
                 if (distToSupport > 0.5) {
                     this.isMoving = true;
-                    this.isRunning = distToSupport > 4;
+                    // Isteresi per evitare flickering
+                    if (this.isRunning) {
+                        this.isRunning = distToSupport > 3;
+                    } else {
+                        this.isRunning = distToSupport > 5;
+                    }
                     this._moveDir.subVectors(this.cornerSupportPos, this.model.position);
                     this._moveDir.y = 0;
                     this._moveDir.normalize();
@@ -411,8 +421,9 @@ export class Bot {
         }
 
         // --- 5. COMPORTAMENTO IA STANDARD ---
-        this.isRunning = false;
-        this.isMoving = false;
+        // NOTA: NON resettiamo isMoving/isRunning qui.
+        // Ogni metodo di comportamento gestisce il proprio stato
+        // per preservare l'isteresi anti-flickering.
 
         if (!isMatchStarted) {
             if (this.ball && this.ball.isLoaded) {
@@ -482,14 +493,31 @@ export class Bot {
         this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
 
         const distToIdeal = this.model.position.distanceTo(this._idealPos);
-        if (distToIdeal > 1.0) {
+
+        // Isteresi per isMoving: evita flickering tra camminata e idle
+        let shouldMove;
+        if (this.isMoving) {
+            shouldMove = distToIdeal > 0.5; // Una volta in moto, fermati solo quando sei molto vicino
+        } else {
+            shouldMove = distToIdeal > 1.5; // Da fermo, parti solo quando sei abbastanza lontano
+        }
+
+        if (shouldMove) {
             this.isMoving = true;
             this._moveDir.subVectors(this._idealPos, this.model.position);
             this._moveDir.y = 0;
             this._moveDir.normalize();
-            const speed = distToIdeal > 4 ? 11 : 7; 
-            this.isRunning = speed > 7;
+            // Isteresi per isRunning: evita flickering tra corsa e camminata
+            if (this.isRunning) {
+                this.isRunning = distToIdeal > 3;
+            } else {
+                this.isRunning = distToIdeal > 5;
+            }
+            const speed = this.isRunning ? 11 : 7;
             this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+        } else {
+            this.isMoving = false;
+            this.isRunning = false;
         }
 
         this._dirToBall.subVectors(this.ball.position, this.model.position);
@@ -497,6 +525,9 @@ export class Bot {
     }
 
     executeAttackBehavior(deltaTime) {
+        // In attacco il bot non si muove, resta fermo e guarda la palla
+        this.isMoving = false;
+        this.isRunning = false;
         if (this.ball && this.ball.isLoaded) {
             this._dirToBall.subVectors(this.ball.position, this.model.position);
             this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);

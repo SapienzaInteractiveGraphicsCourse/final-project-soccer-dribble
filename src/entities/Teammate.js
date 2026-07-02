@@ -79,8 +79,9 @@ export class Teammate {
         this.model.rotation.x = 0;
         this.model.rotation.z = 0;
 
-        this.isRunning = false;
-        this.isMoving = false;
+        // NOTA: NON resettiamo isMoving/isRunning qui.
+        // Ogni metodo di comportamento gestisce il proprio stato
+        // per preservare l'isteresi anti-flickering.
 
         // --- BLOCCO CALCIO D'INIZIO ---
         if (!isMatchStarted) {
@@ -140,7 +141,12 @@ export class Teammate {
                 const distToSupport = this.model.position.distanceTo(this.cornerSupportPos);
                 if (distToSupport > 0.5) {
                     this.isMoving = true;
-                    this.isRunning = distToSupport > 4;
+                    // Isteresi per evitare flickering
+                    if (this.isRunning) {
+                        this.isRunning = distToSupport > 3;
+                    } else {
+                        this.isRunning = distToSupport > 5;
+                    }
                     this._moveDir.subVectors(this.cornerSupportPos, this.model.position);
                     this._moveDir.y = 0;
                     this._moveDir.normalize();
@@ -318,7 +324,15 @@ export class Teammate {
             const distToIdeal = this.model.position.distanceTo(this._idealPos);
             const distToBall = this.model.position.distanceTo(ball.position);
             
-            if (distToBall < 3.5) {
+            // Isteresi per la zona di dodge dalla palla
+            const dodgeEnter = 3.5;
+            const dodgeExit = 5.0;
+            const isDodging = this._isDodgingBall 
+                ? (distToBall < dodgeExit)  // Una volta che scansa, continua finché non è a 5m
+                : (distToBall < dodgeEnter); // Inizia a scansare a 3.5m
+            this._isDodgingBall = isDodging;
+
+            if (isDodging) {
                 // Scansa la palla se ci finisce troppo vicino per non disturbare il giocatore
                 this._pushFromBall.subVectors(this.model.position, ball.position);
                 this._pushFromBall.y = 0;
@@ -326,16 +340,33 @@ export class Teammate {
                 this.model.position.addScaledVector(this._pushFromBall, 7 * deltaTime);
                 this.isMoving = true;
                 this.isRunning = true;
-            } else if (distToIdeal > 1.5) {
-                this.isMoving = true;
-                this._moveDir.subVectors(this._idealPos, this.model.position);
-                this._moveDir.y = 0;
-                this._moveDir.normalize();
+            } else {
+                // Isteresi per isMoving: evita flickering tra camminata e idle
+                let shouldMove;
+                if (this.isMoving) {
+                    shouldMove = distToIdeal > 0.8; // Una volta in moto, fermati solo quando sei vicino
+                } else {
+                    shouldMove = distToIdeal > 2.0; // Da fermo, parti solo quando sei lontano
+                }
 
-                // Regola la velocità in base a quanto sono lontani dalla meta
-                const speed = distToIdeal > 6 ? 12 : 7;
-                this.isRunning = speed > 8;
-                this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+                if (shouldMove) {
+                    this.isMoving = true;
+                    this._moveDir.subVectors(this._idealPos, this.model.position);
+                    this._moveDir.y = 0;
+                    this._moveDir.normalize();
+
+                    // Isteresi per evitare flickering tra corsa e camminata
+                    if (this.isRunning) {
+                        this.isRunning = distToIdeal > 4.5;
+                    } else {
+                        this.isRunning = distToIdeal > 7;
+                    }
+                    const speed = this.isRunning ? 12 : 7;
+                    this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+                } else {
+                    this.isMoving = false;
+                    this.isRunning = false;
+                }
             }
 
             // 6. Guarda sempre la palla
@@ -346,7 +377,9 @@ export class Teammate {
     }
 
     executeDefendBehavior(deltaTime, ball, bots) {
-        // Qui scriveremo la logica per tornare in posizione o pressare
+        // In difesa il compagno resta fermo (logica futura)
+        this.isMoving = false;
+        this.isRunning = false;
     }
 
     setReceiveCornerTarget(ballX, ballZ) {

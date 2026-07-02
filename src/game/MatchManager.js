@@ -483,6 +483,9 @@ export class MatchManager {
 
             this.ball.position.set(ballX, this.ball.radius, ballZ);
             this.ball.velocity.set(0, 0, 0);
+            if (this.ball.mesh) {
+                this.ball.mesh.position.copy(this.ball.position);
+            }
 
             let activeSetPieceNPC = null;
 

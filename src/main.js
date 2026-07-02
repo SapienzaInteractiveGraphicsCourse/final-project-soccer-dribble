@@ -397,6 +397,66 @@ window.fireTrailEffect = new FireTrailEffect(scene);
 const possessionManager = new PossessionManager();
 const boostPadManager = new BoostPadManager(scene);
 
+// --- SISTEMA COLLISIONE PLAYER-TO-PLAYER ---
+const _collisionPushA = new THREE.Vector3();
+const _collisionPushB = new THREE.Vector3();
+
+function resolvePlayerCollisions(humanPlayer, allEntities) {
+    const PLAYER_RADIUS = 0.5;
+    const MIN_DIST = PLAYER_RADIUS * 2; // Somma dei raggi di due giocatori
+
+    // Raccogliamo tutti i modelli validi
+    const bodies = [];
+    for (const entity of allEntities) {
+        if (entity && entity.model && entity.model.position) {
+            bodies.push(entity);
+        }
+    }
+
+    // Controlliamo ogni coppia unica
+    for (let i = 0; i < bodies.length; i++) {
+        for (let j = i + 1; j < bodies.length; j++) {
+            const a = bodies[i];
+            const b = bodies[j];
+
+            const dx = a.model.position.x - b.model.position.x;
+            const dz = a.model.position.z - b.model.position.z;
+            const distSq = dx * dx + dz * dz;
+
+            if (distSq < MIN_DIST * MIN_DIST && distSq > 0.0001) {
+                const dist = Math.sqrt(distSq);
+                const overlap = MIN_DIST - dist;
+
+                // Direzione di separazione normalizzata (da B verso A)
+                const nx = dx / dist;
+                const nz = dz / dist;
+
+                // Peso asimmetrico: se uno dei due è il giocatore umano, spingiamo di più l'IA
+                const aIsHuman = (a === humanPlayer);
+                const bIsHuman = (b === humanPlayer);
+
+                let weightA, weightB;
+                if (aIsHuman) {
+                    weightA = 0.2; // Il giocatore umano viene spostato poco
+                    weightB = 0.8; // L'IA viene spostata molto
+                } else if (bIsHuman) {
+                    weightA = 0.8;
+                    weightB = 0.2;
+                } else {
+                    weightA = 0.5; // Simmetrico tra IA
+                    weightB = 0.5;
+                }
+
+                // Spingiamo A nella direzione positiva, B nella negativa
+                a.model.position.x += nx * overlap * weightA;
+                a.model.position.z += nz * overlap * weightA;
+                b.model.position.x -= nx * overlap * weightB;
+                b.model.position.z -= nz * overlap * weightB;
+            }
+        }
+    }
+}
+
 // Gestione Pointer Lock
 // Cliccando sullo sfondo (il blocker) riprende il gioco
 uiManager.blocker.addEventListener('click', () => {
@@ -697,6 +757,9 @@ function animate(timestamp) {
             
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);
+
+            // --- COLLISIONI PLAYER-TO-PLAYER ---
+            resolvePlayerCollisions(player, [player, ...teammates, ...bots, homeGK, awayGK]);
             const isTraining = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick';
             
             if (isTraining !== window.isTrainingState) {

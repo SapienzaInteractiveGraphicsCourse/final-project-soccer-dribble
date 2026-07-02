@@ -159,10 +159,12 @@ export class Player {
                         this.ballThrown = false;
                     }
                 } else if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
+                    // Durante corner/rimessa dal fondo, solo il passaggio (click sinistro) è permesso
+                    const isSetPiece = this.action.isTakingCorner || this.action.isTakingGoalKick;
                     if (e.button === 0) {
                         this.action.startCharge('pass');
                         this.kickButtonHeld = true;
-                    } else if (e.button === 2) {
+                    } else if (e.button === 2 && !isSetPiece) {
                         this.action.startCharge('shoot');
                         this.kickButtonHeld = true;
                     }
@@ -250,7 +252,8 @@ export class Player {
         });
 
         bindTouchButton('btn-touch-shoot', () => {
-            if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
+            const isSetPiece = this.action.isTakingCorner || this.action.isTakingGoalKick;
+            if (this.ball && this.ball.isLoaded && !this.action.chargingAction && !isSetPiece) {
                 this.action.startCharge('shoot');
                 this.kickButtonHeld = true;
             }
@@ -260,7 +263,9 @@ export class Player {
             }
         });
 
-        bindTouchButton('btn-touch-boost', () => { this.keys.boost = true; }, () => { this.keys.boost = false; });
+        bindTouchButton('btn-touch-boost', () => {
+            if (!this.action.isTakingCorner && !this.action.isTakingGoalKick) this.keys.boost = true;
+        }, () => { this.keys.boost = false; });
         
         bindTouchButton('btn-touch-switch', () => {
             document.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE' }));

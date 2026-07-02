@@ -38,6 +38,9 @@ export class Bot {
         this.isTakingKickOff = false;
         this.kickOffTimer = 0;
 
+        // --- STATI ATTESA IN AREA (durante corner/rimesse avversarie) ---
+        this.isWaitingInArea = false;
+
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
@@ -424,6 +427,29 @@ export class Bot {
         // NOTA: NON resettiamo isMoving/isRunning qui.
         // Ogni metodo di comportamento gestisce il proprio stato
         // per preservare l'isteresi anti-flickering.
+
+        // --- BLOCCO ATTESA IN AREA (corner/rimesse avversarie) ---
+        if (this.isWaitingInArea) {
+            // La palla è stata calciata? Esci dallo stato di attesa
+            if (this.ball && !this.ball.isHeld && this.ball.velocity.lengthSq() > 2.0) {
+                this.isWaitingInArea = false;
+            } else {
+                // Resta fermo e guarda la palla
+                this.isMoving = false;
+                this.isRunning = false;
+                if (this.ball && this.ball.isLoaded) {
+                    this._dirToBall.subVectors(this.ball.position, this.model.position);
+                    this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+                }
+                this.animator.animate(deltaTime, false, false, false, false, null, 0);
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+                return;
+            }
+        }
 
         if (!isMatchStarted) {
             if (this.ball && this.ball.isLoaded) {

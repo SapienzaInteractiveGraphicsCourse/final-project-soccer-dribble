@@ -111,6 +111,7 @@ export class MatchManager {
             if (e.code === 'KeyE') {
                 if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; // Blocca cambio in allenamento
                 if (this.isControllingGK) return; // BLOCCO: Non puoi cambiare giocatore mentre rinvii
+                if (this.player.action.isTakingCorner || this.player.action.isTakingGoalKick) return; // Blocca durante set piece
                 if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
 
                 const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
@@ -120,6 +121,7 @@ export class MatchManager {
             else if (e.code === 'KeyT') {
                 if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; // Blocca scivolata in allenamento
                 if (this.isControllingGK) return; // Il portiere non scivola
+                if (this.player.action.isTakingCorner || this.player.action.isTakingGoalKick) return; // Blocca durante set piece
                 if (this.player && this.player.animator) {
                     this.player.animator.triggerSlide();
                 }
@@ -592,6 +594,11 @@ export class MatchManager {
                     npc.model.rotation.y = Math.atan2(ballX - randX, ballZ - randZ);
                     
                     if (npc.isReceivingGoalKick !== undefined) npc.isReceivingGoalKick = false;
+
+                    // Durante un corner, blocca i bot in area finché la palla non viene calciata
+                    if (isCornerKick && npc.isWaitingInArea !== undefined) {
+                        npc.isWaitingInArea = true;
+                    }
                 }
             });
 

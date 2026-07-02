@@ -446,4 +446,9 @@ export class Teammate {
             (Math.random() * 12 - 6) 
         );
     }
+
+    setReceiveGoalKickTarget(dirX) {
+        this.isReceivingGoalKick = true;
+        this.goalKickRunDir = dirX;
+    }
 }

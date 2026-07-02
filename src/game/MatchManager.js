@@ -441,10 +441,10 @@ export class MatchManager {
                 this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO / AUTOGOAL 🤦‍♂️");
             }
 
-            // Lancia l'evento del replay dopo 1.5s (permette di vedere un po' di esultanza dal vivo prima del replay)
+            // Lancia l'evento del replay dopo 3s (aspetta che il popup del goal scompaia prima di mostrare il replay)
             setTimeout(() => {
                 document.dispatchEvent(new CustomEvent('triggerReplay'));
-            }, 1500);
+            }, 3000);
         }
 
         // Fuorigioco / Rimesse / Corner

@@ -42,6 +42,10 @@ export class Teammate {
         this.isReceivingGoalKick = false;
         this.goalKickRunDir = 1;
 
+        // --- STATI CALCIO D'ANGOLO ---
+        this.isReceivingCorner = false;
+        this.cornerSupportPos = new THREE.Vector3();
+
         this.loadGLB();
     }
 
@@ -114,6 +118,42 @@ export class Teammate {
 
             if (this.isReceivingGoalKick) {
                 this.model.position.x = THREE.MathUtils.clamp(this.model.position.x, -48, 48);
+                this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+                
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+                
+                this.updateRadar();
+                this.handleCollisions(ball);
+                return;
+            }
+        }
+
+        // --- GESTIONE RICEVITORE CALCIO D'ANGOLO ---
+        if (this.isReceivingCorner) {
+            if (ball.velocity.lengthSq() > 2.0) {
+                this.isReceivingCorner = false; // Il cross è partito, torna alla logica normale per attaccare la palla
+            } else {
+                const distToSupport = this.model.position.distanceTo(this.cornerSupportPos);
+                if (distToSupport > 0.5) {
+                    this.isMoving = true;
+                    this.isRunning = distToSupport > 4;
+                    this._moveDir.subVectors(this.cornerSupportPos, this.model.position);
+                    this._moveDir.y = 0;
+                    this._moveDir.normalize();
+                    const speed = this.isRunning ? 9 : 5;
+                    this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                } else {
+                    this.isMoving = false;
+                    this.isRunning = false;
+                    this._dirToBall.subVectors(ball.position, this.model.position);
+                    this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+                }
+                
                 this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
                 
                 const currentRot = this.model.rotation.y;
@@ -309,5 +349,14 @@ export class Teammate {
         // Qui scriveremo la logica per tornare in posizione o pressare
     }
 
-    
+    setReceiveCornerTarget(ballX, ballZ) {
+        this.isReceivingCorner = true;
+        const dirX = ballX > 0 ? -1 : 1;
+        // Posizionamento al centro dell'area di rigore (zona dischetto e limite area piccola)
+        this.cornerSupportPos.set(
+            ballX + (dirX * (11 + Math.random() * 4)), 
+            0,
+            (Math.random() * 12 - 6) 
+        );
+    }
 }

@@ -604,6 +604,15 @@ export class MatchManager {
                         if (activeSetPieceNPC && activeSetPieceNPC.startGoalKick) activeSetPieceNPC.targetReceiver = receivers[0];
                     }
                 }
+            } else {
+                // --- FIX CORNER: I TEAMMATE VANNO IN AREA ---
+                if (attackingTeam === this.playerTeam) {
+                    [this.currentT1, this.currentT2].forEach(teammate => {
+                        if (teammate && teammate.model && teammate.setReceiveCornerTarget) {
+                            teammate.setReceiveCornerTarget(ballX, ballZ);
+                        }
+                    });
+                }
             }
 
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';

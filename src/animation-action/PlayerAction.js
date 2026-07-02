@@ -22,8 +22,8 @@ export class PlayerAction {
         this.headerType = null;
         this.frozenBallPos = null;
 
-        this.shootBasePower = 25;
-        this.shootMaxPower = 55;  // 36 m/s = ~130 km/h (Tiro potentissimo)
+        this.shootBasePower = 18;
+        this.shootMaxPower = 50;  // Abbassata per impedire tiri facili dalla propria metà campo
         this.shootChargeSpeed = 60;
         this.hasSuperShot = false;
         this.hasElectricShot = false;

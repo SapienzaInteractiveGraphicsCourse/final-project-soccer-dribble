@@ -380,6 +380,7 @@ export class MatchManager {
         // Tracker dell'ultimo tocco e Logica Dinamica Fuoco
         if (!this.ball.isHeld) {
             const trackingRadius = 1.3; // Raggio entro cui consideriamo un "tocco"
+            const playerHeight = 1.8;   // Altezza capsula giocatore (come in handleCollisions)
             let closestDist = trackingRadius;
             let closestEntity = null;
 
@@ -391,9 +392,15 @@ export class MatchManager {
             ];
 
             // Troviamo chi è il più vicino alla palla in questo istante
+            // Usiamo la distanza "capsula" (punto più vicino lungo l'asse Y del giocatore)
+            // per non perdere i tocchi quando la palla è alta (petto/testa)
             for (let ent of allParticipants) {
                 if (ent && ent.model) {
-                    const dist = ent.model.position.distanceTo(this.ball.position);
+                    const closestY = Math.max(ent.model.position.y, Math.min(ent.model.position.y + playerHeight, this.ball.position.y));
+                    const dx = ent.model.position.x - this.ball.position.x;
+                    const dy = closestY - this.ball.position.y;
+                    const dz = ent.model.position.z - this.ball.position.z;
+                    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
                     if (dist < closestDist) {
                         closestDist = dist;
                         closestEntity = ent;
@@ -653,6 +660,23 @@ export class MatchManager {
                 this.player.model.position.set(this.ball.position.x, 0, this.ball.position.z + (outOfBoundsOffset * side));
                 this.player.yaw = side > 0 ? Math.PI : 0;
                 this.player.startThrowIn();
+
+                // Trova il compagno più vicino e fallo avvicinare per ricevere la rimessa
+                let closestTeammate = null;
+                let minDistT = Infinity;
+                this.teammates.forEach(t => {
+                    if (t && t.model) {
+                        const dist = t.model.position.distanceTo(this.player.model.position);
+                        if (dist < minDistT) {
+                            minDistT = dist;
+                            closestTeammate = t;
+                        }
+                    }
+                });
+                if (closestTeammate) {
+                    closestTeammate.setReceiveThrowInTarget(this.player.model.position, side);
+                }
+
                 if (!subHappened) this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
             } else {
                 // Rimessa Laterale Bot avversario

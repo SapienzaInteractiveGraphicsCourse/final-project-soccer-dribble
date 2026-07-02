@@ -42,6 +42,10 @@ export class Teammate {
         this.isReceivingGoalKick = false;
         this.goalKickRunDir = 1;
 
+        // --- STATI RIMESSA LATERALE ---
+        this.isReceivingThrowIn = false;
+        this.throwInSupportPos = new THREE.Vector3();
+
         // --- STATI CALCIO D'ANGOLO ---
         this.isReceivingCorner = false;
         this.cornerSupportPos = new THREE.Vector3();
@@ -92,6 +96,47 @@ export class Teammate {
             // Forza l'animazione di Idle
             this.animator.animate(deltaTime, false, false, false, false, null, 0);
             return; // Interrompe qui la logica: nessun calcolo di movimento
+        }
+
+        // --- GESTIONE RICEVITORE RIMESSA LATERALE ---
+        if (this.isReceivingThrowIn) {
+            if (ball && !ball.isHeld) {
+                // La palla è stata lanciata, torna alla logica normale
+                this.isReceivingThrowIn = false;
+            } else {
+                const distToSupport = this.model.position.distanceTo(this.throwInSupportPos);
+                if (distToSupport > 0.5) {
+                    this.isMoving = true;
+                    // Isteresi per evitare flickering
+                    if (this.isRunning) {
+                        this.isRunning = distToSupport > 3;
+                    } else {
+                        this.isRunning = distToSupport > 5;
+                    }
+                    this._moveDir.subVectors(this.throwInSupportPos, this.model.position);
+                    this._moveDir.y = 0;
+                    this._moveDir.normalize();
+                    const speed = this.isRunning ? 9 : 5;
+                    this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                } else {
+                    this.isMoving = false;
+                    this.isRunning = false;
+                    this._dirToBall.subVectors(ball.position, this.model.position);
+                    this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+                }
+
+                this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
+                const currentRot = this.model.rotation.y;
+                let diff = this.yaw - currentRot;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                this.model.rotation.y += diff * Math.min(10 * deltaTime, 1);
+
+                this.updateRadar();
+                this.handleCollisions(ball);
+                return;
+            }
         }
 
         // --- GESTIONE RICEVITORE RIMESSA DAL FONDO ---
@@ -380,6 +425,15 @@ export class Teammate {
         // In difesa il compagno resta fermo (logica futura)
         this.isMoving = false;
         this.isRunning = false;
+    }
+
+    setReceiveThrowInTarget(throwerPos, side) {
+        this.isReceivingThrowIn = true;
+        this.throwInSupportPos.set(
+            throwerPos.x + (Math.random() * 4 - 2),
+            0,
+            throwerPos.z - (side * 6) // Mantiene distanza per una ricezione comoda
+        );
     }
 
     setReceiveCornerTarget(ballX, ballZ) {

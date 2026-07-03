@@ -182,7 +182,7 @@ document.addEventListener('resetFaceSculpting', () => {
 
 document.addEventListener('previewCustomization', (e) => {
     const { type, color, id } = e.detail;
-    
+
     if (type === 'shirtTeam') {
         if (id === 'custom') {
             playerCustomizer.changeTexture('Ch38_Shirt', null);
@@ -206,13 +206,13 @@ document.addEventListener('previewCustomization', (e) => {
         } else {
             // Capello custom: nascondi quello di default e equipaggia il custom
             playerCustomizer.toggleDefaultHair(false);
-            const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
-            const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
-            const hairScale = 1.3; 
+            const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04);
+            const hairOffsetRot = new THREE.Euler(0, 2 * Math.PI, 0);
+            const hairScale = 1.3;
             playerCustomizer.equipAccessory(
-                `${import.meta.env.BASE_URL}models/hair_` + id + '.glb', 
-                'head', 
-                'hair', 
+                `${import.meta.env.BASE_URL}models/hair_` + id + '.glb',
+                'head',
+                'hair',
                 hairOffsetPos,
                 hairOffsetRot,
                 hairScale
@@ -243,7 +243,7 @@ document.addEventListener('resetCustomization', () => {
 
 document.addEventListener('customizePlayer', (e) => {
     const { shirtTeam, shirtColor, skinColor, hairId, accessoryId, hairColor, hatId } = e.detail;
-    
+
     if (shirtTeam && shirtTeam !== 'custom') {
         playerCustomizer.changeTexture('Ch38_Shirt', `${import.meta.env.BASE_URL}textures/shirts/${shirtTeam}.png`);
     } else {
@@ -253,10 +253,10 @@ document.addEventListener('customizePlayer', (e) => {
             playerCustomizer.changeBaseColor('Ch38_Shirt', shirtHex);
         }
     }
-    
+
     const skinHex = parseInt(skinColor.replace('#', '0x'));
     playerCustomizer.changeBaseColor('Ch38_Body', skinHex);
-    
+
     if (hairId !== undefined) {
         if (hairId === "0") {
             // Nessun capello custom: mostra il capello di default del modello
@@ -265,13 +265,13 @@ document.addEventListener('customizePlayer', (e) => {
         } else {
             // Capello custom: nasconde il default e carica il modello scelto
             playerCustomizer.toggleDefaultHair(false);
-            const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04); 
-            const hairOffsetRot = new THREE.Euler(0, 2*Math.PI, 0); 
-            const hairScale = 1.3; 
+            const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04);
+            const hairOffsetRot = new THREE.Euler(0, 2 * Math.PI, 0);
+            const hairScale = 1.3;
             playerCustomizer.equipAccessory(
-                `${import.meta.env.BASE_URL}models/hair_` + hairId + '.glb', 
-                'head', 
-                'hair', 
+                `${import.meta.env.BASE_URL}models/hair_` + hairId + '.glb',
+                'head',
+                'hair',
                 hairOffsetPos,
                 hairOffsetRot,
                 hairScale
@@ -364,7 +364,7 @@ const uiManager = new UIManager((mode) => {
     if (player.isTouchDevice) {
         document.getElementById('touch-controls').style.display = 'block';
         uiManager.blocker.style.display = 'none';
-        
+
         // Richiesta Fullscreen per mobile/iPad (sicuro per Safari)
         const docEl = document.documentElement;
         try {
@@ -473,12 +473,12 @@ uiManager.blocker.addEventListener('click', () => {
                 try {
                     if (docEl.requestFullscreen) {
                         const p = docEl.requestFullscreen();
-                        if (p) p.catch(e=>console.warn(e));
+                        if (p) p.catch(e => console.warn(e));
                     } else if (docEl.webkitRequestFullscreen) {
                         const p = docEl.webkitRequestFullscreen();
-                        if (p) p.catch(e=>console.warn(e));
+                        if (p) p.catch(e => console.warn(e));
                     }
-                } catch(err) { console.warn(err); }
+                } catch (err) { console.warn(err); }
             }
         } else {
             player.controls.lock();
@@ -501,12 +501,12 @@ document.addEventListener('click', (e) => {
                     try {
                         if (docEl.requestFullscreen) {
                             const p = docEl.requestFullscreen();
-                            if (p) p.catch(e=>console.warn(e));
+                            if (p) p.catch(e => console.warn(e));
                         } else if (docEl.webkitRequestFullscreen) {
                             const p = docEl.webkitRequestFullscreen();
-                            if (p) p.catch(e=>console.warn(e));
+                            if (p) p.catch(e => console.warn(e));
                         }
-                    } catch(err) { console.warn(err); }
+                    } catch (err) { console.warn(err); }
                 }
             } else {
                 player.controls.lock();
@@ -527,7 +527,7 @@ if (touchPauseBtn) {
             document.getElementById('touch-controls').style.display = 'none';
             uiManager.blocker.style.display = 'flex';
         }
-    }, {passive: false});
+    }, { passive: false });
 }
 
 // Stato Locale
@@ -581,7 +581,7 @@ document.addEventListener('mousedown', (e) => {
 });
 document.addEventListener('touchstart', (e) => {
     if (replaySystem.isPlaying) skipReplay();
-}, {passive: true});
+}, { passive: true });
 
 function skipReplay() {
     replaySystem.stopPlayback();
@@ -694,7 +694,7 @@ function animate(timestamp) {
             const time = clock.getElapsed();
             camera.position.set(Math.cos(time * 0.1) * 60, 30, Math.sin(time * 0.1) * 60);
             camera.lookAt(0, 0, 0);
-            
+
             // Resetta la rotazione se esci dalla customizzazione
             if (player.model) player.model.rotation.y = startYaw;
         }
@@ -709,7 +709,7 @@ function animate(timestamp) {
                 uiManager.showReplayUI(false);
                 matchManager.resetAfterGoal();
                 isBallInPlay = false; // <--- NUOVO: Blocca i compagni per il nuovo calcio d'inizio
-                
+
                 // RIATTIVA GLI INDICATORI
                 if (effects) {
                     if (effects.playerIndicator) effects.playerIndicator.visible = true;
@@ -749,28 +749,37 @@ function animate(timestamp) {
             possessionManager.update(ball, player, teammates, bots, deltaTime);
             const currentMatchState = possessionManager.getState();
             console.log(currentMatchState);
-           
+
 
 
             const isBotActive = isBallInPlay && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick';
 
-            teammates.forEach(t => t.update(deltaTime, ball, bots, attackDirX, isBotActive, currentMatchState, player, teammates));
-            const opponents = [player, ...teammates]; 
+            teammates.forEach(t => t.update(
+                deltaTime,           // 1. deltaTime
+                ball,                // 2. ball
+                player,              // 3. giocatore umano
+                bots,                // 4. avversari (opponents)
+                teammates,           // 5. compagni
+                attackDirX,          // 6. direzione d'attacco
+                isBotActive,         // 7. se la partita è attiva
+                currentMatchState    // 8. stato del possesso palla
+            ));
+            const opponents = [player, ...teammates];
             bots.forEach(b => b.update(deltaTime, isBotActive, currentMatchState, attackDirX, opponents, bots));
-            
+
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);
 
             // --- COLLISIONI PLAYER-TO-PLAYER ---
             resolvePlayerCollisions(player, [player, ...teammates, ...bots, homeGK, awayGK]);
             const isTraining = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick';
-            
+
             if (isTraining !== window.isTrainingState) {
                 window.isTrainingState = isTraining;
                 bonusManager.setVisible(!isTraining);
                 boostPadManager.setVisible(!isTraining);
             }
-            
+
             if (!isTraining) {
                 bonusManager.update(deltaTime, matchManager.player);
                 boostPadManager.update(deltaTime, player);
@@ -785,7 +794,7 @@ function animate(timestamp) {
             updateEffects(effects, player, matchManager.playerTeam, clock.getElapsed(), isRunning, deltaTime, camera);
             matchManager.updateRules();
             uiManager.updateRadar(player.model, player.yaw, ball.mesh, ball.position, bots);
-            
+
             updateWeatherParticles(deltaTime, player.model ? player.model.position : new THREE.Vector3());
 
             // REGISTRA IL FRAME
@@ -810,33 +819,33 @@ const btnNext = document.getElementById('btn-next-slide');
 let currentSlide = 0;
 
 function showSlide(index) {
-  // Rimuovi la classe active da tutto
-  slides.forEach(slide => slide.classList.remove('active'));
-  dots.forEach(dot => dot.classList.remove('active'));
+    // Rimuovi la classe active da tutto
+    slides.forEach(slide => slide.classList.remove('active'));
+    dots.forEach(dot => dot.classList.remove('active'));
 
-  // Gestisci i limiti (loop continuo)
-  if (index >= slides.length) currentSlide = 0;
-  if (index < 0) currentSlide = slides.length - 1;
+    // Gestisci i limiti (loop continuo)
+    if (index >= slides.length) currentSlide = 0;
+    if (index < 0) currentSlide = slides.length - 1;
 
-  // Aggiungi la classe active alla slide corrente
-  slides[currentSlide].classList.add('active');
-  dots[currentSlide].classList.add('active');
+    // Aggiungi la classe active alla slide corrente
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active');
 }
 
 btnNext.addEventListener('click', () => {
-  currentSlide++;
-  showSlide(currentSlide);
+    currentSlide++;
+    showSlide(currentSlide);
 });
 
 btnPrev.addEventListener('click', () => {
-  currentSlide--;
-  showSlide(currentSlide);
+    currentSlide--;
+    showSlide(currentSlide);
 });
 
 // Resetta il carosello alla prima pagina ogni volta che apri il menu comandi
 document.getElementById('btn-commands').addEventListener('click', () => {
-  currentSlide = 0;
-  showSlide(currentSlide);
+    currentSlide = 0;
+    showSlide(currentSlide);
 });
 
 // --- SISTEMA SOSTITUZIONI ---
@@ -847,7 +856,7 @@ document.addEventListener('openSubstitutions', () => {
     const benchContainer = document.getElementById('bench-players-container');
     const subsText = document.getElementById('subs-remaining-text');
     if (!activeContainer || !benchContainer) return;
-    
+
     if (subsText) {
         subsText.innerText = `Cambi disponibili: ${subsRemaining}`;
         if (subsRemaining === 0) subsText.style.color = '#f44336';
@@ -856,10 +865,10 @@ document.addEventListener('openSubstitutions', () => {
     activeContainer.innerHTML = '';
     benchContainer.innerHTML = '';
 
-    const myTeam = matchManager.playerTeam; 
+    const myTeam = matchManager.playerTeam;
     const myGK = myTeam === 'home' ? matchManager.homeGK : matchManager.awayGK;
     const activePlayers = [player, teammates[0], teammates[1], myGK];
-    
+
     // Genera carte giocatori in campo
     activePlayers.forEach((p, index) => {
         const card = createPlayerCard(p, true, index);
@@ -868,7 +877,7 @@ document.addEventListener('openSubstitutions', () => {
 
     // Genera carte panchina
     const myBench = benchPlayers.filter(bp => bp.team === myTeam && !bp.isSubbed);
-    
+
     myBench.forEach((bp, index) => {
         const card = createPlayerCard(bp, false, index);
         benchContainer.appendChild(card);
@@ -881,17 +890,17 @@ function createPlayerCard(playerData, isActive, index) {
     const positionClass = isActive ? `tactical-slot-${index}` : 'bench-slot';
     card.className = `fut-card ${positionClass}`;
     if (!isActive) card.draggable = true;
-    
+
     const staminaClass = playerData.stamina > 50 ? 'stamina-high' : (playerData.stamina > 20 ? 'stamina-med' : 'stamina-low');
     const displayStamina = Math.floor(playerData.stamina || 100);
-    
+
     // Assegna sfondi diversi per carte diverse in base all'OVR
     let cardTheme = 'gold';
     if (playerData.ovr >= 90) cardTheme = 'special';
     else if (playerData.ovr < 80) cardTheme = 'silver';
 
     card.classList.add(`theme-${cardTheme}`);
-    
+
     card.innerHTML = `
         <div class="fut-card-top-left">
             <div class="fut-ovr">${playerData.ovr || 85}</div>
@@ -908,7 +917,7 @@ function createPlayerCard(playerData, isActive, index) {
 
     if (!isActive) {
         card.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', index); 
+            e.dataTransfer.setData('text/plain', index);
         });
     } else {
         // Drop zone
@@ -947,7 +956,7 @@ function performSubstitution(activePlayer, benchIndex) {
     if (subPlayer) {
         subsRemaining--;
         subPlayer.isSubbed = true; // Rimuove dalla panchina temporaneamente
-        
+
         window.pendingSubstitutions.push({
             activePlayer: activePlayer,
             subPlayer: subPlayer
@@ -963,7 +972,7 @@ function performSubstitution(activePlayer, benchIndex) {
     }
 }
 
-window.executePendingSubstitutions = function() {
+window.executePendingSubstitutions = function () {
     if (!window.pendingSubstitutions || window.pendingSubstitutions.length === 0) return false;
 
     let messageHtml = `<div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">SOSTITUZIONE EFFETTUATA</div>`;

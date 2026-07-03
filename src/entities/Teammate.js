@@ -1,15 +1,17 @@
 import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 import { PlayerAnimator } from '../animation-action/PlayerAnimation.js';
+import { tacticalManager } from '../game/TacticalManager.js';
 
 export class Teammate {
     constructor(scene, startPosition, startYaw = 0) {
+        this.id = Math.random().toString(36).substr(2, 9); // ID univoco per il manager
         this.scene = scene;
         this.model = null;
         this.animator = new PlayerAnimator();
         
         this.startPosition = startPosition;
-        this.yaw = startYaw; // <--- NUOVO
+        this.yaw = startYaw; 
 
         // --- STATISTICHE GIOCATORE ---
         this.stamina = 100;
@@ -33,20 +35,17 @@ export class Teammate {
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
         this._avoidanceVector = new THREE.Vector3();
+        this._teammateSeparation = new THREE.Vector3(); // <--- NUOVO
         this._pushAway = new THREE.Vector3();
         this._pushFromBall = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
         this._dirToBall = new THREE.Vector3();
 
-        // --- STATI RIMESSA DAL FONDO ---
+        // (Stati rimessa e corner omessi per brevità, mantieni i tuoi)
         this.isReceivingGoalKick = false;
         this.goalKickRunDir = 1;
-
-        // --- STATI RIMESSA LATERALE ---
         this.isReceivingThrowIn = false;
         this.throwInSupportPos = new THREE.Vector3();
-
-        // --- STATI CALCIO D'ANGOLO ---
         this.isReceivingCorner = false;
         this.cornerSupportPos = new THREE.Vector3();
 
@@ -76,26 +75,19 @@ export class Teammate {
         });
     }
 
-    update(deltaTime, ball = null, bots = [], attackDirX = 1, isMatchStarted = true, matchState = 'HOME_POSSESSION') {
+    update(deltaTime, ball, player = null, opponents = [], teammates = [], attackDirX = 1, isMatchStarted = true, matchState = 'HOME_POSSESSION') {
         if (!this.model) return;
         
-        // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
         this.model.rotation.x = 0;
         this.model.rotation.z = 0;
 
-        // NOTA: NON resettiamo isMoving/isRunning qui.
-        // Ogni metodo di comportamento gestisce il proprio stato
-        // per preservare l'isteresi anti-flickering.
-
-        // --- BLOCCO CALCIO D'INIZIO ---
         if (!isMatchStarted) {
             if (ball && ball.isLoaded) {
                 this._dirToBall.subVectors(ball.position, this.model.position);
                 this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
             }
-            // Forza l'animazione di Idle
             this.animator.animate(deltaTime, false, false, false, false, null, 0);
-            return; // Interrompe qui la logica: nessun calcolo di movimento
+            return; 
         }
 
         // --- GESTIONE RICEVITORE RIMESSA LATERALE ---
@@ -216,21 +208,17 @@ export class Teammate {
 
         switch (matchState) {
             case 'HOME_POSSESSION':
-                // La palla ce l'hai tu o un compagno: ATTACCO
-                this.executeAttackBehavior(deltaTime, ball, bots, attackDirX);
+                // Chiamata al manager tattico per aggiornare le corsie dinamicamente
+                tacticalManager.updateOffensiveLanes(player, teammates, ball, attackDirX);
+                this.executeAttackBehavior(deltaTime, ball, player, opponents, teammates, attackDirX);
                 break;
 
             case 'AWAY_POSSESSION':
-                // La palla ce l'ha l'avversario: DIFESA (da implementare)
-                this.executeDefendBehavior(deltaTime, ball, bots);
+                this.executeDefendBehavior(deltaTime, ball, opponents);
                 break;
         }
 
-        
-        
-
         this.animator.animate(deltaTime, false, this.isMoving, this.isRunning, false, null, 0);
-
         this.updateRadar();
         this.handleCollisions(ball);
     }
@@ -294,132 +282,119 @@ export class Teammate {
     }
 
 
-    executeAttackBehavior(deltaTime, ball, bots, attackDirX) {
-        if (ball && ball.isLoaded) {
-            this._idealPos.set(0, 0, 0);
+    executeAttackBehavior(deltaTime, ball, player = null, opponents = [], teammates = [], attackDirX = 1) {
+        if (!ball || !ball.isLoaded) return;
+        
+        this._idealPos.set(0, 0, 0);
+        
+        // 1. IDENTIFICAZIONE CORSIA DINAMICA (Position Replacement)
+        const laneZ = tacticalManager.getAssignedLaneZ(this.id);
+
+        // 2. CALCOLO AVANZAMENTO E PROFONDITÀ (Fix: Assegnazione diretta, il LERP avviene nel movimento fisico)
+        const isBallNearGoal = (attackDirX === 1 && ball.position.x > 30) ||
+                               (attackDirX === -1 && ball.position.x < -30);
+
+        if (isBallNearGoal) {
+            let targetZ = laneZ * 0.5; 
+            let targetX = ball.position.x + (attackDirX * 4); 
             
-            // 1. Identificazione Ruolo (Fascia o Centro)
-            let laneZ = 0;
-            if (this.startPosition.z > 5) laneZ = 14;
-            else if (this.startPosition.z < -5) laneZ = -14;
+            const maxDepth = 40; 
+            targetX = attackDirX === 1 ? Math.min(targetX, maxDepth) : Math.max(targetX, -maxDepth);
 
-            // 2. Calcolo Avanzamento Offensivo e Posizionamento Z
-            const isBallNearGoal = (attackDirX === 1 && ball.position.x > 30) ||
-                                   (attackDirX === -1 && ball.position.x < -30);
-
-            if (isBallNearGoal) {
-                // In zona d'attacco: i giocatori sulle fasce tagliano verso l'area, ma non si sovrappongono
-                let targetZ = laneZ * 0.5; // Stringono verso il centro (es. da 14 a 7)
-                
-                // Manteniamo una distanza di sicurezza dal portiere e creiamo opzioni di passaggio (cutback)
-                let targetX = ball.position.x + (attackDirX * 4); 
-                
-                // Limite massimo di profondità per non incollarsi al portiere
-                const maxDepth = 40; 
-                if (attackDirX === 1) targetX = Math.min(targetX, maxDepth);
-                else targetX = Math.max(targetX, -maxDepth);
-
-                this._idealPos.x = targetX;
-                this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, targetZ, deltaTime * 2.0);
-            } else {
-                // Costruzione dell'azione a centrocampo/difesa
-                this._idealPos.x = ball.position.x + (attackDirX * 14); 
-                this._idealPos.z = THREE.MathUtils.lerp(this.model.position.z, laneZ, deltaTime * 1.5);
-            }
-
-            // 3. SMARCAMENTO (Evita i bot avversari)
-            const avoidanceRadius = 15.0; 
-            this._avoidanceVector.set(0, 0, 0);
-            
-            if (bots && bots.length > 0) {
-                bots.forEach(bot => {
-                    if (bot && bot.model) {
-                        const dist = this.model.position.distanceTo(bot.model.position);
-                        if (dist < avoidanceRadius) {
-                            // Fuga dal bot
-                            this._pushAway.subVectors(this.model.position, bot.model.position);
-                            this._pushAway.y = 0;
-                            this._pushAway.normalize();
-
-                            // Direzione verso la posizione ideale
-                            const dirToIdeal = new THREE.Vector3(this._idealPos.x - this.model.position.x, 0, this._idealPos.z - this.model.position.z);
-                            if (dirToIdeal.lengthSq() > 0.001) dirToIdeal.normalize();
-                            else dirToIdeal.set(1, 0, 0);
-
-                            // Blend intelligente: allontanati dal difensore ma cerca di andare verso la meta
-                            const evasionBlend = Math.min(dist / avoidanceRadius, 1.0); 
-                            
-                            const escapeDir = new THREE.Vector3().lerpVectors(this._pushAway, dirToIdeal, evasionBlend).normalize();
-
-                            // Più il bot è vicino, più forte è la repulsione
-                            escapeDir.multiplyScalar(avoidanceRadius - dist);
-                            this._avoidanceVector.add(escapeDir);
-                        }
-                    }
-                });
-            }
-            
-            // Applica il vettore di smarcamento
-            this._idealPos.add(this._avoidanceVector);
-
-            // 4. Limiti del campo (non uscire dal campo)
-            this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
-            this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
-
-            // 5. Movimento Fisico
-            const distToIdeal = this.model.position.distanceTo(this._idealPos);
-            const distToBall = this.model.position.distanceTo(ball.position);
-            
-            // Isteresi per la zona di dodge dalla palla
-            const dodgeEnter = 3.5;
-            const dodgeExit = 5.0;
-            const isDodging = this._isDodgingBall 
-                ? (distToBall < dodgeExit)  // Una volta che scansa, continua finché non è a 5m
-                : (distToBall < dodgeEnter); // Inizia a scansare a 3.5m
-            this._isDodgingBall = isDodging;
-
-            if (isDodging) {
-                // Scansa la palla se ci finisce troppo vicino per non disturbare il giocatore
-                this._pushFromBall.subVectors(this.model.position, ball.position);
-                this._pushFromBall.y = 0;
-                this._pushFromBall.normalize();
-                this.model.position.addScaledVector(this._pushFromBall, 7 * deltaTime);
-                this.isMoving = true;
-                this.isRunning = true;
-            } else {
-                // Isteresi per isMoving: evita flickering tra camminata e idle
-                let shouldMove;
-                if (this.isMoving) {
-                    shouldMove = distToIdeal > 0.8; // Una volta in moto, fermati solo quando sei vicino
-                } else {
-                    shouldMove = distToIdeal > 2.0; // Da fermo, parti solo quando sei lontano
-                }
-
-                if (shouldMove) {
-                    this.isMoving = true;
-                    this._moveDir.subVectors(this._idealPos, this.model.position);
-                    this._moveDir.y = 0;
-                    this._moveDir.normalize();
-
-                    // Isteresi per evitare flickering tra corsa e camminata
-                    if (this.isRunning) {
-                        this.isRunning = distToIdeal > 4.5;
-                    } else {
-                        this.isRunning = distToIdeal > 7;
-                    }
-                    const speed = this.isRunning ? 12 : 7;
-                    this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
-                } else {
-                    this.isMoving = false;
-                    this.isRunning = false;
-                }
-            }
-
-            // 6. Guarda sempre la palla
-            this._dirToBall.subVectors(ball.position, this.model.position);
-            this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+            this._idealPos.x = targetX;
+            this._idealPos.z = targetZ; // <--- FIX: Niente LERP, posizione assoluta
+        } else {
+            this._idealPos.x = ball.position.x + (attackDirX * 14); 
+            this._idealPos.z = laneZ;   // <--- FIX: Niente LERP, posizione assoluta
         }
 
+        // 3. SEPARATION TRA COMPAGNI (Non calpestarsi i piedi)
+        const teamSeparationRadius = 6.0;
+        this._teammateSeparation.set(0, 0, 0);
+        let forceMoveAway = false; // <--- FLAG PER FORZARE LO SPOSTAMENTO
+
+        const allAllies = [...teammates, player].filter(a => a && a !== this && a.model);
+        allAllies.forEach(ally => {
+            const dist = this.model.position.distanceTo(ally.model.position);
+            if (dist < teamSeparationRadius) {
+                const push = new THREE.Vector3().subVectors(this.model.position, ally.model.position);
+                push.y = 0;
+                // Spinta aumentata (x 1.5) per una repulsione chiara e netta
+                push.normalize().multiplyScalar((teamSeparationRadius - dist) * 1.5); 
+                this._teammateSeparation.add(push);
+                
+                forceMoveAway = true; // Se siamo troppo vicini, IGNORA la deadzone e scappa
+            }
+        });
+        this._idealPos.add(this._teammateSeparation);
+
+        // 4. SMARCAMENTO DAGLI AVVERSARI (Avoidance)
+        const avoidanceRadius = 15.0; 
+        this._avoidanceVector.set(0, 0, 0);
+        
+        if (opponents && opponents.length > 0) {
+            opponents.forEach(bot => {
+                if (bot && bot.model) {
+                    const dist = this.model.position.distanceTo(bot.model.position);
+                    if (dist < avoidanceRadius) {
+                        this._pushAway.subVectors(this.model.position, bot.model.position);
+                        this._pushAway.y = 0;
+                        this._pushAway.normalize();
+
+                        const dirToIdeal = new THREE.Vector3(this._idealPos.x - this.model.position.x, 0, this._idealPos.z - this.model.position.z).normalize();
+                        const evasionBlend = Math.min(dist / avoidanceRadius, 1.0); 
+                        
+                        const escapeDir = new THREE.Vector3().lerpVectors(this._pushAway, dirToIdeal, evasionBlend).normalize();
+                        escapeDir.multiplyScalar((avoidanceRadius - dist) * 1.2);
+                        this._avoidanceVector.add(escapeDir);
+                    }
+                }
+            });
+        }
+        this._idealPos.add(this._avoidanceVector);
+
+        // 5. LIMITI DEL CAMPO
+        this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
+        this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
+
+        // 6. MOVIMENTO FISICO E SCHIVATA PALLA
+        const distToIdeal = this.model.position.distanceTo(this._idealPos);
+        const distToBall = this.model.position.distanceTo(ball.position);
+        
+        const dodgeEnter = 3.5;
+        const dodgeExit = 5.0;
+        this._isDodgingBall = this._isDodgingBall ? (distToBall < dodgeExit) : (distToBall < dodgeEnter);
+
+        if (this._isDodgingBall) {
+            this._pushFromBall.subVectors(this.model.position, ball.position);
+            this._pushFromBall.y = 0;
+            this._pushFromBall.normalize();
+            this.model.position.addScaledVector(this._pushFromBall, 7 * deltaTime);
+            this.isMoving = true;
+            this.isRunning = true;
+        } else {
+            // FIX: forceMoveAway salta la regola dei 2 metri di tolleranza
+            let shouldMove = forceMoveAway || (this.isMoving ? (distToIdeal > 0.8) : (distToIdeal > 2.0));
+
+            if (shouldMove) {
+                this.isMoving = true;
+                this._moveDir.subVectors(this._idealPos, this.model.position);
+                this._moveDir.y = 0;
+                this._moveDir.normalize();
+
+                this.isRunning = this.isRunning ? (distToIdeal > 4.5) : (distToIdeal > 7);
+                
+                const speed = this.isRunning ? 12 : 7;
+                this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+            } else {
+                this.isMoving = false;
+                this.isRunning = false;
+            }
+        }
+
+        // 7. ORIENTAMENTO VERSO LA PALLA
+        this._dirToBall.subVectors(ball.position, this.model.position);
+        this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }
 
     executeDefendBehavior(deltaTime, ball, bots) {

@@ -3,9 +3,13 @@ import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 import { PlayerAnimator } from '../animation-action/PlayerAnimation.js';
 import { PlayerAction } from '../animation-action/PlayerAction.js';
+import { TacticalManager } from '../game/TacticalManager.js';
+
+const botTacticalManager = new TacticalManager();
 
 export class Bot {
     constructor(scene, ball, startPos, startYaw) {
+        this.id = Math.random().toString(36).substr(2, 9); // <--- ID UNIVOCO (NECESSARIO)
         this.scene = scene;
         this.ball = ball;
         this.startPos = startPos;
@@ -28,7 +32,7 @@ export class Bot {
         this.cornerTimer = 0;
         this.isReceivingCorner = false;
         this.cornerSupportPos = new THREE.Vector3();
-        this.cornerTargetGoalX = 0; // Memorizza quale porta attaccare
+        this.cornerTargetGoalX = 0; 
 
         // --- STATI RIMESSA DAL FONDO ---
         this.isReceivingGoalKick = false;
@@ -38,13 +42,18 @@ export class Bot {
         this.isTakingKickOff = false;
         this.kickOffTimer = 0;
 
-        // --- STATI ATTESA IN AREA (durante corner/rimesse avversarie) ---
+        // --- STATI ATTESA IN AREA ---
         this.isWaitingInArea = false;
 
         // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
         this._idealPos = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
         this._dirToBall = new THREE.Vector3();
+        
+        // --- NUOVI VETTORI PER LA GESTIONE DEGLI SPAZI ---
+        this._teammateSeparation = new THREE.Vector3();
+        this._avoidanceVector = new THREE.Vector3();
+        this._pushAway = new THREE.Vector3();
 
         this.loadGLB();
     }
@@ -461,7 +470,8 @@ export class Bot {
                 break;
 
             case 'AWAY_POSSESSION':
-                this.executeAttackBehavior(deltaTime, defendDirX, bots);
+                // <--- AGGIUNTO 'opponents' COME PARAMETRO
+                this.executeAttackBehavior(deltaTime, defendDirX, bots, opponents); 
                 break;
         }
 
@@ -548,32 +558,49 @@ export class Bot {
         this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }
 
-    executeAttackBehavior(deltaTime, defendDirX, bots) {
+    executeAttackBehavior(deltaTime, defendDirX, bots, opponents) {
         if (!this.ball || !this.ball.isLoaded) return;
         
         const attackGoalX = -49.5 * defendDirX;
         const targetGoalPos = new THREE.Vector3(attackGoalX, 0, 0);
+        const attackDirX = attackGoalX > 0 ? 1 : -1;
         
+        // 1. TROVA IL PORTATORE DI PALLA (Chi è più vicino)
+        let ballCarrier = null;
         let isClosest = true;
         const myDistToBall = this.model.position.distanceTo(this.ball.position);
+        let minDist = Infinity;
         
         if (bots && bots.length > 0) {
             bots.forEach(otherBot => {
-                if (otherBot !== this && otherBot.model) {
-                    if (otherBot.model.position.distanceTo(this.ball.position) < myDistToBall) {
+                if (otherBot && otherBot.model) {
+                    const dist = otherBot.model.position.distanceTo(this.ball.position);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        ballCarrier = otherBot;
+                    }
+                    if (otherBot !== this && dist < myDistToBall) {
                         isClosest = false;
                     }
                 }
             });
+            if (!ballCarrier) ballCarrier = this;
+        } else {
+            ballCarrier = this;
         }
-        
+
+        // 2. AGGIORNA LE CORSIE TATTICHE DEI BOT
+        const otherBots = bots.filter(b => b !== ballCarrier);
+        // Il ballCarrier funge da "player" (prenota la sua corsia), gli altri due si adattano
+        botTacticalManager.updateOffensiveLanes(ballCarrier, otherBots, this.ball, attackDirX);
+
+        // 3. LOGICA DI ATTACCO
         if (isClosest) {
-            // Controlla se la palla è veramente ai piedi del giocatore
+            // --- LOGICA ORIGINALE DEL PORTATORE DI PALLA (Invariata) ---
             if (myDistToBall < 1.2) {
                 this.isMoving = true;
                 this.isRunning = true;
                 
-                // Punta verso la porta avversaria
                 this._moveDir.subVectors(targetGoalPos, this.model.position);
                 this._moveDir.y = 0;
                 
@@ -583,12 +610,10 @@ export class Bot {
                     this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
                 }
 
-                // Chiama la funzione di dribbling passando i finti comandi per spingere la palla!
                 this.action.dribble(this.ball, this.yaw, this.isRunning, false, { forward: true, backward: false, left: false, right: false }, deltaTime);
 
                 const distToGoal = this.model.position.distanceTo(targetGoalPos);
                 
-                // Caricamento tiro
                 if (distToGoal < 25) {
                     if (!this.action.chargingAction) {
                         this.action.startCharge('shoot');
@@ -606,7 +631,6 @@ export class Bot {
                 }
                 
             } else {
-                // Insegue la palla finché non ce l'ha ai piedi
                 this.isMoving = true;
                 this.isRunning = true;
                 this._moveDir.subVectors(this.ball.position, this.model.position);
@@ -617,41 +641,106 @@ export class Bot {
                     this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
                 }
                 
-                // Mentre insegue, non carica il tiro
                 if (this.action.chargingAction) {
                     this.action.cancelCharge(null);
                 }
             }
         } else {
-            // Smarcamento compagni
-            const attackDir = attackGoalX > 0 ? 1 : -1;
-            this._idealPos.set(
-                this.ball.position.x + (15 * attackDir),
-                0,
-                this.startPos.z
-            );
+            // --- NUOVA LOGICA: SMARCAMENTO E POSITION REPLACEMENT ---
+            this._idealPos.set(0, 0, 0);
+
+            // A) Identificazione Corsia
+            const laneZ = botTacticalManager.getAssignedLaneZ(this.id);
+
+            // B) Calcolo Avanzamento in Profondità
+            const isBallNearGoal = (attackDirX === 1 && this.ball.position.x > 30) ||
+                                   (attackDirX === -1 && this.ball.position.x < -30);
+
+            if (isBallNearGoal) {
+                let targetZ = laneZ * 0.5; 
+                let targetX = this.ball.position.x + (attackDirX * 4); 
+                
+                const maxDepth = 40; 
+                targetX = attackDirX === 1 ? Math.min(targetX, maxDepth) : Math.max(targetX, -maxDepth);
+
+                this._idealPos.x = targetX;
+                this._idealPos.z = targetZ; // Niente LERP, posizione fissa
+            } else {
+                this._idealPos.x = this.ball.position.x + (attackDirX * 10); // I bot di supporto stanno un po' più vicini
+                this._idealPos.z = laneZ; // Niente LERP
+            }
+
+            // C) Separation tra bot alleati (evita collisioni in contropiede)
+            const teamSeparationRadius = 6.0;
+            this._teammateSeparation.set(0, 0, 0);
+            let forceMoveAway = false;
+
+            bots.forEach(ally => {
+                if (ally !== this && ally.model) {
+                    const dist = this.model.position.distanceTo(ally.model.position);
+                    if (dist < teamSeparationRadius) {
+                        const push = new THREE.Vector3().subVectors(this.model.position, ally.model.position);
+                        push.y = 0;
+                        push.normalize().multiplyScalar((teamSeparationRadius - dist) * 1.5); 
+                        this._teammateSeparation.add(push);
+                        forceMoveAway = true;
+                    }
+                }
+            });
+            this._idealPos.add(this._teammateSeparation);
+
+            // D) Avoidance degli avversari (I bot evitano i TUOI giocatori)
+            const avoidanceRadius = 15.0; 
+            this._avoidanceVector.set(0, 0, 0);
             
+            if (opponents && opponents.length > 0) {
+                opponents.forEach(opp => {
+                    if (opp && opp.model) {
+                        const dist = this.model.position.distanceTo(opp.model.position);
+                        if (dist < avoidanceRadius) {
+                            this._pushAway.subVectors(this.model.position, opp.model.position);
+                            this._pushAway.y = 0;
+                            this._pushAway.normalize();
+
+                            const dirToIdeal = new THREE.Vector3(this._idealPos.x - this.model.position.x, 0, this._idealPos.z - this.model.position.z).normalize();
+                            const evasionBlend = Math.min(dist / avoidanceRadius, 1.0); 
+                            
+                            const escapeDir = new THREE.Vector3().lerpVectors(this._pushAway, dirToIdeal, evasionBlend).normalize();
+                            escapeDir.multiplyScalar((avoidanceRadius - dist) * 1.2);
+                            this._avoidanceVector.add(escapeDir);
+                        }
+                    }
+                });
+            }
+            this._idealPos.add(this._avoidanceVector);
+
+            // E) Limiti del campo
             this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
             this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
-            
+
+            // F) Movimento Fisico
             const distToIdeal = this.model.position.distanceTo(this._idealPos);
-            if (distToIdeal > 3.0) {
+            
+            let shouldMove = forceMoveAway || (this.isMoving ? (distToIdeal > 0.8) : (distToIdeal > 2.0));
+
+            if (shouldMove) {
                 this.isMoving = true;
-                this.isRunning = false;
                 this._moveDir.subVectors(this._idealPos, this.model.position);
                 this._moveDir.y = 0;
-                if (this._moveDir.lengthSq() > 0.001) {
-                    this._moveDir.normalize();
-                    this.model.position.addScaledVector(this._moveDir, 7 * deltaTime);
-                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
-                }
+                this._moveDir.normalize();
+
+                this.isRunning = this.isRunning ? (distToIdeal > 4.5) : (distToIdeal > 7);
+                const speed = this.isRunning ? 11 : 7;
+                this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
             } else {
                 this.isMoving = false;
                 this.isRunning = false;
-                this._dirToBall.subVectors(this.ball.position, this.model.position);
-                this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
             }
-            
+
+            // G) Orientamento verso la palla
+            this._dirToBall.subVectors(this.ball.position, this.model.position);
+            this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
+
             if (this.action.chargingAction) {
                 this.action.cancelCharge(null);
             }

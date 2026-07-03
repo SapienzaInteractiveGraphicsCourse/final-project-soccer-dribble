@@ -10,39 +10,61 @@ export class PossessionManager {
         this.currentState = MatchState.HOME_POSSESSION;
     }
 
+    /**
+     * Imposta il possesso su AWAY_POSSESSION.
+     * Da chiamare SOLO nei seguenti casi:
+     * - HOME ha segnato un goal (calcio d'inizio AWAY)
+     * - Rimessa laterale affidata ad AWAY
+     * - Calcio d'angolo affidato ad AWAY
+     * - Rimessa dal fondo affidata ad AWAY
+     */
+    setAwayPossession() {
+        this.currentState = MatchState.AWAY_POSSESSION;
+    }
+
+    /**
+     * Ripristina il possesso a HOME_POSSESSION.
+     * Da chiamare quando un Teammate (o il Player) tocca la palla.
+     */
+    setHomePossession() {
+        this.currentState = MatchState.HOME_POSSESSION;
+    }
+
     update(ball, player, teammates, bots, deltaTime) {
         if (!ball || !ball.isLoaded) return;
 
-        let closestHomeDist = Infinity;
-        let closestAwayDist = Infinity;
+        // Il possesso viene gestito esclusivamente tramite eventi:
+        // - setAwayPossession() per assegnare il possesso ad AWAY
+        // - setHomePossession() per ripristinare il possesso a HOME
+        //
+        // Qui controlliamo SOLO se un giocatore HOME (Player o Teammate) tocca la palla,
+        // in tal caso il possesso torna immediatamente a HOME.
 
-        // 1. Distanza del Player
-        if (player && player.model) {
-            closestHomeDist = Math.min(closestHomeDist, player.model.position.distanceTo(ball.position));
-        }
+        if (this.currentState !== MatchState.HOME_POSSESSION) {
+            const touchRadius = 1.2; // Raggio di contatto con la palla
 
-        // 2. Distanze dei Teammates
-        if (teammates && teammates.length > 0) {
-            teammates.forEach(t => {
-                if (t.model) {
-                    closestHomeDist = Math.min(closestHomeDist, t.model.position.distanceTo(ball.position));
+            // 1. Controlla il Player
+            if (player && player.model) {
+                const distPlayer = player.model.position.distanceTo(ball.position);
+                if (distPlayer < touchRadius) {
+                    this.currentState = MatchState.HOME_POSSESSION;
+                    return;
                 }
-            });
-        }
+            }
 
-        // 3. Distanze dei Bots
-        if (bots && bots.length > 0) {
-            bots.forEach(b => {
-                if (b.model) {
-                    closestAwayDist = Math.min(closestAwayDist, b.model.position.distanceTo(ball.position));
+            // 2. Controlla i Teammates
+            if (teammates && teammates.length > 0) {
+                for (let i = 0; i < teammates.length; i++) {
+                    const t = teammates[i];
+                    if (t.model) {
+                        const dist = t.model.position.distanceTo(ball.position);
+                        if (dist < touchRadius) {
+                            this.currentState = MatchState.HOME_POSSESSION;
+                            return;
+                        }
+                    }
                 }
-            });
-        }
-
-        if (closestHomeDist <= closestAwayDist) {
-            this.currentState = MatchState.HOME_POSSESSION;
-        } else {
-            this.currentState = MatchState.AWAY_POSSESSION;
+            }
         }
     }
 

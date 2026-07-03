@@ -395,6 +395,8 @@ const matchManager = new MatchManager(camera, ball, player, teammates, bots, hom
 const bonusManager = new BonusManager(scene, uiManager);
 window.fireTrailEffect = new FireTrailEffect(scene);
 const possessionManager = new PossessionManager();
+matchManager.possessionManager = possessionManager;
+homeGK.possessionManager = possessionManager;
 const boostPadManager = new BoostPadManager(scene);
 
 // --- SISTEMA COLLISIONE PLAYER-TO-PLAYER ---
@@ -746,6 +748,7 @@ function animate(timestamp) {
 
             possessionManager.update(ball, player, teammates, bots, deltaTime);
             const currentMatchState = possessionManager.getState();
+            console.log(currentMatchState);
            
 
 

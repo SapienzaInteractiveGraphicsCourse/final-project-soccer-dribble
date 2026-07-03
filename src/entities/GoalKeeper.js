@@ -20,6 +20,9 @@ export class GoalKeeper {
         this.goalKickTimer = 0;
         this.targetReceiver = null;
 
+        // Riferimento al PossessionManager (impostato esternamente)
+        this.possessionManager = null;
+
         // --- FISICA ---
         // Raggio della Hitbox sferica del portiere
         this.hitboxRadius = 1.5;
@@ -220,6 +223,11 @@ export class GoalKeeper {
                     // IMPORTANTE: Annulliamo eventuali flag di gol o rimessa che si sono attivati per sbaglio!
                     this.ball.isGoal = false;
                     this.ball.isOutBaseline = false;
+
+                    // --- POSSESSO: Se il portiere HOME para, il possesso torna a HOME ---
+                    if (this.team === 'home' && this.possessionManager) {
+                        this.possessionManager.setHomePossession();
+                    }
 
                     // --- FISICA RESPINTA BRUSCA ---
                     this.ball.velocity.x = Math.abs(this.ball.velocity.x) * pushDirX * 0.6;

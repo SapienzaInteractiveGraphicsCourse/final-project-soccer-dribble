@@ -12,6 +12,9 @@ export class MatchManager {
         this.awayGK = awayGK;
         this.uiManager = uiManager;
 
+        // Riferimento al PossessionManager (impostato esternamente dopo la creazione)
+        this.possessionManager = null;
+
         // Stato Partita
         this.isGameStarted = false;
         this.gameMode = 'match';
@@ -346,6 +349,9 @@ export class MatchManager {
                 if (this.currentO3.model) { this.currentO3.model.position.set(20, 0, 15); this.currentO3.model.rotation.y = 3 / 2 * Math.PI; this.currentO3.yaw = 3 / 2 * Math.PI; }
             } else {
                 // Il team 'away' (Bot) batte il calcio d'inizio
+                // Imposta il possesso su AWAY (HOME ha segnato, AWAY batte il calcio d'inizio)
+                if (this.possessionManager) this.possessionManager.setAwayPossession();
+
                 if (this.player.model) {
                     this.player.model.position.set(-10.5, 0, 0);
                     this.player.yaw = Math.PI / 2;
@@ -523,6 +529,9 @@ export class MatchManager {
             } else {
                 this.restoreGoalkeeper();
 
+                // Possesso ad AWAY: calcio d'angolo o rimessa dal fondo affidata ai bot
+                if (this.possessionManager) this.possessionManager.setAwayPossession();
+
                 if (isCornerKick) {
                     let closestBot = null;
                     let secondClosestBot = null;
@@ -687,6 +696,9 @@ export class MatchManager {
                 if (!subHappened) this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
             } else {
                 // Rimessa Laterale Bot avversario
+                // Possesso ad AWAY: rimessa laterale affidata ai bot
+                if (this.possessionManager) this.possessionManager.setAwayPossession();
+
                 // --- INIZIO: Trova chi batte e chi riceve ---
                 let closestBot = null;
                 let secondClosestBot = null;

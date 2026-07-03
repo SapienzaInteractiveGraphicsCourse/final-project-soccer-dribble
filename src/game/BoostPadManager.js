@@ -86,7 +86,7 @@ export class BoostPadManager {
                     // --- COLLISIONE RIMPICCIOLITA ---
                     // Ridotto da 1.8 a 1.0 (più preciso)
                     if (dist < 1.0 && player.boost < 100) {
-                        player.boost = Math.min(100, player.boost + 25); 
+                        player.boost = Math.min(100, player.boost + 50); 
                         pad.isActive = false; 
                         pad.cooldown = 10;    
                         pad.center.material = this.centerInactiveMaterial;

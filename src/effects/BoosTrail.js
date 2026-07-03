@@ -25,6 +25,7 @@ export class BoosterTrail {
         });
 
         this.points = new THREE.Points(this.geometry, this.material);
+        this.points.frustumCulled = false; // Disabilita il frustum culling per evitare che sparisca quando l'origine (0,0,0) non è inquadrata
         this.scene.add(this.points);
 
         for (let i = 0; i < this.maxParticles; i++) {

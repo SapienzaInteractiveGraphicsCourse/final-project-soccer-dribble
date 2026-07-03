@@ -1,11 +1,9 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Permette di eseguire il deploy ogni volta che pushi sul branch "main"
   push:
     branches:
       - main
-  # Permette di eseguire il deploy manualmente
   workflow_dispatch:
 
 permissions:
@@ -30,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22 # Aggiornato a Node 22 per eliminare il warning di deprecazione
           cache: 'npm'
 
       - name: Install dependencies
@@ -39,13 +37,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      # Abbiamo rimosso "Setup Pages" (configure-pages) perché spesso va in conflitto con l'upload manuale dell'artefatto
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './dist' # Assicurati che la cartella generata dal tuo "npm run build" si chiami effettivamente 'dist'
 
       - name: Deploy to GitHub Pages
         id: deployment

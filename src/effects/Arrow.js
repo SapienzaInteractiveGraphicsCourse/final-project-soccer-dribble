@@ -67,18 +67,14 @@ export class CoolArrow extends THREE.Mesh {
         // Pulsazione ritmica base
         const pulse = 1.0 + Math.sin(Date.now() * 0.005) * 0.08;
         
-        // --- NUOVO: Calcolo dell'allungamento ---
-        // Se chargeRatio è 0, la lunghezza è 1x. Se è 1 (max potenza), la lunghezza diventa 2.5x
-        const stretchZ = 1.0 + (this.chargeRatio * 1.5); 
-
-        // Applichiamo la scala: X e Y (spessore) pulsano normalmente, Z (lunghezza) pulsa e si allunga!
+        // Applichiamo la scala: X e Y (spessore) pulsano normalmente
         this.scale.set(
             this.baseScale * pulse, 
             this.baseScale * pulse, 
-            this.baseScale * pulse * stretchZ
+            this.baseScale * pulse
         );
 
-        // Aumentiamo leggermente l'illuminazione interna man mano che si carica
-        this.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.01) * 0.2 + (this.chargeRatio * 0.5);
+        // Aumentiamo l'illuminazione interna e il bagliore man mano che si carica
+        this.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.01) * 0.2 + (this.chargeRatio * 1.5);
     }
 }

@@ -261,25 +261,28 @@ export class PlayerAction {
             let V_xz, V_y;
             
             // pitch = 0 significa freccia in basso/orizzontale. pitch > 0 significa freccia in alto.
-            // Se punta in basso (pitch <= 0.05), esegue un passaggio rasoterra.
-            if (pitch <= 0.05) {
-                const speedBonus = 1.0 + (chargeRatio * 0.5);
-                V_xz = Math.max(10, distanceToTarget * 2.4) * speedBonus; 
+            // Soglia alzata a 0.20 (circa 11.5 gradi) per garantire che i passaggi standard siano rasoterra.
+            if (pitch <= 0.20) {
+                // Rasoterra: Velocità base più alta e la carica la moltiplica fino a 3x.
+                const baseSpeed = Math.max(25, distanceToTarget * 3.5);
+                V_xz = baseSpeed * (1.0 + chargeRatio * 2.0); 
                 V_y = 0;
             } else {
-                // Passaggio con parabola (pallonetto) proporzionale alla carica e all'inclinazione
-                const pitchFactor = Math.min(1.0, pitch / (Math.PI / 8)); // Massimo effetto a circa 22.5 gradi
-                const parabolaFactor = Math.max(0.1, chargeRatio) * pitchFactor;
-                const maxHeight = 1.0 + (parabolaFactor * 7.0); 
+                // Passaggio con parabola (pallonetto/cross). 
+                // L'altezza dipende SOLO dall'inclinazione oltre lo 0.20.
+                const pitchFactor = Math.min(1.0, (pitch - 0.20) / (Math.PI / 4)); // Massimo effetto a 45 gradi
+                const maxHeight = 1.0 + (pitchFactor * 4.5); // Altezza massima ridotta a 5.5 metri per maggiore realismo
                 
                 V_y = Math.sqrt(2 * 12.0 * maxHeight); // Inversione della formula dell'altezza massima
                 const flightTime = (2 * V_y) / 12.0;
                 
+                // La velocità orizzontale calcolata per far atterrare la palla sul compagno.
+                // Non applichiamo bonus di velocità dovuti alla carica, altrimenti la palla scavalcherebbe il bersaglio.
                 const dragCompensation = 1 + (distanceToTarget * 0.015);
                 V_xz = (distanceToTarget / flightTime) * dragCompensation;
             }
             
-            V_xz = Math.min(V_xz, 45); // Limite di sicurezza per evitare velocità incontrollabili
+            V_xz = Math.min(V_xz, 90); // Limite di sicurezza alzato a 90 per permettere rasoterra fortissimi
             
             const impulse = new THREE.Vector3(passDir.x * V_xz, V_y, passDir.z * V_xz);
             

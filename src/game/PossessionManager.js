@@ -45,6 +45,12 @@ export class PossessionManager {
 
             // 1. Controlla il Player
             if (player && player.model) {
+                // Se il player sta battendo un calcio da fermo o rimessa, ripristina il possesso a HOME
+                if (player.action && (player.action.isThrowingIn || player.action.isTakingCorner || player.action.isTakingGoalKick)) {
+                    this.currentState = MatchState.HOME_POSSESSION;
+                    return;
+                }
+
                 const distPlayer = player.model.position.distanceTo(ball.position);
                 if (distPlayer < touchRadius) {
                     this.currentState = MatchState.HOME_POSSESSION;

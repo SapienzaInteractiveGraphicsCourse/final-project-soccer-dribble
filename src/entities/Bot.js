@@ -344,24 +344,19 @@ export class Bot {
 
         // --- 4.5. GESTIONE RICEVITORE RIMESSA DAL FONDO ---
         if (this.isReceivingGoalKick) {
-            if (!this.ball.isHeld && this.ball.velocity.lengthSq() > 5.0) {
-                const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
-                                     .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
-                
-                // Interrompe la routine se la palla tocca terra o è a distanza di controllo palla
-                if (distToBallXZ < 3.0 || this.ball.position.y <= this.ball.radius + 0.1) {
-                    this.isReceivingGoalKick = false;
-                } else {
-                    this.isMoving = true;
-                    this.isRunning = true;
-                    this._moveDir.set(this.ball.position.x - this.model.position.x, 0, this.ball.position.z - this.model.position.z).normalize();
-                    this.model.position.addScaledVector(this._moveDir, 11 * deltaTime); // Insegue la traiettoria
-                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
-                }
+            const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                                 .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
+            
+            const isBallOutArea = Math.abs(this.ball.position.x) < 33; 
+            const isBallKicked = !this.ball.isHeld && this.ball.velocity.lengthSq() > 5.0;
+
+            // Interrompe la routine solo se riceve la palla o se la palla esce dall'area
+            if (distToBallXZ < 3.0 || (isBallKicked && isBallOutArea && this.ball.position.y <= this.ball.radius + 0.2)) {
+                this.isReceivingGoalKick = false;
             } else {
                 this.isMoving = true;
                 this.isRunning = true;
-                this._moveDir.set(this.goalKickRunDir, 0, 0); // Scatta in avanti
+                this._moveDir.set(this.goalKickRunDir, 0, 0); // Scatta in avanti lontano dal portiere
                 this.model.position.addScaledVector(this._moveDir, 10 * deltaTime);
                 this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
             }

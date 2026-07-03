@@ -141,19 +141,14 @@ export class Teammate {
 
         // --- GESTIONE RICEVITORE RIMESSA DAL FONDO ---
         if (this.isReceivingGoalKick) {
-            if (!ball.isHeld && ball.velocity.lengthSq() > 5.0) {
-                const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
-                                     .distanceTo(new THREE.Vector2(ball.position.x, ball.position.z));
-                
-                if (distToBallXZ < 3.0 || ball.position.y <= ball.radius + 0.1) {
-                    this.isReceivingGoalKick = false;
-                } else {
-                    this.isMoving = true;
-                    this.isRunning = true;
-                    this._moveDir.set(ball.position.x - this.model.position.x, 0, ball.position.z - this.model.position.z).normalize();
-                    this.model.position.addScaledVector(this._moveDir, 11 * deltaTime);
-                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
-                }
+            const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
+                                 .distanceTo(new THREE.Vector2(ball.position.x, ball.position.z));
+            
+            const isBallOutArea = Math.abs(ball.position.x) < 33; 
+            const isBallKicked = !ball.isHeld && ball.velocity.lengthSq() > 5.0;
+
+            if (distToBallXZ < 3.0 || (isBallKicked && isBallOutArea && ball.position.y <= ball.radius + 0.2)) {
+                this.isReceivingGoalKick = false;
             } else {
                 this.isMoving = true;
                 this.isRunning = true;

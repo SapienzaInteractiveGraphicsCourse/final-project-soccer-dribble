@@ -622,8 +622,7 @@ export class MatchManager {
                 } else {
                     const receivers = [this.currentO1, this.currentO2, this.currentO3].filter(b => b && b.model);
                     if (receivers.length > 0) {
-                        receivers[0].setReceiveGoalKickTarget(runDir);
-                        if (receivers.length > 1) receivers[1].setReceiveGoalKickTarget(runDir);
+                        receivers.forEach(r => r.setReceiveGoalKickTarget(runDir));
                         if (activeSetPieceNPC && activeSetPieceNPC.startGoalKick) activeSetPieceNPC.targetReceiver = receivers[0];
                     }
                 }

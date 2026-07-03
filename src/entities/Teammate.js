@@ -208,13 +208,13 @@ export class Teammate {
 
         switch (matchState) {
             case 'HOME_POSSESSION':
-                // Chiamata al manager tattico per aggiornare le corsie dinamicamente
                 tacticalManager.updateOffensiveLanes(player, teammates, ball, attackDirX);
                 this.executeAttackBehavior(deltaTime, ball, player, opponents, teammates, attackDirX);
                 break;
 
             case 'AWAY_POSSESSION':
-                this.executeDefendBehavior(deltaTime, ball, opponents);
+                // Passiamo tutto il contesto anche alla difesa
+                this.executeDefendBehavior(deltaTime, ball, player, opponents, teammates, attackDirX);
                 break;
         }
 
@@ -397,10 +397,84 @@ export class Teammate {
         this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }
 
-    executeDefendBehavior(deltaTime, ball, bots) {
-        // In difesa il compagno resta fermo (logica futura)
-        this.isMoving = false;
-        this.isRunning = false;
+    executeDefendBehavior(deltaTime, ball, player = null, opponents = [], teammates = [], attackDirX = 1) {
+        if (!ball || !ball.isLoaded) return;
+        
+        // 1. IDENTIFICAZIONE PORTA (La porta da difendere è opposta a quella d'attacco)
+        const myGoalX = -49.5 * attackDirX; 
+        const goalPos = new THREE.Vector3(myGoalX, 0, 0);
+
+        // 2. ASSEGNAZIONE MARCATURA A UOMO
+        let targetOpponent = null;
+        const myIndex = teammates.indexOf(this);
+        
+        // Il compagno 0 marca il bot 0, il compagno 1 marca il bot 1
+        if (myIndex !== -1 && opponents[myIndex]) {
+            targetOpponent = opponents[myIndex];
+        }
+
+        // 3. POSIZIONAMENTO TATTICO
+        if (targetOpponent) {
+            // Si mette in mezzo (al 10%) tra l'avversario e la propria porta
+            const oppPos = targetOpponent.model ? targetOpponent.model.position : targetOpponent.position;
+            this._idealPos.lerpVectors(oppPos, goalPos, 0.1); 
+        } else {
+            // Se non ha una marcatura, copre la sua zona di partenza
+            this._idealPos.copy(this.startPosition);
+        }
+
+        // 4. AVOIDANCE COMPAGNI (Non sbattere contro il player o l'altro teammate)
+        const allAllies = [...teammates, player].filter(a => a && a !== this && a.model);
+        const avoidanceRadius = 1.5; 
+        
+        if (allAllies.length > 0) {
+            allAllies.forEach(ally => {
+                const dist = this.model.position.distanceTo(ally.model.position);
+                if (dist < avoidanceRadius && dist > 0.01) {
+                    const pushAway = new THREE.Vector3().subVectors(this.model.position, ally.model.position);
+                    pushAway.y = 0;
+                    pushAway.normalize().multiplyScalar((avoidanceRadius - dist) * 0.8);
+                    this._idealPos.add(pushAway);
+                }
+            });
+        }
+
+        // 5. LIMITI DEL CAMPO
+        this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
+        this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
+
+        // 6. MOVIMENTO FISICO CON ISTERESI
+        const distToIdeal = this.model.position.distanceTo(this._idealPos);
+
+        let shouldMove;
+        if (this.isMoving) {
+            shouldMove = distToIdeal > 0.5; // Una volta in moto, fermati solo se sei arrivato
+        } else {
+            shouldMove = distToIdeal > 1.5; // Da fermo, parti solo se il target si allontana
+        }
+
+        if (shouldMove) {
+            this.isMoving = true;
+            this._moveDir.subVectors(this._idealPos, this.model.position);
+            this._moveDir.y = 0;
+            this._moveDir.normalize();
+            
+            if (this.isRunning) {
+                this.isRunning = distToIdeal > 3;
+            } else {
+                this.isRunning = distToIdeal > 5;
+            }
+            
+            const speed = this.isRunning ? 11 : 7;
+            this.model.position.addScaledVector(this._moveDir, speed * deltaTime);
+        } else {
+            this.isMoving = false;
+            this.isRunning = false;
+        }
+
+        // 7. ORIENTAMENTO (Guarda sempre la palla)
+        this._dirToBall.subVectors(ball.position, this.model.position);
+        this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }
 
     setReceiveThrowInTarget(throwerPos, side) {

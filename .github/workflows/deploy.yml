@@ -16,10 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,7 +25,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22 # Aggiornato a Node 22 per eliminare il warning di deprecazione
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -37,13 +34,18 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Abbiamo rimosso "Setup Pages" (configure-pages) perché spesso va in conflitto con l'upload manuale dell'artefatto
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Assicurati che la cartella generata dal tuo "npm run build" si chiami effettivamente 'dist'
+          path: './dist'
 
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

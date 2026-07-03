@@ -260,13 +260,16 @@ export class PlayerAction {
 
             let V_xz, V_y;
             
-            if (chargeRatio < 0.1) {
-                // Rasoterra perfetto (minimo 10 di forza per non fermarsi a 1 metro)
-                V_xz = Math.max(10, distanceToTarget * 2.4); 
+            // pitch = 0 significa freccia in basso/orizzontale. pitch > 0 significa freccia in alto.
+            // Se punta in basso (pitch <= 0.05), esegue un passaggio rasoterra.
+            if (pitch <= 0.05) {
+                const speedBonus = 1.0 + (chargeRatio * 0.5);
+                V_xz = Math.max(10, distanceToTarget * 2.4) * speedBonus; 
                 V_y = 0;
             } else {
-                // Passaggio con parabola (più carico = più alto)
-                const parabolaFactor = (chargeRatio - 0.1) / 0.9;
+                // Passaggio con parabola (pallonetto) proporzionale alla carica e all'inclinazione
+                const pitchFactor = Math.min(1.0, pitch / (Math.PI / 8)); // Massimo effetto a circa 22.5 gradi
+                const parabolaFactor = Math.max(0.1, chargeRatio) * pitchFactor;
                 const maxHeight = 1.0 + (parabolaFactor * 7.0); 
                 
                 V_y = Math.sqrt(2 * 12.0 * maxHeight); // Inversione della formula dell'altezza massima

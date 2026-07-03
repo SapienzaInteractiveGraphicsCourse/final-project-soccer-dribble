@@ -604,8 +604,14 @@ export class Player {
                     const pushDir = new THREE.Vector3().subVectors(this.ball.position, closestPointOnPlayer);
                     if (pushDir.lengthSq() > 0.001) {
                         pushDir.normalize();
+                        if (pushDir.y > 0.5) {
+                            pushDir.y = 0.2;
+                            pushDir.x += Math.sign(pushDir.x || (Math.random() - 0.5)) * 1.5;
+                            pushDir.z += Math.sign(pushDir.z || (Math.random() - 0.5)) * 1.5;
+                            pushDir.normalize();
+                        }
                     } else {
-                        pushDir.set(0, 1, 0); 
+                        pushDir.set((Math.random() - 0.5), 0.2, (Math.random() - 0.5)).normalize(); 
                     }
 
                     // Risoluzione compenetrazione: sposta la palla fuori dal modello

@@ -786,7 +786,11 @@ export class Player {
 
             // A ~0.89s (Math.PI / speed) l'animazione scatta in avanti: lanciamo la palla!
             if (this.throwTimer >= 0.65 && !this.ballThrown) {
-                this.action.executeThrow(this.ball, this.yaw, this.scene);
+                this.action.executeThrow(this.ball, this.yaw, this.scene, this.targetReceiver);
+                if (this.targetReceiver) {
+                    document.dispatchEvent(new CustomEvent('passExecuted', { detail: { target: this.targetReceiver } }));
+                    this.targetReceiver = null;
+                }
                 this.ballThrown = true;
             }
 

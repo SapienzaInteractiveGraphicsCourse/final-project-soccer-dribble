@@ -488,9 +488,9 @@ export class Teammate {
     setReceiveThrowInTarget(throwerPos, side) {
         this.isReceivingThrowIn = true;
         this.throwInSupportPos.set(
-            throwerPos.x + (Math.random() * 4 - 2),
+            throwerPos.x + (Math.random() * 2 - 1),
             0,
-            throwerPos.z - (side * 6) // Mantiene distanza per una ricezione comoda
+            throwerPos.z - (side * 4) // Avvicina il compagno a 4 metri invece di 6
         );
     }
 

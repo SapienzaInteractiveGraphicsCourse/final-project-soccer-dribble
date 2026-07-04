@@ -689,6 +689,7 @@ export class MatchManager {
                     }
                 });
                 if (closestTeammate) {
+                    this.player.targetReceiver = closestTeammate;
                     closestTeammate.setReceiveThrowInTarget(this.player.model.position, side);
                 }
 

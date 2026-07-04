@@ -20,6 +20,11 @@ export class UIManager {
         this.radarBall = document.getElementById('radar-ball');
         this.scoreElement = document.querySelector('.score');
         this.hudPlayerName = document.getElementById('hud-player-name');
+        
+        // Nuovi elementi Scoreboard HTML
+        this.hudTime = document.getElementById('hud-time');
+        this.hudScoreHome = document.getElementById('hud-score-home');
+        this.hudScoreAway = document.getElementById('hud-score-away');
 
         this.clickSound = new Audio(`${import.meta.env.BASE_URL}sound/click3.ogg`);
         this.switchSound = new Audio(`${import.meta.env.BASE_URL}sound/switch1.ogg`);
@@ -655,6 +660,15 @@ export class UIManager {
         if (stamina > 50) this.staminaBarFill.style.backgroundColor = '#4CAF50';
         else if (stamina > 20) this.staminaBarFill.style.backgroundColor = '#FFEB3B';
         else this.staminaBarFill.style.backgroundColor = '#F44336';
+
+        // Aggiornamento Scoreboard HTML
+        if (this.hudTime) {
+            const minutes = Math.floor(matchTime / 60);
+            const seconds = Math.floor(matchTime % 60);
+            this.hudTime.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        if (this.hudScoreHome) this.hudScoreHome.innerText = homeScore;
+        if (this.hudScoreAway) this.hudScoreAway.innerText = awayScore;
     }
 
     updateRadar(playerModel, playerYaw, ballMesh, ballPosition, bots = []) {
@@ -781,6 +795,7 @@ export class UIManager {
         const stamina = document.getElementById('stamina-container');
         const boost = document.getElementById('boost-container');
         const playerNameHud = document.getElementById('player-name-hud');
+        const scoreboardHud = document.getElementById('scoreboard-hud');
         
         // Opzionale: se vuoi nascondere anche i bonus e il tabellone durante il replay
         const bonusHud = document.getElementById('bonus-hud'); 
@@ -795,6 +810,7 @@ export class UIManager {
             if (boost) boost.style.display = 'none';
             if (bonusHud) bonusHud.style.display = 'none';
             if (playerNameHud) playerNameHud.style.display = 'none';
+            if (scoreboardHud) scoreboardHud.style.display = 'none';
 
         } else {
             // --- NASCONDI SCRITTA REPLAY ---
@@ -810,6 +826,7 @@ export class UIManager {
             if (boost) boost.style.display = '';
             if (bonusHud) bonusHud.style.display = '';
             if (playerNameHud) playerNameHud.style.display = '';
+            if (scoreboardHud) scoreboardHud.style.display = '';
         }
     }
 }

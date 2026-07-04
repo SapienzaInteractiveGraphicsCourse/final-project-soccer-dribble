@@ -337,6 +337,29 @@
   </div>
 
   <div id="game-ui" style="display: none;">
+    <!-- SCOREBOARD IN ALTO A SINISTRA -->
+    <div id="scoreboard-hud" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); border: 2px solid #4CAF50; padding: 10px 30px; border-radius: 12px; color: white; font-family: 'Arial', sans-serif; font-weight: bold; box-shadow: 0 0 15px rgba(76, 175, 80, 0.6); z-index: 10; display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-width: 320px;">
+        
+        <!-- SQUADRA HOME -->
+        <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+            <div style="font-size: 12px; color: #4CAF50; margin-bottom: 3px;">HOME</div>
+            <div id="hud-score-home" style="font-size: 32px;">0</div>
+        </div>
+        
+        <!-- TEMPO CENTRALE -->
+        <div style="display: flex; flex-direction: column; align-items: center; border-left: 1px solid #555; border-right: 1px solid #555; padding: 0 20px;">
+            <div style="font-size: 12px; color: #ccc; letter-spacing: 2px; margin-bottom: 3px;">TEMPO</div>
+            <div id="hud-time" style="font-size: 26px; color: #fff;">00:00</div>
+        </div>
+        
+        <!-- SQUADRA AWAY -->
+        <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
+            <div style="font-size: 12px; color: #f44336; margin-bottom: 3px;">AWAY</div>
+            <div id="hud-score-away" style="font-size: 32px;">0</div>
+        </div>
+        
+    </div>
+
     <div id="boost-container">
       <div id="boost-label">BOOST</div>
       <div id="boost-bar-bg">

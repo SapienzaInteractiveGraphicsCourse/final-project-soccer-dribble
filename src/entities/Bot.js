@@ -242,7 +242,7 @@ export class Bot {
                 }
                 
                 // Rimettiamo il 'pass' con bersaglio, così la fisica calcola la parabola esatta per raggiungere l'area
-                this.action.executeKick(this.ball, this.yaw, 0, null, fakeTarget);
+                this.action.executeKick(this.ball, this.yaw, 0, null, fakeTarget, true);
 
                 if (this.targetReceiver) {
                     this.targetReceiver = null;
@@ -337,7 +337,7 @@ export class Bot {
                     
                     // BOOM! Calcia con una traiettoria dritta (-0.1) ma aggiungendo un piccolo margine d'errore
                     const shotError = (Math.random() - 0.5) * 0.35;
-                    this.action.executeKick(this.ball, this.yaw + shotError, -0.1, null, null);
+                    this.action.executeKick(this.ball, this.yaw + shotError, -0.1, null, null, true);
                     
                     // Sgancia l'IA, l'azione da fermo è conclusa
                     this.isReceivingCorner = false;
@@ -419,7 +419,7 @@ export class Bot {
 
             if (this.kickOffTimer >= kickTime && this.action.chargingAction) {
                 let passTarget = this.targetReceiver;
-                this.action.executeKick(this.ball, this.yaw, 0, null, passTarget);
+                this.action.executeKick(this.ball, this.yaw, 0, null, passTarget, true);
                 this.targetReceiver = null;
             }
 
@@ -718,7 +718,7 @@ export class Bot {
                     
                     if (this.action.kickPower >= this.action.shootMaxPower * 0.85) {
                         const shotError = (Math.random() - 0.5) * 0.2;
-                        this.action.executeKick(this.ball, this.yaw + shotError, -0.15, null, null);
+                        this.action.executeKick(this.ball, this.yaw + shotError, -0.15, null, null, true);
                         this.possessionState = 'DRIBBLE';
                         this.wasPossessingBall = false;
                     }
@@ -737,7 +737,7 @@ export class Bot {
                         
                         if (this.action.kickPower >= this.action.passMaxPower * 0.5) {
                             console.log(`Bot ${this.id} KICKS pass!`);
-                            this.action.executeKick(this.ball, this.yaw, 0, null, this.chosenReceiver);
+                            this.action.executeKick(this.ball, this.yaw, 0, null, this.chosenReceiver, true);
                             this.passCooldownTimer = 1.5;
                             this.possessionState = 'DRIBBLE';
                             this.chosenReceiver = null;

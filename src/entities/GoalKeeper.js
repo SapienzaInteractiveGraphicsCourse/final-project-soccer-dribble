@@ -114,7 +114,7 @@ export class GoalKeeper {
             if (this.goalKickTimer >= kickTime && this.action.chargingAction) {
                 this.ball.isHeld = false;
                 let fakeTarget = futurePos ? { model: { position: futurePos } } : null;
-                this.action.executeKick(this.ball, this.yaw, -0.2, null, fakeTarget);
+                this.action.executeKick(this.ball, this.yaw, -0.2, null, fakeTarget, true);
                 this.targetReceiver = null;
             }
 

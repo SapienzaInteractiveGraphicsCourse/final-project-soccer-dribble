@@ -222,7 +222,7 @@ export class PlayerAction {
         }
     }
 
-    executeKick(ball, yaw, pitch, passArrow, passTarget = null) {
+    executeKick(ball, yaw, pitch, passArrow, passTarget = null, isBot = false) {
         if (!ball || !ball.isLoaded || !this.chargingAction) return;
 
         // Calcoliamo la direzione base
@@ -366,13 +366,13 @@ export class PlayerAction {
             finalPower *= 2.5;
             isSuperShotActive = true;
             
-            if (this.hasElectricShot) {
+            if (this.hasElectricShot && !isBot) {
                 ball.triggerElectricEffect();
             }
 
             this.hasSuperShot = false;
             this.hasElectricShot = false;
-            document.dispatchEvent(new CustomEvent('bonusCleared'));
+            if (!isBot) document.dispatchEvent(new CustomEvent('bonusCleared'));
             kickDir.y = Math.min(kickDir.y, 0.04);
             kickDir.normalize();
 
@@ -429,7 +429,9 @@ export class PlayerAction {
                 kickDir.normalize();
                 
                 // --- EFFETTO SLOW MOTION ---
-                document.dispatchEvent(new CustomEvent('triggerSlowMotion', { detail: { duration: 1.0, scale: 0.25 } }));
+                if (!isBot) {
+                    document.dispatchEvent(new CustomEvent('triggerSlowMotion', { detail: { duration: 1.0, scale: 0.25 } }));
+                }
             }
         }
 
@@ -447,7 +449,9 @@ export class PlayerAction {
         // Effetto WOW: scatta se hai il super tiro O se carichi un tiro normale oltre l'85%
         if (this.chargingAction === 'shoot') {
             if (isSuperShotActive || this.kickPower >= this.shootMaxPower * 0.85) {
-                ball.triggerPowerEffect();
+                if (!isBot) {
+                    ball.triggerPowerEffect();
+                }
             }
         }
         if (passArrow) {

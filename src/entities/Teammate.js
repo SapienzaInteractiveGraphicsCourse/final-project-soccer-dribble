@@ -487,10 +487,12 @@ export class Teammate {
 
     setReceiveThrowInTarget(throwerPos, side) {
         this.isReceivingThrowIn = true;
+        // Scegliamo un lato verso il centro del campo per non farlo stare proprio davanti
+        const dirX = throwerPos.x > 0 ? -1 : 1;
         this.throwInSupportPos.set(
-            throwerPos.x + (Math.random() * 2 - 1),
+            throwerPos.x + (dirX * 5) + (Math.random() * 2 - 1), // 5 metri spostato lateralmente (lungo la fascia)
             0,
-            throwerPos.z - (side * 4) // Avvicina il compagno a 4 metri invece di 6
+            throwerPos.z - (side * 8) // 8 metri dentro il campo (più distante per dare respiro)
         );
     }
 

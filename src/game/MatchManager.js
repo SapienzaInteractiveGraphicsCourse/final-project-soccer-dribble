@@ -161,6 +161,11 @@ export class MatchManager {
 
         this.player.action.chargingAction = null;
         this.player.action.isThrowingIn = false;
+        
+        // Resetta le variabili di throw-in del player per evitare che il ricevente faccia l'animazione
+        this.player.throwAnimPlaying = false;
+        this.player.ballThrown = false;
+        this.player.throwTimer = 0;
 
         this.player.animator.cancelCharge();
         teammate.animator.cancelCharge();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -14,7 +14,7 @@
   <div id="ui-layer">
 
     <div id="loading-screen" class="menu-screen">
-      <h1>CARICAMENTO...</h1>
+      <h1>LOADING GAME...</h1>
       <div style="width: 300px; height: 20px; background: #222; border: 2px solid white; border-radius: 10px; margin-top: 20px; overflow: hidden;">
         <div id="loading-bar-fill" style="width: 0%; height: 100%; background: #4CAF50; transition: width 0.2s;"></div>
       </div>
@@ -25,13 +25,13 @@
       <h1>SOCCER DRIBBLE</h1>
       <button id="btn-play" class="menu-btn">PLAY</button>
       <button id="btn-training" class="menu-btn" style="margin-top: 15px;">TRAINING</button>
-      <button id="btn-customize" class="menu-btn" style="margin-top: 15px;">PERSONALIZZA GIOCATORE</button>
-      <button id="btn-commands" class="menu-btn">COMANDI</button>
-      <button id="btn-global-settings" class="menu-btn" style="margin-top: 15px;">IMPOSTAZIONI GIOCO</button>
+      <button id="btn-customize" class="menu-btn" style="margin-top: 15px;">PLAYER CUSTOMIZATION</button>
+      <button id="btn-commands" class="menu-btn">CONTROLS</button>
+      <button id="btn-global-settings" class="menu-btn" style="margin-top: 15px;">GAME SETTINGS</button>
     </div>
 
     <div id="commands-menu" class="menu-screen" style="display: none;">
-      <h2>COMANDI DI GIOCO</h2>
+      <h2>GAME CONTROLS</h2>
       
       <div class="carousel-container">
         <button id="btn-prev-slide" class="carousel-arrow">&#10094;</button>
@@ -39,42 +39,42 @@
         <div class="carousel-track">
           
           <div class="carousel-slide active">
-            <h3>🎮 Comandi Base</h3>
+            <h3>🎮 Basic Controls</h3>
             <div class="commands-grid">
-              <p><span>W A S D</span> Muoviti / Orbita</p>
-              <p><span>Mouse</span> Mira / Telecamera</p>
-              <p><span>Shift</span> Corri (usa Stamina)</p>
-              <p><span>Click SX</span> Passaggio (tieni per potenza)</p>
-              <p><span>Click DX</span> Tiro (tiro a giro in diagonale)</p>
-              <p><span>E</span> Cambia Giocatore</p>
-              <p><span>T</span> Scivolata difensiva</p>
+              <p><span>W A S D</span> Move / Orbit</p>
+              <p><span>Mouse</span> Aim / Camera</p>
+              <p><span>Shift</span> Sprint (uses Stamina)</p>
+              <p><span>Left Click</span> Pass (hold for power)</p>
+              <p><span>Right Click</span> Shoot (finesse shot diagonally)</p>
+              <p><span>E</span> Switch Player</p>
+              <p><span>T</span> Sliding tackle</p>
             </div>
           </div>
 
           <div class="carousel-slide">
-            <h3>🚀 Il Boost</h3>
+            <h3>🚀 The Boost</h3>
             <div class="boost-info">
-              <div class="key-highlight">Tieni premuto <span>SPAZIO</span></div>
-              <p>Attiva uno scatto potentissimo per spingere la palla in avanti e lanciare un contropiede fulmineo.</p>
+              <div class="key-highlight">Hold <span>SPACEBAR</span></div>
+              <p>Activates a powerful sprint to push the ball forward and launch a lightning-fast counterattack.</p>
               <ul>
-                <li>Consuma rapidamente la <b>Barra del Boost</b> (Gialla).</li>
-                <li>Ricarica il boost passando sopra le <b>Pedane Luminose</b> presenti sul campo.</li>
+                <li>Rapidly consumes the <b>Boost Bar</b> (Yellow).</li>
+                <li>Recharge the boost by running over the <b>Glowing Pads</b> on the pitch.</li>
               </ul>
             </div>
           </div>
 
           <div class="carousel-slide">
-            <h3>💎 Bonus & Power-Up</h3>
-            <p class="bonus-desc">Raccogli i diamanti sul campo. Il bonus si attiva <b>solo al prossimo tiro (Click DX)</b>. Se passi la palla o cambi giocatore, il bonus svanisce!</p>
+            <h3>💎 Bonuses & Power-Ups</h3>
+            <p class="bonus-desc">Collect diamonds on the pitch. The bonus activates <b>only on the next shot (Right Click)</b>. If you pass the ball or switch players, the bonus disappears!</p>
             
             <div class="bonus-card orange">
-              <h4>🔥 SUPER TIRO</h4>
-              <p>Potenza x2.5. La palla lascia una scia di fuoco e viaggia dritta a velocità devastante.</p>
+              <h4>🔥 SUPER SHOT</h4>
+              <p>Power x2.5. The ball leaves a trail of fire and travels straight at devastating speed.</p>
             </div>
 
             <div class="bonus-card blue">
-              <h4>⚡ TIRO ELETTRICO</h4>
-              <p>Potenza x2.5. La palla segue una traiettoria a zig-zag imprevedibile per il portiere.</p>
+              <h4>⚡ ELECTRIC SHOT</h4>
+              <p>Power x2.5. The ball follows an unpredictable zig-zag trajectory for the goalkeeper.</p>
             </div>
           </div>
 
@@ -89,11 +89,11 @@
         <span class="dot"></span>
       </div>
 
-      <button id="btn-back-commands" class="menu-btn" style="margin-top: 25px;">INDIETRO</button>
+      <button id="btn-back-commands" class="menu-btn" style="margin-top: 25px;">BACK</button>
     </div>
 
     <div id="formation-menu" class="menu-screen" style="display: none;">
-      <h2>SCEGLI LA FORMAZIONE</h2>
+      <h2>CHOOSE FORMATION</h2>
       <div class="formation-buttons">
         
         <div class="formation-buttons">
@@ -121,19 +121,19 @@
       </div>
 
       </div>
-      <button id="btn-back-formation" class="menu-btn" style="margin-top:20px;">INDIETRO</button>
+      <button id="btn-back-formation" class="menu-btn" style="margin-top:20px;">BACK</button>
     </div>
 
     <div id="customization-menu" class="menu-screen customization-menu-style" style="display: none;">
         <div id="customization-container" class="customization-container-style">
-            <h1 class="customization-h1-style">CREA IL TUO GIOCATORE</h1>
+            <h1 class="customization-h1-style">CREATE YOUR PLAYER</h1>
             
             <div style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 15px; flex-wrap: wrap;">
-                <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">CAPELLI</button>
-                <button id="tab-hats" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">CAPPELLI</button>
+                <button id="tab-hair" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #4CAF50;">HAIR</button>
+                <button id="tab-hats" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">HATS</button>
                 <button id="tab-accessories" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">GLASSES</button>
-                <button id="tab-face" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">VISO</button>
-                <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORI</button>
+                <button id="tab-face" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">FACE</button>
+                <button id="tab-colors" class="menu-btn" style="padding: 10px 15px; font-size: 1rem; width: auto; background-color: #222;">COLORS</button>
             </div>
 
             <div id="section-hair" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
@@ -179,7 +179,6 @@
                 </div>
             </div>
 
-            <!-- SEZIONE CAPPELLI -->
             <div id="section-hats" style="display: none; flex-direction: column; gap: 15px; width: 100%;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <button class="menu-btn btn-hat" data-hat="0">
@@ -203,27 +202,26 @@
                 </div>
             </div>
 
-            <!-- SEZIONE VISO: sculpting interattivo -->
             <div id="section-face" style="display: none; flex-direction: column; gap: 12px; width: 100%;">
                 <div class="face-sculpt-info">
                     <span class="face-sculpt-icon">👆</span>
-                    <p>Fai <strong>zoom col mouse</strong> sul viso, poi <strong>trascina</strong> uno degli handle colorati per modellare il viso.</p>
+                    <p><strong>Zoom with the mouse</strong> on the face, then <strong>drag</strong> one of the colored handles to sculpt the face.</p>
                 </div>
                 <div class="face-handles-legend">
-                    <span class="handle-dot" style="background:#ff6b6b;"></span><span>👃 Naso</span>
-                    <span class="handle-dot" style="background:#ff4444;"></span><span>👄 Bocca</span>
-                    <span class="handle-dot" style="background:#44aaff;"></span><span>👁 Occhi</span>
-                    <span class="handle-dot" style="background:#ffaa44;"></span><span>👂 Orecchie</span>
+                    <span class="handle-dot" style="background:#ff6b6b;"></span><span>👃 Nose</span>
+                    <span class="handle-dot" style="background:#ff4444;"></span><span>👄 Mouth</span>
+                    <span class="handle-dot" style="background:#44aaff;"></span><span>👁 Eyes</span>
+                    <span class="handle-dot" style="background:#ffaa44;"></span><span>👂 Ears</span>
                 </div>
                 <div class="face-sculpt-tip">
-                    ℹ️ Scorri la rotella del mouse per avvicinarti al viso
+                    ℹ️ Scroll the mouse wheel to zoom in on the face
                 </div>
-                <button id="btn-reset-face" class="menu-btn" style="background:#c0392b; border-color:#c0392b; width:100%; padding:12px; font-size:0.95rem;">🗑️ RESET VISO</button>
+                <button id="btn-reset-face" class="menu-btn" style="background:#c0392b; border-color:#c0392b; width:100%; padding:12px; font-size:0.95rem;">🗑️ RESET FACE</button>
             </div>
 
             <div id="section-colors" style="display: none; flex-direction: column; gap: 20px; width: 100%; font-family: sans-serif;">
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <label class="color-label">SQUADRA</label>
+                    <label class="color-label">TEAM</label>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;">
                         <button class="menu-btn btn-shirt" data-shirt="milan" style="padding: 10px; font-size: 0.9rem; background: #e74c3c;">MILAN</button>
                         <button class="menu-btn btn-shirt" data-shirt="inter" style="padding: 10px; font-size: 0.9rem; background: #2980b9;">INTER</button>
@@ -233,126 +231,120 @@
                     <input type="color" id="color-shirt" value="#ff0000" class="color-picker" style="display: none;">
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <label class="color-label">COLORE PELLE</label>
+                    <label class="color-label">SKIN COLOR</label>
                     <input type="color" id="color-skin" value="#ffccaa" class="color-picker">
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center;">
-                    <label class="color-label">COLORE CAPELLI</label>
+                    <label class="color-label">HAIR COLOR</label>
                     <input type="color" id="color-hair" value="#000000" class="color-picker">
                 </div>
             </div>
 
-            <button id="btn-save-customization" class="menu-btn" style="margin-top: 20px; width: 100%;">SALVA E CONTINUA</button>
-            <button id="btn-reset-customization" class="menu-btn reset-btn">↺ RESET PREDEFINITO</button>
+            <button id="btn-save-customization" class="menu-btn" style="margin-top: 20px; width: 100%;">SAVE AND CONTINUE</button>
+            <button id="btn-reset-customization" class="menu-btn reset-btn">↺ RESET TO DEFAULT</button>
         </div>
-        <button id="btn-toggle-animation" class="menu-btn toggle-anim-btn">STOP ANIMAZIONE</button>
+        <button id="btn-toggle-animation" class="menu-btn toggle-anim-btn">STOP ANIMATION</button>
     </div>
 
     <div id="training-menu" class="menu-screen training-menu-style" style="display: none;">
         <h1 class="training-h1-style">TRAINING MODE</h1>
-        <button id="btn-train-freekick" class="menu-btn">PUNIZIONE</button>
-        <button id="btn-train-penalty" class="menu-btn">RIGORE</button>
-        <button id="btn-back-training" class="menu-btn" style="margin-top: 20px;">INDIETRO</button>
+        <button id="btn-train-freekick" class="menu-btn">FREE-KICK</button>
+        <button id="btn-train-penalty" class="menu-btn">PENALTY</button>
+        <button id="btn-back-training" class="menu-btn" style="margin-top: 20px;">BACK</button>
     </div>
 
     <div id="settings-menu" class="menu-screen settings-menu-style" style="display: none;">
-        <h1 class="settings-h1-style">IMPOSTAZIONI PARTITA</h1>
+        <h1 class="settings-h1-style">MATCH SETTINGS</h1>
         <div style="display: flex; gap: 30px; font-family: sans-serif; margin-bottom: 20px;">
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">ORARIO</label>
+                <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">TIME</label>
                 <select id="select-time" class="settings-select">
-                    <option value="day">Giorno (Day)</option>
-                    <option value="night">Notte (Night)</option>
+                    <option value="day">Day</option>
+                    <option value="night">Night</option>
                 </select>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">METEO</label>
+                <label style="color: white; margin-bottom: 10px; font-size: 1.5rem; font-weight: bold;">WEATHER</label>
                 <select id="select-weather" class="settings-select">
-                    <option value="clear">Sereno (Clear)</option>
-                    <option value="fog">Nebbia (Fog)</option>
-                    <option value="rain">Pioggia (Rain)</option>
-                    <option value="snow">Neve (Snow)</option>
+                    <option value="clear">Clear</option>
+                    <option value="fog">Fog</option>
+                    <option value="rain">Rain</option>
+                    <option value="snow">Snow</option>
                 </select>
             </div>
         </div>
-        <button id="btn-next-settings" class="menu-btn">AVANTI</button>
-        <button id="btn-back-settings" class="menu-btn" style="margin-top: 10px;">INDIETRO</button>
+        <button id="btn-next-settings" class="menu-btn">NEXT</button>
+        <button id="btn-back-settings" class="menu-btn" style="margin-top: 10px;">BACK</button>
     </div>
 
     <div id="global-settings-menu" class="menu-screen global-settings-menu-style" style="display: none;">
-        <h1 class="settings-h1-style">IMPOSTAZIONI GIOCO</h1>
+        <h1 class="settings-h1-style">GAME SETTINGS</h1>
         <div style="display: flex; flex-direction: column; gap: 25px; align-items: center; margin-top: 20px; width: 100%; max-width: 400px; font-family: sans-serif;">
             
             <div style="width: 100%; text-align: center;">
-                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Qualità Grafica: <span id="val-graphics" style="color: #4CAF50;">Alta</span></label>
+                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Graphics Quality: <span id="val-graphics" style="color: #4CAF50;">High</span></label>
                 <input type="range" id="slider-graphics" min="0" max="2" value="2" step="1" style="width: 80%;">
-                <small style="color: #ccc; font-size: 12px; display: block; margin-top: 5px;">Bassa (Più Fluido) | Media | Alta (Migliore)</small>
+                <small style="color: #ccc; font-size: 12px; display: block; margin-top: 5px;">Low (Smoother) | Medium | High (Best)</small>
             </div>
 
             <div style="width: 100%; text-align: center;">
-                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Sensibilità Mouse X: <span id="val-sens-x" style="color: #4CAF50;">1.0</span>x</label>
+                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Mouse Sensitivity X: <span id="val-sens-x" style="color: #4CAF50;">1.0</span>x</label>
                 <input type="range" id="slider-sens-x" min="0.1" max="3" value="1" step="0.1" style="width: 80%;">
             </div>
 
             <div style="width: 100%; text-align: center;">
-                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Sensibilità Mouse Y: <span id="val-sens-y" style="color: #4CAF50;">1.0</span>x</label>
+                <label style="color: white; font-size: 1.2rem; font-weight: bold; display: block; margin-bottom: 8px;">Mouse Sensitivity Y: <span id="val-sens-y" style="color: #4CAF50;">1.0</span>x</label>
                 <input type="range" id="slider-sens-y" min="0.1" max="3" value="1" step="0.1" style="width: 80%;">
             </div>
 
         </div>
-        <button id="btn-back-global-settings" class="menu-btn" style="margin-top: 30px;">INDIETRO</button>
+        <button id="btn-back-global-settings" class="menu-btn" style="margin-top: 30px;">BACK</button>
     </div>
 
     <div id="substitutions-menu" class="menu-screen substitutions-menu-style" style="display: none;">
-        <h1 class="subs-h1-style" style="margin-bottom: 5px;">LA TUA SQUADRA</h1>
-        <h3 id="subs-remaining-text" style="color: #FFEB3B; margin-bottom: 10px; font-size: 20px; text-shadow: 1px 1px 2px black;">Cambi disponibili: 5</h3>
+        <h1 class="subs-h1-style" style="margin-bottom: 5px;">YOUR TEAM</h1>
+        <h3 id="subs-remaining-text" style="color: #FFEB3B; margin-bottom: 10px; font-size: 20px; text-shadow: 1px 1px 2px black;">Substitutions available: 5</h3>
         
         <div class="fut-pitch-container">
             <div id="active-players-container">
-                <!-- Generato dinamicamente -->
-            </div>
+                </div>
         </div>
 
         <div class="fut-bench-wrapper">
-            <h3 style="color: white; margin-bottom: 5px; text-shadow: 1px 1px 2px black; font-size: 16px;">PANCHINA (Trascina in campo)</h3>
+            <h3 style="color: white; margin-bottom: 5px; text-shadow: 1px 1px 2px black; font-size: 16px;">BENCH (Drag onto the pitch)</h3>
             <div class="fut-bench-container" id="bench-players-container">
-                <!-- Generato dinamicamente -->
-            </div>
+                </div>
         </div>
 
-        <button id="btn-close-substitutions" class="menu-btn" style="margin-top: 15px;">CHIUDI</button>
+        <button id="btn-close-substitutions" class="menu-btn" style="margin-top: 15px;">CLOSE</button>
     </div>
 
   </div>
 
   <div id="blocker" style="display: none;">
     <div id="pause-menu" style="display: flex; flex-direction: column; align-items: center; font-family: 'Arial', sans-serif;">
-      <h1 style="font-size: 60px; margin-bottom: 40px; text-shadow: 0 0 20px #4CAF50; color: white;">PAUSA</h1>
-      <button id="btn-resume" class="menu-btn">RIPRENDI</button>
-      <button id="btn-substitutions" class="menu-btn">MODIFICA FORMAZIONE</button>
-      <button id="btn-pause-commands" class="menu-btn">COMANDI</button>
-      <button id="btn-pause-settings" class="menu-btn">IMPOSTAZIONI GIOCO</button>
-      <button id="btn-exit" class="menu-btn">ESCI</button>
+      <h1 style="font-size: 60px; margin-bottom: 40px; text-shadow: 0 0 20px #4CAF50; color: white;">PAUSED</h1>
+      <button id="btn-resume" class="menu-btn">RESUME</button>
+      <button id="btn-substitutions" class="menu-btn">EDIT FORMATION</button>
+      <button id="btn-pause-commands" class="menu-btn">CONTROLS</button>
+      <button id="btn-pause-settings" class="menu-btn">GAME SETTINGS</button>
+      <button id="btn-exit" class="menu-btn">EXIT</button>
     </div>
   </div>
 
   <div id="game-ui" style="display: none;">
-    <!-- SCOREBOARD IN ALTO A SINISTRA -->
     <div id="scoreboard-hud" style="position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.8); border: 2px solid #4CAF50; padding: 10px 30px; border-radius: 12px; color: white; font-family: 'Arial', sans-serif; font-weight: bold; box-shadow: 0 0 15px rgba(76, 175, 80, 0.6); z-index: 10; display: flex; flex-direction: row; align-items: center; justify-content: space-between; min-width: 320px;">
         
-        <!-- SQUADRA HOME -->
         <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
             <div style="font-size: 12px; color: #4CAF50; margin-bottom: 3px;">HOME</div>
             <div id="hud-score-home" style="font-size: 32px;">0</div>
         </div>
         
-        <!-- TEMPO CENTRALE -->
         <div style="display: flex; flex-direction: column; align-items: center; border-left: 1px solid #555; border-right: 1px solid #555; padding: 0 20px;">
-            <div style="font-size: 12px; color: #ccc; letter-spacing: 2px; margin-bottom: 3px;">TEMPO</div>
+            <div style="font-size: 12px; color: #ccc; letter-spacing: 2px; margin-bottom: 3px;">TIME</div>
             <div id="hud-time" style="font-size: 26px; color: #fff;">00:00</div>
         </div>
         
-        <!-- SQUADRA AWAY -->
         <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
             <div style="font-size: 12px; color: #f44336; margin-bottom: 3px;">AWAY</div>
             <div id="hud-score-away" style="font-size: 32px;">0</div>
@@ -379,17 +371,16 @@
         <div id="radar-ball"></div>
     </div>
 
-    <!-- Player Name HUD (Separato dal Bonus) -->
     <div id="player-name-hud" style="position: absolute; bottom: 30px; left: 260px; background: rgba(0,0,0,0.8); border: 2px solid #4CAF50; padding: 10px 20px; border-radius: 8px; color: white; font-weight: bold; font-family: sans-serif; font-size: 18px; box-shadow: 0 0 10px rgba(76, 175, 80, 0.5); z-index: 10;">
-        <span style="color: #ccc; font-size: 12px; display: block; margin-bottom: 5px; letter-spacing: 1px;">GIOCATORE ATTIVO</span>
+        <span style="color: #ccc; font-size: 12px; display: block; margin-bottom: 5px; letter-spacing: 1px;">ACTIVE PLAYER</span>
         <span id="hud-player-name" style="color: #4CAF50; font-size: 22px;"></span>
     </div>
 
     <div id="bonus-hud">
-      <div class="bonus-title">BONUS ACQUISITO</div>
+      <div class="bonus-title">ACQUIRED BONUS</div>
       <div class="bonus-slot">
         <div id="bonus-roller">
-          <div class="bonus-item bonus-empty">NESSUNO</div>
+          <div class="bonus-item bonus-empty">NONE</div>
         </div>
       </div>
     </div>
@@ -412,8 +403,8 @@
     <div id="touch-buttons-zone">
       <button id="btn-touch-switch" class="touch-action-btn">E</button>
       <button id="btn-touch-boost" class="touch-action-btn">BOOST</button>
-      <button id="btn-touch-pass" class="touch-action-btn">PASSA</button>
-      <button id="btn-touch-shoot" class="touch-action-btn">TIRA</button>
+      <button id="btn-touch-pass" class="touch-action-btn">PASS</button>
+      <button id="btn-touch-shoot" class="touch-action-btn">SHOOT</button>
     </div>
     
     <button id="btn-touch-pause" class="touch-action-btn" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; font-size: 24px; border-radius: 10px; z-index: 100;">⏸</button>

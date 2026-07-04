@@ -116,10 +116,10 @@ export class PlayerAction {
         
         
 
-        // Eventuale effetto scia
-        if (this.headerType === 'shoot' && power > 30) {
-            ball.triggerPowerEffect && ball.triggerPowerEffect();
-        }
+        // Eventuale effetto scia (DISATTIVATO PER I COLPI DI TESTA)
+        // if (this.headerType === 'shoot' && power > 30) {
+        //     ball.triggerPowerEffect && ball.triggerPowerEffect();
+        // }
     }
 
     executeThrow(ball, yaw, scene, targetReceiver = null) {

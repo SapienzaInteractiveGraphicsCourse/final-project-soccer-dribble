@@ -490,7 +490,7 @@ uiManager.blocker.addEventListener('click', () => {
 // Questo aggira eventuali e.stopPropagation() presenti nel codice dell'interfaccia (UIManager)
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.menu-btn, button'); // Cerchiamo un bottone o un elemento con classe menu-btn
-    if (btn && btn.innerText.trim().toUpperCase() === 'RIPRENDI') {
+    if (btn && (btn.innerText.trim().toUpperCase() === 'RIPRENDI' || btn.innerText.trim().toUpperCase() === 'RESUME' || btn.id === 'btn-resume')) {
         if (matchManager.isGameStarted && !player.controls.isLocked) {
             if (player.isTouchDevice) {
                 document.getElementById('touch-controls').style.display = 'block';

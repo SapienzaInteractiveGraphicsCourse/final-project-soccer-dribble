@@ -284,7 +284,7 @@ export class UIManager {
             document.getElementById('btn-toggle-animation').addEventListener('click', (e) => {
                 e.stopPropagation();
                 isAnimationPaused = !isAnimationPaused;
-                e.target.innerText = isAnimationPaused ? 'RIPRENDI ANIMAZIONE' : 'STOP ANIMAZIONE';
+                e.target.innerText = isAnimationPaused ? 'RESUME ANIMATION' : 'STOP ANIMATION';
                 e.target.style.backgroundColor = isAnimationPaused ? '#4CAF50' : '#f44336';
                 e.target.style.borderColor = isAnimationPaused ? '#4CAF50' : '#f44336';
                 document.dispatchEvent(new CustomEvent('toggleCustomizationAnimation', { detail: { paused: isAnimationPaused } }));

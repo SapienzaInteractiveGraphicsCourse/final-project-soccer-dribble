@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 import { PlayerAnimator } from '../animation-action/PlayerAnimation.js';
 import { tacticalManager } from '../game/TacticalManager.js';
+import { defensiveManager } from '../game/DefensiveManager.js';
 
 export class Teammate {
     constructor(scene, startPosition, startYaw = 0) {
@@ -214,6 +215,7 @@ export class Teammate {
 
             case 'AWAY_POSSESSION':
                 // Passiamo tutto il contesto anche alla difesa
+                defensiveManager.updateDefensiveAssignments(teammates, opponents, ball, attackDirX);
                 this.executeDefendBehavior(deltaTime, ball, player, opponents, teammates, attackDirX);
                 break;
         }
@@ -404,14 +406,9 @@ export class Teammate {
         const myGoalX = -49.5 * attackDirX; 
         const goalPos = new THREE.Vector3(myGoalX, 0, 0);
 
-        // 2. ASSEGNAZIONE MARCATURA A UOMO
-        let targetOpponent = null;
+        // 2. ASSEGNAZIONE MARCATURA A UOMO (Dinamica)
         const myIndex = teammates.indexOf(this);
-        
-        // Il compagno 0 marca il bot 0, il compagno 1 marca il bot 1
-        if (myIndex !== -1 && opponents[myIndex]) {
-            targetOpponent = opponents[myIndex];
-        }
+        let targetOpponent = defensiveManager.getAssignedOpponent(this.id, opponents);
 
         // 3. POSIZIONAMENTO TATTICO
         const isOpponentCorner = opponents.some(opp => opp && opp.isTakingCorner);

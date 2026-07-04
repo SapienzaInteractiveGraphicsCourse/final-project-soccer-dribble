@@ -21,6 +21,13 @@ export class Bot {
 
         this.targetReceiver = null;
         
+        // --- MACCHINA A STATI POSSESSO PALLA ---
+        this.possessionState = 'DRIBBLE';
+        this.passCooldownTimer = 0;
+        this.receiveLockTimer = 0;
+        this.chosenReceiver = null;
+        this.wasPossessingBall = false;
+
         // --- STATI RIMESSA ---
         this.isThrowingIn = false;
         this.throwInTimer = 0;
@@ -561,6 +568,10 @@ export class Bot {
     executeAttackBehavior(deltaTime, defendDirX, bots, opponents) {
         if (!this.ball || !this.ball.isLoaded) return;
         
+        // --- UPDATE TIMERS ---
+        if (this.passCooldownTimer > 0) this.passCooldownTimer -= deltaTime;
+        if (this.receiveLockTimer > 0) this.receiveLockTimer -= deltaTime;
+
         const attackGoalX = -49.5 * defendDirX;
         const targetGoalPos = new THREE.Vector3(attackGoalX, 0, 0);
         const attackDirX = attackGoalX > 0 ? 1 : -1;
@@ -596,26 +607,111 @@ export class Bot {
 
         // 3. LOGICA DI ATTACCO
         if (isClosest) {
-            // --- LOGICA ORIGINALE DEL PORTATORE DI PALLA (Invariata) ---
-            if (myDistToBall < 1.2) {
+            if (myDistToBall < 1.5) {
                 this.isMoving = true;
                 this.isRunning = true;
                 
-                this._moveDir.subVectors(targetGoalPos, this.model.position);
-                this._moveDir.y = 0;
-                
-                if (this._moveDir.lengthSq() > 0.001) {
-                    this._moveDir.normalize();
-                    this.model.position.addScaledVector(this._moveDir, 12 * deltaTime);
-                    this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                // Entrata in possesso iniziale
+                if (!this.wasPossessingBall) {
+                    this.wasPossessingBall = true;
+                    this.possessionState = 'RECEIVING';
+                    this.receiveLockTimer = 0.5; // mezzo secondo di controllo palla (receive lock)
+                    this.chosenReceiver = null;
                 }
 
-                this.action.dribble(this.ball, this.yaw, this.isRunning, false, { forward: true, backward: false, left: false, right: false }, deltaTime);
+                if (this.possessionState === 'RECEIVING') {
+                    if (this.receiveLockTimer <= 0) {
+                        this.possessionState = 'DRIBBLE';
+                    }
+                }
 
-                const distToGoal = this.model.position.distanceTo(targetGoalPos);
-                
-                if (distToGoal < 25) {
-                    if (!this.action.chargingAction) {
+                if (this.possessionState === 'DRIBBLE') {
+                    const distToGoal = this.model.position.distanceTo(targetGoalPos);
+                    
+                    if (distToGoal < 25) {
+                        this.possessionState = 'SHOOT';
+                    } else if (this.passCooldownTimer <= 0) {
+                        let opponentNear = false;
+                        let closestOppDist = Infinity;
+                        
+                        if (opponents && opponents.length > 0) {
+                            for (let opp of opponents) {
+                                const oppPos = opp.model ? opp.model.position : opp.position;
+                                if (oppPos) {
+                                    const dist = this.model.position.distanceTo(oppPos);
+                                    if (dist < closestOppDist) closestOppDist = dist;
+                                    if (dist < 6.0) { // Aumentato a 6.0 per sicurezza
+                                        opponentNear = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (opponentNear && bots.length > 1) {
+                            console.log(`Bot ${this.id} under pressure (dist: ${closestOppDist.toFixed(2)}). Searching for receiver...`);
+
+                            let bestScore = -Infinity;
+                            let bestReceiver = null;
+
+                            bots.forEach(ally => {
+                                if (ally !== this && ally.model) {
+                                    const allyPos = ally.model.position;
+                                    let score = 0;
+                                    
+                                    // 1. Distanza dalla porta
+                                    const distToGoalAlly = allyPos.distanceTo(targetGoalPos);
+                                    score += (100 - distToGoalAlly);
+
+                                    // 2. Libertà da marcature
+                                    let minOppDist = Infinity;
+                                    opponents.forEach(opp => {
+                                        const oppPos = opp.model ? opp.model.position : opp.position;
+                                        if (oppPos) {
+                                            const d = allyPos.distanceTo(oppPos);
+                                            if (d < minOppDist) minOppDist = d;
+                                        }
+                                    });
+                                    if (minOppDist !== Infinity) {
+                                        score += (minOppDist * 2);
+                                    }
+
+                                    // 3. Posizione avanzata
+                                    const isForward = (allyPos.x - this.model.position.x) * attackDirX > 0;
+                                    if (isForward) score += 20;
+
+                                    if (score > bestScore) {
+                                        bestScore = score;
+                                        bestReceiver = ally;
+                                    }
+                                }
+                            });
+
+                            if (bestReceiver) {
+                                console.log(`Bot ${this.id} selected receiver ${bestReceiver.id}. Transitioning to PASS state.`);
+                                this.chosenReceiver = bestReceiver;
+                                this.possessionState = 'PASS';
+                            }
+                        }
+                    }
+                }
+
+                if (this.possessionState !== 'PASS') {
+                    this._moveDir.subVectors(targetGoalPos, this.model.position);
+                    this._moveDir.y = 0;
+                    
+                    if (this._moveDir.lengthSq() > 0.001) {
+                        this._moveDir.normalize();
+                        this.model.position.addScaledVector(this._moveDir, 12 * deltaTime);
+                        this.yaw = Math.atan2(this._moveDir.x, this._moveDir.z);
+                    }
+
+                    this.action.dribble(this.ball, this.yaw, this.isRunning, false, { forward: true, backward: false, left: false, right: false }, deltaTime);
+                }
+
+                if (this.possessionState === 'SHOOT') {
+                    console.log(`Bot ${this.id} is SHOOTING!`);
+                    if (this.action.chargingAction !== 'shoot') {
                         this.action.startCharge('shoot');
                     }
                     this.action.updateCharge(deltaTime * 2.5, null); 
@@ -623,16 +719,42 @@ export class Bot {
                     if (this.action.kickPower >= this.action.shootMaxPower * 0.85) {
                         const shotError = (Math.random() - 0.5) * 0.2;
                         this.action.executeKick(this.ball, this.yaw + shotError, -0.15, null, null);
+                        this.possessionState = 'DRIBBLE';
+                        this.wasPossessingBall = false;
                     }
-                } else {
-                    if (this.action.chargingAction) {
-                        this.action.cancelCharge(null);
+                } else if (this.possessionState === 'PASS') {
+                    if (this.chosenReceiver) {
+                        this.yaw = Math.atan2(
+                            this.chosenReceiver.model.position.x - this.model.position.x,
+                            this.chosenReceiver.model.position.z - this.model.position.z
+                        );
+
+                        if (this.action.chargingAction !== 'pass') {
+                            console.log(`Bot ${this.id} starts charging pass!`);
+                            this.action.startCharge('pass');
+                        }
+                        this.action.updateCharge(deltaTime * 15.0, null); // Carica veloce
+                        
+                        if (this.action.kickPower >= this.action.passMaxPower * 0.5) {
+                            console.log(`Bot ${this.id} KICKS pass!`);
+                            this.action.executeKick(this.ball, this.yaw, 0, null, this.chosenReceiver);
+                            this.passCooldownTimer = 1.5;
+                            this.possessionState = 'DRIBBLE';
+                            this.chosenReceiver = null;
+                            this.wasPossessingBall = false;
+                        }
+                    } else {
+                        this.possessionState = 'DRIBBLE';
+                        if (this.action.chargingAction === 'pass') {
+                            this.action.cancelCharge(null);
+                        }
                     }
                 }
-                
+
             } else {
                 this.isMoving = true;
                 this.isRunning = true;
+
                 this._moveDir.subVectors(this.ball.position, this.model.position);
                 this._moveDir.y = 0;
                 if (this._moveDir.lengthSq() > 0.001) {
@@ -647,6 +769,10 @@ export class Bot {
             }
         } else {
             // --- NUOVA LOGICA: SMARCAMENTO E POSITION REPLACEMENT ---
+            this.wasPossessingBall = false;
+            this.possessionState = 'DRIBBLE';
+            this.chosenReceiver = null;
+            
             this._idealPos.set(0, 0, 0);
 
             // A) Identificazione Corsia

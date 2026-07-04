@@ -826,7 +826,7 @@ export class UIManager {
             if (boost) boost.style.display = '';
             if (bonusHud) bonusHud.style.display = '';
             if (playerNameHud) playerNameHud.style.display = '';
-            if (scoreboardHud) scoreboardHud.style.display = '';
+            if (scoreboardHud) scoreboardHud.style.display = 'flex';
         }
     }
 }

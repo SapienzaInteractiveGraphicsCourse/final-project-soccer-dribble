@@ -414,7 +414,15 @@ export class Teammate {
         }
 
         // 3. POSIZIONAMENTO TATTICO
-        if (targetOpponent) {
+        const isOpponentCorner = opponents.some(opp => opp && opp.isTakingCorner);
+
+        if (isOpponentCorner) {
+            // Tutti in area a difendere durante il calcio d'angolo avversario
+            const dirFromGoal = attackDirX;
+            const offsetX = 5 + (myIndex % 3) * 3;
+            const offsetZ = -9 + (myIndex % 4) * 6;
+            this._idealPos.set(myGoalX + dirFromGoal * offsetX, 0, offsetZ);
+        } else if (targetOpponent) {
             // Si mette in mezzo (al 10%) tra l'avversario e la propria porta
             const oppPos = targetOpponent.model ? targetOpponent.model.position : targetOpponent.position;
             this._idealPos.lerpVectors(oppPos, goalPos, 0.1); 

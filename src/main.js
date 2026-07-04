@@ -858,7 +858,7 @@ document.addEventListener('openSubstitutions', () => {
     if (!activeContainer || !benchContainer) return;
 
     if (subsText) {
-        subsText.innerText = `Cambi disponibili: ${subsRemaining}`;
+        subsText.innerText = `Available Substitutions: ${subsRemaining}`;
         if (subsRemaining === 0) subsText.style.color = '#f44336';
     }
 

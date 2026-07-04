@@ -181,7 +181,7 @@ export class Ball {
         const borderZ = 30.5; // Allineato ai bordi del campo reali
         const goalHalfWidth = 6.5;  // Aumentato per coprire perfettamente la porta visiva
         const goalHeight = 4.2;     // Aumentato per evitare che tiri sotto la traversa contino fuori
-        const goalDepth = 3.0;      // Profondità della rete
+        const goalDepth = 5.0;      // Profondità della rete
 
         // --- 1. CCD PER LA LINEA DI PORTA DESTRA ---
         // Se nel frame precedente era prima della linea, e ora è oltre la linea

@@ -108,7 +108,7 @@ export class MatchManager {
             // Tasto rapido per rimettere a posto la palla in allenamento
             if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick')) {
                 this.startGame(this.gameMode);
-                this.uiManager.showInGameMessage("PALLA RIPOSIZIONATA");
+                this.uiManager.showInGameMessage("BALL REPOSITIONED");
             }
 
             if (e.code === 'KeyE') {
@@ -236,10 +236,10 @@ export class MatchManager {
             this.resetKickOff();
         } else if (mode === 'penalty') {
             this.setupPenalty();
-            this.uiManager.showInGameMessage("ALLENAMENTO RIGORI<br><span style='font-size:20px'>Premi 'R' per riposizionare</span>");
+            this.uiManager.showInGameMessage("TRAINING PENALTY<br><span style='font-size:20px'>Press 'R' to reposition</span>");
         } else if (mode === 'freekick') {
             this.setupFreeKick();
-            this.uiManager.showInGameMessage("ALLENAMENTO PUNIZIONI<br><span style='font-size:20px'>Premi 'R' per riposizionare</span>");
+            this.uiManager.showInGameMessage("TRAINING FREEKICK<br><span style='font-size:20px'>Press 'R' to reposition</span>");
         }
 
         // Reset Telecamera dietro al giocatore
@@ -454,11 +454,11 @@ export class MatchManager {
             if (this.ball.position.x > 0) {
                 this.homeScore++;
                 this.kickOffTeam = 'away';
-                this.uiManager.showInGameMessage(this.playerTeam === 'home' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO / AUTOGOAL 🤦‍♂️");
+                this.uiManager.showInGameMessage(this.playerTeam === 'home' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO 🤦‍♂️");
             } else {
                 this.awayScore++;
                 this.kickOffTeam = 'home';
-                this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO / AUTOGOAL 🤦‍♂️");
+                this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO 🤦‍♂️");
             }
 
             // Lancia l'evento del replay dopo 3s (aspetta che il popup del goal scompaia prima di mostrare il replay)
@@ -476,7 +476,7 @@ export class MatchManager {
 
             // Se siamo in allenamento e la palla va fuori rimettila semplicemente a posto
             if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
-                this.uiManager.showInGameMessage("RITENTA!<br><span style='font-size:20px'>Premi 'R' per riposizionare</span>");
+                this.uiManager.showInGameMessage("TRY AGAIN!<br><span style='font-size:20px'>Press 'R' to reposition</span>");
                 setTimeout(() => { this.startGame(this.gameMode); }, 1500);
                 return;
             }
@@ -644,7 +644,7 @@ export class MatchManager {
 
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
             if (!subHappened) {
-                this.uiManager.showInGameMessage(isCornerKick ? `CALCIO D'ANGOLO: SQUADRA ${teamName}` : `RIMESSA DAL FONDO: SQUADRA ${teamName}`);
+                this.uiManager.showInGameMessage(isCornerKick ? `CORNER KICK: ${teamName}` : `GOAL KICK: SQUADRA ${teamName}`);
             }
         } else {
             // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---
@@ -698,7 +698,7 @@ export class MatchManager {
                     closestTeammate.setReceiveThrowInTarget(this.player.model.position, side);
                 }
 
-                if (!subHappened) this.uiManager.showInGameMessage("RIMESSA: SQUADRA ROSSA");
+                if (!subHappened) this.uiManager.showInGameMessage("THROW-IN: HOME");
             } else {
                 // Rimessa Laterale Bot avversario
                 // Possesso ad AWAY: rimessa laterale affidata ai bot
@@ -747,7 +747,7 @@ export class MatchManager {
                 // --- FINE FIX RIMESSA IA ---
 
                 if (!subHappened) {
-                    this.uiManager.showInGameMessage("RIMESSA: SQUADRA BLU");
+                    this.uiManager.showInGameMessage("THROW-IN: AWAY");
                 }
             }
         }

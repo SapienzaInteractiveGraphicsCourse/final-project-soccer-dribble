@@ -109,9 +109,6 @@ export function createEnvironment(scene) {
                 if (child.isMesh) {
                     child.castShadow = true;
                     child.receiveShadow = true;
-                    if (child.name.toLowerCase().includes('goal')) {
-                        child.visible = false;
-                    }
                 }
             });
 

@@ -155,6 +155,7 @@ export class GoalKeeper {
 
     checkCollision(deltaTime) {
         if (!this.model || !this.ball || !this.ball.mesh) return;
+        if (this.ball.isGoal) return; // FIX: Se è già goal, il portiere non deve respingere la palla come un muro invisibile
 
         const goalLineX = this.team === 'home' ? -48.5 : 48.5;
         const pushDirX = this.team === 'home' ? 1 : -1;

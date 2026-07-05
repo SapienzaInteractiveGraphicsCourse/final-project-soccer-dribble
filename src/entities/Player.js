@@ -519,7 +519,8 @@ export class Player {
 
         // Se stiamo battendo un corner, la telecamera si avvicina molto e si abbassa un po'
         if (this.action.isTakingCorner) {
-            targetOffset = new THREE.Vector3(0, 2.5, -3);
+            // Inquadratura frontale, più bassa ma molto arretrata per inquadrare l'area
+            targetOffset = new THREE.Vector3(0, 15, 60);
         } else if (this.action.isTakingGoalKick) {
             // Inquadratura dall'alto e spostata all'indietro per la rimessa dal fondo
             targetOffset = new THREE.Vector3(0, 15, -12);
@@ -723,16 +724,20 @@ export class Player {
                         }
 
                         this.action.executeKick(this.ball, this.yaw, this.pitch, this.passArrow, passTarget);
-                        if (wasTakingCorner) {
-                            document.dispatchEvent(new CustomEvent('cornerKicked'));
-                        }
-                        if (wasTakingGoalKick) {
-                            document.dispatchEvent(new CustomEvent('goalKicked'));
+                        
+                        if (passTarget && !wasTakingCorner && !wasTakingGoalKick) {
+                            // Normale passaggio in gioco
+                            document.dispatchEvent(new CustomEvent('passExecuted', { detail: { target: passTarget } }));
+                        } else {
+                            // Se è un corner o rimessa, passiamo il target come dettaglio dell'evento del set piece
+                            if (wasTakingCorner) {
+                                document.dispatchEvent(new CustomEvent('cornerKicked', { detail: { target: passTarget } }));
+                            }
+                            if (wasTakingGoalKick) {
+                                document.dispatchEvent(new CustomEvent('goalKicked', { detail: { target: passTarget } }));
+                            }
                         }
                         
-                        if (passTarget) {
-                            document.dispatchEvent(new CustomEvent('passExecuted', { detail: { target: passTarget } }));
-                        }
                         this.kickButtonHeld = false;
                         isChargingAnim = null;
                     }

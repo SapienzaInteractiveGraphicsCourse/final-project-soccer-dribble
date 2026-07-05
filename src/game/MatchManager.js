@@ -64,28 +64,34 @@ export class MatchManager {
     }
 
     setupSetPieceEvents() {
-        document.addEventListener('cornerKicked', () => {
+        document.addEventListener('cornerKicked', (e) => {
             if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
 
             // --- FIX PORTIERE ---
             // Lasciamo fare tutto a restoreGoalkeeper() che gestisce correttamente anche l'IA
             this.restoreGoalkeeper();
 
-            // Normale auto-switch all'attaccante per ricevere la palla
-            const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
-            const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
-            const targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
+            // Usa il target fornito, altrimenti fallback al compagno più vicino
+            let targetTeammate = e.detail ? e.detail.target : null;
+            if (!targetTeammate) {
+                const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
+                const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
+                targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
+            }
             this.switchCharacter(targetTeammate);
         });
 
-        document.addEventListener('goalKicked', () => {
+        document.addEventListener('goalKicked', (e) => {
             if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
 
             this.restoreGoalkeeper();
 
-            const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
-            const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
-            const targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
+            let targetTeammate = e.detail ? e.detail.target : null;
+            if (!targetTeammate) {
+                const distT1 = this.currentT1.model.position.distanceTo(this.ball.position);
+                const distT2 = this.currentT2.model.position.distanceTo(this.ball.position);
+                targetTeammate = distT1 < distT2 ? this.currentT1 : this.currentT2;
+            }
             this.switchCharacter(targetTeammate);
         });
     }

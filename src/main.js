@@ -945,7 +945,7 @@ window.pendingSubstitutions = window.pendingSubstitutions || [];
 
 function performSubstitution(activePlayer, benchIndex) {
     if (subsRemaining <= 0) {
-        uiManager.showInGameMessage("<span style='color:red'>CAMBI ESAURITI!</span>");
+        uiManager.showInGameMessage("<span style='color:red'>NO SUBSTITUTIONS LEFT!</span>");
         return;
     }
 
@@ -963,8 +963,8 @@ function performSubstitution(activePlayer, benchIndex) {
         });
 
         uiManager.showInGameMessage(`
-            <div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">CAMBIO PRENOTATO</div>
-            <div style="font-size: 14px;">Avverrà alla prossima palla inattiva</div>
+            <div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">SUBSTITUTION SCHEDULED</div>
+            <div style="font-size: 14px;">It will happen on the next set piece.</div>
         `);
 
         // Ricarica la UI
@@ -975,7 +975,7 @@ function performSubstitution(activePlayer, benchIndex) {
 window.executePendingSubstitutions = function () {
     if (!window.pendingSubstitutions || window.pendingSubstitutions.length === 0) return false;
 
-    let messageHtml = `<div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">SOSTITUZIONE EFFETTUATA</div>`;
+    let messageHtml = `<div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">SUBSTITUTION COMPLETED</div>`;
 
     for (let sub of window.pendingSubstitutions) {
         const activePlayer = sub.activePlayer;

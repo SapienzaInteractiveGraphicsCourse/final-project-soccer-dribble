@@ -644,7 +644,7 @@ export class MatchManager {
 
             const teamName = attackingTeam === 'home' ? 'ROSSA' : 'BLU';
             if (!subHappened) {
-                this.uiManager.showInGameMessage(isCornerKick ? `CORNER KICK: ${teamName}` : `GOAL KICK: SQUADRA ${teamName}`);
+                this.uiManager.showInGameMessage(isCornerKick ? `CORNER KICK: ${teamName}` : `GOAL KICK: TEAM ${teamName}`);
             }
         } else {
             // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---

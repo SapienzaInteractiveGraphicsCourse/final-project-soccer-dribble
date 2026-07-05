@@ -518,8 +518,11 @@ export class Player {
         let targetOffset = this.cameraOffset; // Offset di base (0, 3.5, -8)
 
         // Se stiamo battendo un corner, la telecamera si avvicina molto e si abbassa un po'
-        if (this.action.isTakingCorner || this.action.isTakingGoalKick) {
+        if (this.action.isTakingCorner) {
             targetOffset = new THREE.Vector3(0, 2.5, -3);
+        } else if (this.action.isTakingGoalKick) {
+            // Inquadratura dall'alto e spostata all'indietro per la rimessa dal fondo
+            targetOffset = new THREE.Vector3(0, 15, -12);
         }
 
         const offset = targetOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw);

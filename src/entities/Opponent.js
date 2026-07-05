@@ -7,7 +7,7 @@ import { TacticalManager } from '../game/TacticalManager.js';
 
 const botTacticalManager = new TacticalManager();
 
-export class Bot {
+export class Opponent {
     constructor(scene, ball, startPos, startYaw) {
         this.id = Math.random().toString(36).substr(2, 9); 
         this.scene = scene;
@@ -649,7 +649,7 @@ export class Bot {
                         }
 
                         if (opponentNear && bots.length > 1) {
-                            console.log(`Bot ${this.id} under pressure (dist: ${closestOppDist.toFixed(2)}). Searching for receiver...`);
+                            console.log(`Opponent ${this.id} under pressure (dist: ${closestOppDist.toFixed(2)}). Searching for receiver...`);
 
                             let bestScore = -Infinity;
                             let bestReceiver = null;
@@ -688,7 +688,7 @@ export class Bot {
                             });
 
                             if (bestReceiver) {
-                                console.log(`Bot ${this.id} selected receiver ${bestReceiver.id}. Transitioning to PASS state.`);
+                                console.log(`Opponent ${this.id} selected receiver ${bestReceiver.id}. Transitioning to PASS state.`);
                                 this.chosenReceiver = bestReceiver;
                                 this.possessionState = 'PASS';
                             }
@@ -710,7 +710,7 @@ export class Bot {
                 }
 
                 if (this.possessionState === 'SHOOT') {
-                    console.log(`Bot ${this.id} is SHOOTING!`);
+                    console.log(`Opponent ${this.id} is SHOOTING!`);
                     if (this.action.chargingAction !== 'shoot') {
                         this.action.startCharge('shoot');
                     }
@@ -730,13 +730,13 @@ export class Bot {
                         );
 
                         if (this.action.chargingAction !== 'pass') {
-                            console.log(`Bot ${this.id} starts charging pass!`);
+                            console.log(`Opponent ${this.id} starts charging pass!`);
                             this.action.startCharge('pass');
                         }
                         this.action.updateCharge(deltaTime * 15.0, null); 
                         
                         if (this.action.kickPower >= this.action.passMaxPower * 0.5) {
-                            console.log(`Bot ${this.id} KICKS pass!`);
+                            console.log(`Opponent ${this.id} KICKS pass!`);
                             this.action.executeKick(this.ball, this.yaw, 0, null, this.chosenReceiver, true);
                             this.passCooldownTimer = 1.5;
                             this.possessionState = 'DRIBBLE';

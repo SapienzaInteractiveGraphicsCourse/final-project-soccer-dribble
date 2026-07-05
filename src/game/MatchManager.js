@@ -317,7 +317,7 @@ export class MatchManager {
             this.player.yaw = targetYaw;
         }
 
-        // Crea la barriera! (Usiamo i Bot)
+        // Crea la barriera! (Usiamo i Opponent)
         if (this.currentO1.model) { this.currentO1.model.position.set(34, 0, -6); this.currentO1.model.rotation.y = 3 / 2 * Math.PI; }
         if (this.currentO2.model) { this.currentO2.model.position.set(34, 0, -7.5); this.currentO2.model.rotation.y = 3 / 2 * Math.PI; }
         if (this.currentO3.model) { this.currentO3.model.position.set(34, 0, -9); this.currentO3.model.rotation.y = 3 / 2 * Math.PI; }
@@ -359,7 +359,7 @@ export class MatchManager {
                 if (this.currentO2.model) { this.currentO2.model.position.set(20, 0, -15); this.currentO2.model.rotation.y = 3 / 2 * Math.PI; this.currentO2.yaw = 3 / 2 * Math.PI; }
                 if (this.currentO3.model) { this.currentO3.model.position.set(20, 0, 15); this.currentO3.model.rotation.y = 3 / 2 * Math.PI; this.currentO3.yaw = 3 / 2 * Math.PI; }
             } else {
-                // Il team 'away' (Bot) batte il calcio d'inizio
+                // Il team 'away' (Opponent) batte il calcio d'inizio
                 // Imposta il possesso su AWAY (HOME ha segnato, AWAY batte il calcio d'inizio)
                 if (this.possessionManager) this.possessionManager.setAwayPossession();
 
@@ -658,7 +658,7 @@ export class MatchManager {
                 this.uiManager.showInGameMessage(isCornerKick ? `CORNER KICK: ${teamName}` : `GOAL KICK: TEAM ${teamName}`);
             }
         } else {
-            // --- INIZIO FIX: Controllo se un qualsiasi Bot sta battendo ---
+            // --- INIZIO FIX: Controllo se un qualsiasi Opponent sta battendo ---
             const allBots = [this.currentO1, this.currentO2, this.currentO3, this.currentT1, this.currentT2];
             const isAnyBotThrowingIn = allBots.some(bot => bot && bot.isThrowingIn);
 
@@ -711,7 +711,7 @@ export class MatchManager {
 
                 if (!subHappened) this.uiManager.showInGameMessage("THROW-IN: HOME");
             } else {
-                // Rimessa Laterale Bot avversario
+                // Rimessa Laterale Opponent avversario
                 // Possesso ad AWAY: rimessa laterale affidata ai bot
                 if (this.possessionManager) this.possessionManager.setAwayPossession();
 

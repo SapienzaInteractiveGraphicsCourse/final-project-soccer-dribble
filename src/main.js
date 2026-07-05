@@ -23,7 +23,7 @@ import { Player } from './entities/Player.js';
 import { Ball } from './entities/Ball.js';
 import { Teammate } from './entities/Teammate.js';
 import { Referee } from './entities/Referee.js';
-import { Bot } from './entities/Bot.js';
+import { Opponent } from './entities/Opponent.js';
 import { GoalKeeper } from './entities/GoalKeeper.js';
 import { BonusManager } from './game/BonusManager.js';
 import { FireTrailEffect } from './effects/FireTrailEffect.js'
@@ -313,9 +313,9 @@ teammates[1].ovr = 84;
 teammates[1].avatar = '👤';
 
 const bots = [
-    new Bot(scene, ball, new THREE.Vector3(-10, -100, 0), 0),
-    new Bot(scene, ball, new THREE.Vector3(-20, -100, 0), 0),
-    new Bot(scene, ball, new THREE.Vector3(-30, -100, 0), 0)
+    new Opponent(scene, ball, new THREE.Vector3(-10, -100, 0), 0),
+    new Opponent(scene, ball, new THREE.Vector3(-20, -100, 0), 0),
+    new Opponent(scene, ball, new THREE.Vector3(-30, -100, 0), 0)
 ];
 
 const homeGK = new GoalKeeper(scene, ball, 'home', new THREE.Vector3(-48.5, 0, 0), Math.PI / 2);

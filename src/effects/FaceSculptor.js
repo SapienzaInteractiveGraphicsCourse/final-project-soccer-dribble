@@ -1,7 +1,3 @@
-// FaceSculptor.js — v3
-// Handle in world-space agganciati all'head bone.
-// Drag con delta-pixel → world-space conversion semplificata.
-
 import * as THREE from 'three';
 
 const LOCALSTORAGE_KEY = 'faceDeformations_v3';
@@ -60,12 +56,12 @@ export class FaceSculptor {
 
         this.isActive = false;
         this.targetMeshes = [];
-        this.meshData = []; // { mesh, originalPositions, currentOffsets, headVertexIndices }
+        this.meshData = []; 
         this.headBone = null;
 
         this.handles = [];
 
-        // Drag state
+        
         this.isDragging = false;
         this.activeHandleIdx = -1;
         this.lastX = 0;
@@ -73,20 +69,20 @@ export class FaceSculptor {
 
         this.raycaster = new THREE.Raycaster();
 
-        // bind
+        
         this._onDown = this._onDown.bind(this);
         this._onMove = this._onMove.bind(this);
         this._onUp   = this._onUp.bind(this);
     }
 
-    // ----------------------------------------------------------------
+    
     init() {
         if (!this.playerModel) { console.warn('[FS] playerModel null!'); return; }
 
         this.playerModel.traverse((child) => {
             const name = child.name ? child.name.toLowerCase() : '';
             if (child.isMesh && (name.includes('body') || name.includes('eyelashes') || name.includes('hair'))) {
-                child.geometry = child.geometry.clone(); // Clona la geometria per isolare le modifiche al main player
+                child.geometry = child.geometry.clone(); 
                 this.targetMeshes.push(child);
             }
             if (child.isBone && name.endsWith('head')) {
@@ -152,7 +148,7 @@ export class FaceSculptor {
             sphere.userData.handleIdx = i;
             sphere.visible = false;
 
-            // Ring
+            
             const rGeo = new THREE.RingGeometry(0.010, 0.014, 32);
             const rMat = new THREE.MeshBasicMaterial({
                 color: def.color, transparent: true, opacity: 0.55,
@@ -167,7 +163,7 @@ export class FaceSculptor {
         });
     }
 
-    // ----------------------------------------------------------------
+    
     activate() {
         if (this.meshData.length === 0) {
             this.init();
@@ -176,7 +172,7 @@ export class FaceSculptor {
         this.isActive = true;
         this.handles.forEach(h => { h.mesh.visible = true; });
 
-        // Ascoltiamo sul DOCUMENT così non ci sono problemi di propagazione
+        
         document.addEventListener('pointerdown', this._onDown);
         document.addEventListener('pointermove', this._onMove);
         document.addEventListener('pointerup',   this._onUp);
@@ -195,7 +191,7 @@ export class FaceSculptor {
         document.removeEventListener('pointerup',   this._onUp);
     }
 
-    // ----------------------------------------------------------------
+    
     update() {
         if (!this.isActive) return;
 
@@ -239,7 +235,7 @@ export class FaceSculptor {
         return p;
     }
 
-    // ----------------------------------------------------------------
+    
     _getNDC(e) {
         const rect = this.canvas.getBoundingClientRect();
         return new THREE.Vector2(
@@ -250,7 +246,7 @@ export class FaceSculptor {
 
     _onDown(e) {
         if (!this.isActive) return;
-        // Ignora click su pulsanti UI
+        
         if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
 
         const ndc = this._getNDC(e);
@@ -334,7 +330,7 @@ export class FaceSculptor {
         }
     }
 
-    // ----------------------------------------------------------------
+    
     _applyGaussian(centerBind, deltaBind, radiusBind) {
         const sigma2 = radiusBind * radiusBind * 2;
 
@@ -352,9 +348,9 @@ export class FaceSculptor {
                 const dy = vy - centerBind.y;
                 const dz = vz - centerBind.z;
 
-                // Anisotropia: moltiplichiamo dz per 0.3. 
-                // Questo rende il "pennello" molto più profondo sull'asse Z (entrando nel viso)
-                // senza allargarlo sull'asse X/Y. Permette di prendere i bulbi oculari e i denti.
+                
+                
+                
                 const d2 = dx*dx + dy*dy + (dz * 0.3)*(dz * 0.3);
                 
                 const w  = Math.exp(-d2 / sigma2);
@@ -378,7 +374,7 @@ export class FaceSculptor {
         });
     }
 
-    // ----------------------------------------------------------------
+    
     reset() {
         this.meshData.forEach(md => {
             const posAttr = md.mesh.geometry.getAttribute('position');
@@ -398,7 +394,7 @@ export class FaceSculptor {
         console.log('[FS] reset effettuato');
     }
 
-    // ----------------------------------------------------------------
+    
     saveDeformations() {
         const meshesSave = this.meshData.map(data => {
             const sparse = [];

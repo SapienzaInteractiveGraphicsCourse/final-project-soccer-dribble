@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export function setupEffects(scene) {
-    // 1. Indicatore Giocatore (FIFA Style)
+    
     const indicatorGeo = new THREE.ConeGeometry(0.25, 0.6, 4);
     indicatorGeo.rotateX(Math.PI); 
     const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xffff00 }); 
@@ -9,7 +9,7 @@ export function setupEffects(scene) {
     playerIndicator.visible = false;
     scene.add(playerIndicator);
 
-    // 2. Indicatore Porta Bersaglio
+    
     const targetGoalGroup = new THREE.Group();
     const targetArrowGeo = new THREE.ConeGeometry(1.5, 3, 8);
     targetArrowGeo.rotateX(Math.PI);
@@ -24,7 +24,7 @@ export function setupEffects(scene) {
     targetGoalGroup.visible = false;
     scene.add(targetGoalGroup);
 
-    // 3. Vento 3D
+    
     const windLinesGroup = new THREE.Group();
     const windLineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.0 });
     
@@ -43,7 +43,7 @@ export function setupEffects(scene) {
 export function updateEffects(effects, player, playerTeam, elapsedTime, isRunning, deltaTime, camera) {
     const { playerIndicator, targetGoalGroup, windLinesGroup, windLineMat } = effects;
 
-    // Aggiorna Indicatore Giocatore
+    
     if (player.model) {
         playerIndicator.visible = true;
         const bounce = Math.sin(elapsedTime * 6) * 0.1;
@@ -53,13 +53,13 @@ export function updateEffects(effects, player, playerTeam, elapsedTime, isRunnin
         playerIndicator.visible = false;
     }
 
-    // Aggiorna Freccia Porta
+    
     targetGoalGroup.visible = true;
     targetGoalGroup.position.y = 6 + Math.sin(elapsedTime * 4) * 1.0;
     targetGoalGroup.rotation.y = elapsedTime * 2;
     targetGoalGroup.position.x = playerTeam === 'home' ? 49.5 : -49.5;
 
-    // Aggiorna Vento
+    
     if (isRunning) {
         camera.fov = THREE.MathUtils.lerp(camera.fov, 90, deltaTime * 8);
         windLineMat.opacity = THREE.MathUtils.lerp(windLineMat.opacity, 0.4, deltaTime * 10);

@@ -2,9 +2,9 @@ import * as THREE from 'three';
 
 export class UIManager {
     constructor(onStartGame) {
-        this.onStartGame = onStartGame; // Funzione da chiamare quando si clicca play
+        this.onStartGame = onStartGame; 
 
-        // Elementi DOM
+        
         this.loadingScreen = document.getElementById('loading-screen');
         this.loadingBarFill = document.getElementById('loading-bar-fill');
         this.loadingText = document.getElementById('loading-text');
@@ -21,7 +21,7 @@ export class UIManager {
         this.scoreElement = document.querySelector('.score');
         this.hudPlayerName = document.getElementById('hud-player-name');
         
-        // Nuovi elementi Scoreboard HTML
+        
         this.hudTime = document.getElementById('hud-time');
         this.hudScoreHome = document.getElementById('hud-score-home');
         this.hudScoreAway = document.getElementById('hud-score-away');
@@ -45,12 +45,12 @@ export class UIManager {
             this.loadingText.innerText = Math.floor(percentuale) + '%';
         };
         THREE.DefaultLoadingManager.onLoad = () => {
-            if (!isFirstLoad) return; // Evita che il menu riappaia quando si carica il meteo in background
+            if (!isFirstLoad) return; 
             isFirstLoad = false;
 
             const savedShirtColor = localStorage.getItem('customShirtColor');
             const savedShirtTeam = localStorage.getItem('customShirtTeam') || 'custom';
-            const alreadyCustomized = savedShirtColor !== null; // true se esiste già una personalizzazione salvata
+            const alreadyCustomized = savedShirtColor !== null; 
 
             setTimeout(() => {
                 this.loadingScreen.style.display = 'none';
@@ -63,20 +63,20 @@ export class UIManager {
                 const hatId = localStorage.getItem('customHat') || '0';
 
                 if (alreadyCustomized) {
-                    // Personalizzazione già presente: applica in background e vai al main menu
+                    
                     document.dispatchEvent(new CustomEvent('customizePlayer', {
                         detail: { shirtTeam: savedShirtTeam, shirtColor, skinColor, hairId, accessoryId, hairColor, hatId }
                     }));
                     this.mainMenu.style.display = 'flex';
                 } else {
-                    // Prima volta: apri il menu di personalizzazione
+                    
                     this.customizationMenu.style.display = 'flex';
                     document.dispatchEvent(new Event('customizePlayerStart'));
 
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirtTeam', id: savedShirtTeam } }));
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: shirtColor } }));
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: skinColor } }));
-                    // I capelli vengono applicati solo se c'è una scelta salvata diversa da '0'
+                    
                     if (hairId !== '0') {
                         document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hair', id: hairId } }));
                     }
@@ -130,7 +130,7 @@ export class UIManager {
             if(colorSkinInput) colorSkinInput.value = savedSkin;
             if(colorHairInput) colorHairInput.value = savedHairColor;
 
-            // --- FORZA IL COLORE NERO SUI MODEL VIEWER DEI CAPELLI ---
+            
             
             const modelViewers = customizationMenu.querySelectorAll('.btn-hair model-viewer, .btn-hat model-viewer');
             modelViewers.forEach(viewer => {
@@ -138,14 +138,14 @@ export class UIManager {
                     if (viewer.model && viewer.model.materials) {
                         viewer.model.materials.forEach(material => {
                             if (material.pbrMetallicRoughness) {
-                                material.pbrMetallicRoughness.setBaseColorFactor([0, 0, 0, 1]); // R, G, B, A (Nero opaco)
+                                material.pbrMetallicRoughness.setBaseColorFactor([0, 0, 0, 1]); 
                             }
                         });
                     }
                 });
             });
 
-            // --- EVENTI TABS ---
+            
             const tabHair = document.getElementById('tab-hair');
             const tabHats = document.getElementById('tab-hats');
             const tabAccessories = document.getElementById('tab-accessories');
@@ -158,7 +158,7 @@ export class UIManager {
             const sectionFace = document.getElementById('section-face');
 
             const _setActiveTab = (activeTab) => {
-                // Reset tutti
+                
                 tabHair.style.backgroundColor = '#222';
                 tabHats.style.backgroundColor = '#222';
                 tabAccessories.style.backgroundColor = '#222';
@@ -169,10 +169,10 @@ export class UIManager {
                 sectionAccessories.style.display = 'none';
                 sectionColors.style.display = 'none';
                 sectionFace.style.display = 'none';
-                // Attiva quello scelto
+                
                 activeTab.btn.style.backgroundColor = '#4CAF50';
                 activeTab.section.style.display = 'flex';
-                // Notifica cambio tab
+                
                 document.dispatchEvent(new CustomEvent('customizationTabChanged', { detail: { tab: activeTab.id } }));
             };
 
@@ -201,10 +201,10 @@ export class UIManager {
                 _setActiveTab({ btn: tabFace, section: sectionFace, id: 'face' });
             });
 
-            // Reset a CAPELLI all'apertura
+            
             _setActiveTab({ btn: tabHair, section: sectionHair, id: 'hair' });
 
-            // --- EVENTI SCELTA CAPELLI ---
+            
             let selectedHair = localStorage.getItem('customHair') || '0';
             const hairButtons = document.querySelectorAll('.btn-hair');
             hairButtons.forEach(btn => {
@@ -216,7 +216,7 @@ export class UIManager {
                 });
             });
 
-            // --- EVENTI SCELTA ACCESSORI ---
+            
             let selectedAccessory = localStorage.getItem('customAccessory') || '0';
             const accessoryButtons = document.querySelectorAll('.btn-accessory');
             accessoryButtons.forEach(btn => {
@@ -228,7 +228,7 @@ export class UIManager {
                 });
             });
 
-            // --- EVENTI SCELTA CAPPELLI ---
+            
             let selectedHat = localStorage.getItem('customHat') || '0';
             const hatButtons = document.querySelectorAll('.btn-hat');
             hatButtons.forEach(btn => {
@@ -240,7 +240,7 @@ export class UIManager {
                 });
             });
 
-            // --- EVENTI SCELTA MAGLIA SQUADRA ---
+            
             let selectedShirtTeam = localStorage.getItem('customShirtTeam') || 'custom';
             const shirtButtons = document.querySelectorAll('.btn-shirt');
             const colorShirtInputEl = document.getElementById('color-shirt');
@@ -267,7 +267,7 @@ export class UIManager {
                 });
             });
 
-            // --- EVENTI PREVIEW IN TEMPO REALE ---
+            
             document.getElementById('color-shirt').addEventListener('input', (e) => {
                 if (selectedShirtTeam === 'custom') {
                     document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: e.target.value } }));
@@ -293,7 +293,7 @@ export class UIManager {
             document.getElementById('btn-reset-customization').addEventListener('click', (e) => {
                 e.stopPropagation();
 
-                // Reset valori di default
+                
                 const defaultShirtColor = '#ff0000';
                 const defaultShirtTeam = 'custom';
                 const defaultSkin = '#ffccaa';
@@ -303,13 +303,13 @@ export class UIManager {
                 selectedHat = '0';
                 selectedShirtTeam = defaultShirtTeam;
 
-                // Aggiorna visivamente i color picker e i bottoni
+                
                 document.getElementById('color-shirt').value = defaultShirtColor;
                 updateShirtUI();
                 document.getElementById('color-skin').value = defaultSkin;
                 document.getElementById('color-hair').value = defaultHairColor;
 
-                // Applica le preview
+                
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirtTeam', id: defaultShirtTeam } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'shirt', color: defaultShirtColor } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'skin', color: defaultSkin } }));
@@ -317,7 +317,7 @@ export class UIManager {
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'accessory', id: '0' } }));
                 document.dispatchEvent(new CustomEvent('previewCustomization', { detail: { type: 'hat', id: '0' } }));
 
-                // Deseleziona tutti i bottoni capello e seleziona "Nessuno"
+                
                 document.querySelectorAll('.btn-hair').forEach(b => {
                     b.style.border = '2px solid transparent';
                     b.style.backgroundColor = 'white';
@@ -328,7 +328,7 @@ export class UIManager {
                     noneBtn.style.backgroundColor = '#e8f5e9';
                 }
 
-                // Deseleziona tutti gli accessori e seleziona "Nessuno"
+                
                 document.querySelectorAll('.btn-accessory').forEach(b => {
                     b.style.border = '2px solid transparent';
                     b.style.backgroundColor = 'white';
@@ -339,7 +339,7 @@ export class UIManager {
                     noneAccBtn.style.backgroundColor = '#e8f5e9';
                 }
 
-                // Deseleziona tutti i cappelli e seleziona "Nessuno"
+                
                 document.querySelectorAll('.btn-hat').forEach(b => {
                     b.style.border = '2px solid transparent';
                     b.style.backgroundColor = 'white';
@@ -350,11 +350,11 @@ export class UIManager {
                     noneHatBtn.style.backgroundColor = '#e8f5e9';
                 }
 
-                // Invia evento di reset al motore
+                
                 document.dispatchEvent(new Event('resetCustomization'));
             });
 
-            // --- RESET VISO ---
+            
             const btnResetFace = document.getElementById('btn-reset-face');
             if (btnResetFace) {
                 btnResetFace.addEventListener('click', (e) => {
@@ -393,7 +393,7 @@ export class UIManager {
                 this.customizationMenu.style.display = 'flex';
                 document.dispatchEvent(new Event('customizePlayerStart'));
                 
-                // Reset bottone e stato animazione
+                
                 isAnimationPaused = false;
                 const btnAnim = document.getElementById('btn-toggle-animation');
                 if (btnAnim) {
@@ -430,7 +430,7 @@ export class UIManager {
                 this.startGame('penalty');
             });
             
-            // --- MENU IMPOSTAZIONI METEO E ORARIO ---
+            
             const settingsMenu = document.getElementById('settings-menu');
             this.settingsMenu = settingsMenu;
 
@@ -441,7 +441,7 @@ export class UIManager {
                 
                 const time = document.getElementById('select-time').value;
                 const weather = document.getElementById('select-weather').value;
-                // Segnala al motore di gioco di aggiornare il meteo
+                
                 document.dispatchEvent(new CustomEvent('updateEnvironment', { detail: { time, weather } }));
             });
 
@@ -462,10 +462,10 @@ export class UIManager {
             e.stopPropagation();
             this.commandsMenu.style.display = 'none';
             
-            // Controlla se abbiamo aperto i comandi dal menu di pausa
+            
             if (this.commandsMenu.dataset.fromPause === 'true') {
                 document.getElementById('pause-menu').style.display = 'flex';
-                document.getElementById('ui-layer').style.zIndex = '10'; // Ripristina lo z-index normale
+                document.getElementById('ui-layer').style.zIndex = '10'; 
                 this.commandsMenu.dataset.fromPause = 'false';
             } else {
                 this.mainMenu.style.display = 'flex';
@@ -489,7 +489,7 @@ export class UIManager {
                 
                 if (this.globalSettingsMenu.dataset.fromPause === 'true') {
                     document.getElementById('pause-menu').style.display = 'flex';
-                    document.getElementById('ui-layer').style.zIndex = '10'; // Ripristina lo z-index normale
+                    document.getElementById('ui-layer').style.zIndex = '10'; 
                     this.globalSettingsMenu.dataset.fromPause = 'false';
                 } else {
                     this.mainMenu.style.display = 'flex';
@@ -497,7 +497,7 @@ export class UIManager {
             });
         }
 
-        // Event listeners for global settings sliders
+        
         const sliderGraphics = document.getElementById('slider-graphics');
         const sliderSensX = document.getElementById('slider-sens-x');
         const sliderSensY = document.getElementById('slider-sens-y');
@@ -557,7 +557,7 @@ export class UIManager {
             this.startGame('1-2');
         });
 
-        // --- BOTTONI MENU DI PAUSA ---
+        
         const btnResume = document.getElementById('btn-resume');
         const btnPauseCommands = document.getElementById('btn-pause-commands');
         const btnPauseSettings = document.getElementById('btn-pause-settings');
@@ -569,7 +569,7 @@ export class UIManager {
 
         if (btnResume) btnResume.addEventListener('click', (e) => {
             e.stopPropagation();
-            document.dispatchEvent(new Event('resumeGame')); // Invia un segnale a main.js
+            document.dispatchEvent(new Event('resumeGame')); 
         });
 
         if (btnSubstitutions) btnSubstitutions.addEventListener('click', (e) => {
@@ -593,7 +593,7 @@ export class UIManager {
             e.stopPropagation();
             pauseMenu.style.display = 'none';
             this.commandsMenu.style.display = 'flex';
-            document.getElementById('ui-layer').style.zIndex = '100'; // Porta la UI in primissimo piano
+            document.getElementById('ui-layer').style.zIndex = '100'; 
             this.commandsMenu.dataset.fromPause = 'true';
         });
 
@@ -607,21 +607,21 @@ export class UIManager {
 
         if (btnExit) btnExit.addEventListener('click', (e) => {
             e.stopPropagation();
-            location.reload(); // Ricarica la pagina resettando il gioco
+            location.reload(); 
         });
     }
 
     startGame(formation) {
         this.formationMenu.style.display = 'none';
         this.gameUi.style.display = 'block';
-        this.onStartGame(formation); // Passa la formazione al GameLogic
+        this.onStartGame(formation); 
     }
 
     showInGameMessage(text) {
         let msg = document.getElementById('ingame-message-box');
         if (!msg) return;
 
-        // Evita che lo stesso messaggio re-inneschi il suono a raffica
+        
         if (msg.innerHTML === text && msg.classList.contains('show')) {
             if (msg.fadeTimer) clearTimeout(msg.fadeTimer);
             msg.fadeTimer = setTimeout(() => { 
@@ -642,26 +642,26 @@ export class UIManager {
         }
         
         msg.innerHTML = text;
-        msg.style.opacity = ''; // Remove inline opacity to let CSS handle it
+        msg.style.opacity = ''; 
         msg.classList.add('show');
 
         if (msg.fadeTimer) clearTimeout(msg.fadeTimer);
 
         msg.fadeTimer = setTimeout(() => { 
             msg.classList.remove('show'); 
-        }, 2500); // 2.5s display time
+        }, 2500); 
     }
 
     updateHUD(playerName, stamina, matchTime, homeScore, awayScore) {
         if (this.hudPlayerName) this.hudPlayerName.innerText = playerName;
         
-        // Stamina
+        
         this.staminaBarFill.style.width = stamina + '%';
         if (stamina > 50) this.staminaBarFill.style.backgroundColor = '#4CAF50';
         else if (stamina > 20) this.staminaBarFill.style.backgroundColor = '#FFEB3B';
         else this.staminaBarFill.style.backgroundColor = '#F44336';
 
-        // Aggiornamento Scoreboard HTML
+        
         if (this.hudTime) {
             const minutes = Math.floor(matchTime / 60);
             const seconds = Math.floor(matchTime % 60);
@@ -690,7 +690,7 @@ export class UIManager {
             this.radarBall.style.top = bZ + '%';
         }
 
-        // Gestione punti radar dei bot
+        
         if (!this.botRadarDots) {
             this.botRadarDots = [];
         }
@@ -700,7 +700,7 @@ export class UIManager {
             dot.style.position = 'absolute';
             dot.style.width = '8px';
             dot.style.height = '8px';
-            dot.style.backgroundColor = '#2196F3'; // Blu per i bot
+            dot.style.backgroundColor = '#2196F3'; 
             dot.style.borderRadius = '50%';
             dot.style.transform = 'translate(-50%, -50%)';
             dot.style.zIndex = '4';
@@ -731,18 +731,18 @@ export class UIManager {
         const roller = document.getElementById('bonus-roller');
         if (!roller) return;
 
-        // Una lista di bonus "finti" che vedrai scorrere per dare l'illusione della casualità
+        
         const fakeBonuses = [
             "VELOCITÀ FLASH", "MAGNETE", "SCUDO FERREO", "PALLA INFUOCATA", 
             "TACKLE GIGANTE", "INVISIBILITÀ", "TELETRASPORTO"
         ];
 
-        // 1. Resettiamo il rullo
+        
         roller.innerHTML = '';
-        roller.style.transition = 'none'; // Spegniamo l'animazione per riportarlo giù
+        roller.style.transition = 'none'; 
         roller.style.transform = 'translateY(0px)';
 
-        // 2. Riempiamo il rullo con 15 elementi casuali
+        
         const totalItems = 15;
         for (let i = 0; i < totalItems - 1; i++) {
             const randomBonus = fakeBonuses[Math.floor(Math.random() * fakeBonuses.length)];
@@ -752,16 +752,16 @@ export class UIManager {
             roller.appendChild(div);
         }
 
-        // 3. Aggiungiamo il bonus REALE alla fine della lista
+        
         const finalDiv = document.createElement('div');
         finalDiv.className = `bonus-item ${finalBonusClass}`;
         finalDiv.innerText = finalBonusText;
         roller.appendChild(finalDiv);
 
-        // 4. Forziamo il browser ad aggiornare la grafica prima di far partire l'animazione
+        
         void roller.offsetWidth;
 
-        // Suona l'effetto della mystery box
+        
         let animDuration = 3;
         if (this.bonusSound) {
             if (!isNaN(this.bonusSound.duration) && this.bonusSound.duration > 0) {
@@ -771,10 +771,10 @@ export class UIManager {
             this.bonusSound.play().catch(() => {});
         }
 
-        // 5. Facciamo partire l'animazione! (35px è l'altezza che abbiamo dato nel CSS)
+        
         const scrollDistance = (totalItems - 1) * 35; 
         
-        // Usiamo una curva "cubic-bezier" che parte veloce e rallenta molto dolcemente alla fine
+        
         roller.style.transition = `transform ${animDuration}s cubic-bezier(0.15, 0.85, 0.3, 1)`; 
         roller.style.transform = `translateY(-${scrollDistance}px)`;
     }
@@ -790,21 +790,21 @@ export class UIManager {
     showReplayUI(isActive) {
         let replayIcon = document.getElementById('replay-indicator');
         
-        // Recuperiamo gli elementi della UI dal DOM
+        
         const radar = document.getElementById('radar');
         const stamina = document.getElementById('stamina-container');
         const boost = document.getElementById('boost-container');
         const playerNameHud = document.getElementById('player-name-hud');
         const scoreboardHud = document.getElementById('scoreboard-hud');
         
-        // Opzionale: se vuoi nascondere anche i bonus e il tabellone durante il replay
+        
         const bonusHud = document.getElementById('bonus-hud'); 
         
         if (isActive) {
-            // --- MOSTRA SCRITTA REPLAY ---
+            
             if (replayIcon) replayIcon.style.display = 'block';
 
-            // --- NASCONDI L'HUD ---
+            
             if (radar) radar.style.display = 'none';
             if (stamina) stamina.style.display = 'none';
             if (boost) boost.style.display = 'none';
@@ -813,14 +813,14 @@ export class UIManager {
             if (scoreboardHud) scoreboardHud.style.display = 'none';
 
         } else {
-            // --- NASCONDI SCRITTA REPLAY ---
+            
             if (replayIcon) {
                 replayIcon.style.display = 'none';
             }
 
-            // --- RIATTIVA L'HUD ---
-            // Usiamo '' (stringa vuota) per rimuovere lo stile inline 
-            // e far tornare le regole CSS originali del tuo file style.css
+            
+            
+            
             if (radar) radar.style.display = '';
             if (stamina) stamina.style.display = '';
             if (boost) boost.style.display = '';

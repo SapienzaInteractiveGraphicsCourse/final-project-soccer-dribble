@@ -4,20 +4,20 @@ import './customization-menu.css';
 
 import * as THREE from 'three';
 
-// --- INIZIALIZZAZIONE IMPOSTAZIONI GLOBALI ---
+
 window.gameSettings = {
-    graphicsQuality: 2, // 0 = Bassa, 1 = Media, 2 = Alta
+    graphicsQuality: 2, 
     sensitivityX: 1.0,
     sensitivityY: 1.0
 };
 
-// Import moduli e refactor
+
 import { setupScene, updateSceneEnvironment, updateWeatherParticles, setGraphicsQuality } from './core/SceneSetup.js';
 import { UIManager } from './ui/UIManager.js';
 import { setupEffects, updateEffects } from './effects/GameEffects.js';
 import { MatchManager } from './game/MatchManager.js';
 
-// Import entità originali
+
 import { createEnvironment } from './environment/Pitch.js';
 import { Player } from './entities/Player.js';
 import { Ball } from './entities/Ball.js';
@@ -34,19 +34,19 @@ import { PossessionManager, MatchState } from './game/PossessionManager.js';
 import { PlayerCustomizer } from './effects/PlayerCustomizer.js';
 import { FaceSculptor } from './effects/FaceSculptor.js';
 
-// --- INIZIALIZZAZIONE CORE ---
+
 const { scene, camera, renderer, scoreboard } = setupScene();
 createEnvironment(scene);
 
 window.applyGraphicsQuality = (quality) => {
     setGraphicsQuality(quality, renderer);
 };
-// Applica impostazioni iniziali
+
 window.applyGraphicsQuality(window.gameSettings.graphicsQuality);
 const effects = setupEffects(scene);
 const clock = new THREE.Timer();
 
-// --- INIZIALIZZAZIONE ENTITÀ ---
+
 const ball = new Ball(scene);
 const startYaw = Math.PI / 2;
 const player = new Player(camera, renderer.domElement, scene, ball, new THREE.Vector3(0, -100, 0), startYaw);
@@ -64,14 +64,14 @@ let previousMouseY = 0;
 let customizationDistance = 3.5;
 let customizationHeightOffset = 1.2;
 
-// --- FACE SCULPTING ---
-let faceSculptor = null;       // istanza FaceSculptor (creata dopo loadGLB)
-let isFaceTabActive = false;   // true quando il tab VISO è aperto
-let faceZoomDistance = 0.55;   // distanza camera quando in modalità viso
-let faceZoomTarget = 3.5;      // valore corrente di zoom (lerp verso faceZoomDistance o 3.5)
 
-// Crea il FaceSculptor appena il modello del player è pronto
-// Usiamo un piccolo polling: controlliamo ogni frame se player.model esiste
+let faceSculptor = null;       
+let isFaceTabActive = false;   
+let faceZoomDistance = 0.55;   
+let faceZoomTarget = 3.5;      
+
+
+
 let faceSculptorInited = false;
 
 document.addEventListener('customizePlayerStart', () => {
@@ -79,7 +79,7 @@ document.addEventListener('customizePlayerStart', () => {
     customizationRotation = 0;
     customizationDistance = 3.5;
     customizationHeightOffset = 1.2;
-    faceZoomTarget = 3.5;     // reset zoom
+    faceZoomTarget = 3.5;     
     isFaceTabActive = false;
     if (player.model) {
         player.model.position.set(0, 0, 0);
@@ -87,7 +87,7 @@ document.addEventListener('customizePlayerStart', () => {
     if (ball && ball.mesh) {
         ball.mesh.visible = false;
     }
-    // Prova ad inizializzare il FaceSculptor ora (se il modello c'è già)
+    
     if (!faceSculptorInited && player.model) {
         faceSculptor = new FaceSculptor(player.model, scene, camera, renderer.domElement);
         faceSculptor.init();
@@ -107,7 +107,7 @@ document.addEventListener('customizePlayerEnd', () => {
     }
 });
 
-// Aggiungiamo il drag per ruotare il personaggio (solo quando NON siamo sul tab viso)
+
 document.addEventListener('pointerdown', (e) => {
     if (isCustomizing && !isFaceTabActive && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
         isDragging = true;
@@ -122,7 +122,7 @@ document.addEventListener('pointermove', (e) => {
         const deltaY = e.clientY - previousMouseY;
         customizationRotation += deltaX * 0.01;
         customizationHeightOffset += deltaY * 0.01;
-        customizationHeightOffset = Math.max(0.2, Math.min(customizationHeightOffset, 2.5)); // Limiti visuale
+        customizationHeightOffset = Math.max(0.2, Math.min(customizationHeightOffset, 2.5)); 
         previousMouseX = e.clientX;
         previousMouseY = e.clientY;
     }
@@ -136,17 +136,17 @@ let isCustomizationPaused = false;
 document.addEventListener('toggleCustomizationAnimation', (e) => {
     isCustomizationPaused = e.detail.paused;
     if (!isCustomizationPaused) {
-        // Quando riprende l'animazione, riparti dalla corsa per una transizione più pulita
+        
         customizationAnimState = 'run';
         customizationAnimTimer = 2 + Math.random() * 2;
     }
 });
 
-// Zoom con la rotellina del mouse
+
 document.addEventListener('wheel', (e) => {
     if (isCustomizing) {
         if (isFaceTabActive) {
-            // Zoom differenziato per la modalità viso (range più ravvicinato)
+            
             faceZoomDistance += e.deltaY * 0.001;
             faceZoomDistance = Math.max(0.2, Math.min(faceZoomDistance, 1.5));
         } else {
@@ -156,26 +156,26 @@ document.addEventListener('wheel', (e) => {
     }
 });
 
-// Cambio tab: attiva/disattiva FaceSculptor e gestisci zoom camera
+
 document.addEventListener('customizationTabChanged', (e) => {
     const tab = e.detail.tab;
     isFaceTabActive = (tab === 'face');
 
     if (isFaceTabActive) {
-        // Prova init se non ancora fatto
+        
         if (!faceSculptorInited && player.model) {
             faceSculptor = new FaceSculptor(player.model, scene, camera, renderer.domElement);
             faceSculptor.init();
             faceSculptorInited = true;
         }
         if (faceSculptor) faceSculptor.activate();
-        faceZoomDistance = 0.55; // Zoom ravvicinato iniziale sul viso
+        faceZoomDistance = 0.55; 
     } else {
         if (faceSculptor) faceSculptor.deactivate();
     }
 });
 
-// Reset scultura viso
+
 document.addEventListener('resetFaceSculpting', () => {
     if (faceSculptor) faceSculptor.reset();
 });
@@ -200,11 +200,11 @@ document.addEventListener('previewCustomization', (e) => {
     }
     if (type === 'hair') {
         if (id === "0") {
-            // Nessuno: rimuovi capello custom e nascondi anche quello di default → calvo
+            
             playerCustomizer.removeAccessory('hair');
             playerCustomizer.toggleDefaultHair(false);
         } else {
-            // Capello custom: nascondi quello di default e equipaggia il custom
+            
             playerCustomizer.toggleDefaultHair(false);
             const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04);
             const hairOffsetRot = new THREE.Euler(0, 2 * Math.PI, 0);
@@ -231,7 +231,7 @@ document.addEventListener('previewCustomization', (e) => {
 });
 
 document.addEventListener('resetCustomization', () => {
-    // Ripristina i valori di default
+    
     playerCustomizer.toggleDefaultHair(true);
     playerCustomizer.removeAccessory('hair');
     playerCustomizer.equipGlasses('0');
@@ -259,11 +259,11 @@ document.addEventListener('customizePlayer', (e) => {
 
     if (hairId !== undefined) {
         if (hairId === "0") {
-            // Nessun capello custom: mostra il capello di default del modello
+            
             playerCustomizer.removeAccessory('hair');
             playerCustomizer.toggleDefaultHair(true);
         } else {
-            // Capello custom: nasconde il default e carica il modello scelto
+            
             playerCustomizer.toggleDefaultHair(false);
             const hairOffsetPos = new THREE.Vector3(0, -1.95, 0.04);
             const hairOffsetRot = new THREE.Euler(0, 2 * Math.PI, 0);
@@ -328,25 +328,25 @@ homeGK.ovr = 88;
 homeGK.avatar = '👤';
 homeGK.stamina = 100;
 
-awayGK.playerName = awayNames[5]; // Just for completeness
+awayGK.playerName = awayNames[5]; 
 awayGK.position = 'POR';
 awayGK.ovr = 88;
 awayGK.avatar = '👤';
 awayGK.stamina = 100;
 
-// --- INIZIALIZZAZIONE PANCHINA ---
+
 const benchPlayers = [];
 const benchPositions = ['ATT', 'CEN', 'CEN', 'DIF', 'DIF', 'DIF', 'POR', 'ATT'];
-// Panchina Home (Rossa)
+
 for (let i = 0; i < 8; i++) {
     const bp = new BenchPlayer(scene, 'home', new THREE.Vector3(-18 + (i * 1.5), -0.5, -35.1), 0);
     bp.playerName = homeNames[3 + i] || "Riserva";
     bp.position = benchPositions[i];
-    bp.ovr = Math.floor(Math.random() * 10) + 75; // 75-84
+    bp.ovr = Math.floor(Math.random() * 10) + 75; 
     bp.avatar = '👤';
     benchPlayers.push(bp);
 }
-// Panchina Away (Blu)
+
 for (let i = 0; i < 8; i++) {
     const bp = new BenchPlayer(scene, 'away', new THREE.Vector3(7 + (i * 1.5), -0.5, -35.1), 0);
     bp.playerName = awayNames[i];
@@ -356,16 +356,16 @@ for (let i = 0; i < 8; i++) {
     benchPlayers.push(bp);
 }
 
-// --- INIZIALIZZAZIONE MANAGER ---
+
 const uiManager = new UIManager((mode) => {
     matchManager.isGameStarted = true;
     matchManager.startGame(mode);
-    isBallInPlay = false; // <--- NUOVO: Reset all'inizio del match
+    isBallInPlay = false; 
     if (player.isTouchDevice) {
         document.getElementById('touch-controls').style.display = 'block';
         uiManager.blocker.style.display = 'none';
 
-        // Richiesta Fullscreen per mobile/iPad (sicuro per Safari)
+        
         const docEl = document.documentElement;
         try {
             if (docEl.requestFullscreen) {
@@ -383,7 +383,7 @@ const uiManager = new UIManager((mode) => {
     }
 });
 
-// Ascolta l'evento per cambiare le condizioni meteo/orario
+
 document.addEventListener('updateEnvironment', (e) => {
     updateSceneEnvironment(scene, e.detail.time, e.detail.weather);
 });
@@ -399,15 +399,15 @@ matchManager.possessionManager = possessionManager;
 homeGK.possessionManager = possessionManager;
 const boostPadManager = new BoostPadManager(scene);
 
-// --- SISTEMA COLLISIONE PLAYER-TO-PLAYER ---
+
 const _collisionPushA = new THREE.Vector3();
 const _collisionPushB = new THREE.Vector3();
 
 function resolvePlayerCollisions(humanPlayer, allEntities) {
     const PLAYER_RADIUS = 0.5;
-    const MIN_DIST = PLAYER_RADIUS * 2; // Somma dei raggi di due giocatori
+    const MIN_DIST = PLAYER_RADIUS * 2; 
 
-    // Raccogliamo tutti i modelli validi
+    
     const bodies = [];
     for (const entity of allEntities) {
         if (entity && entity.model && entity.model.position) {
@@ -415,7 +415,7 @@ function resolvePlayerCollisions(humanPlayer, allEntities) {
         }
     }
 
-    // Controlliamo ogni coppia unica
+    
     for (let i = 0; i < bodies.length; i++) {
         for (let j = i + 1; j < bodies.length; j++) {
             const a = bodies[i];
@@ -429,27 +429,27 @@ function resolvePlayerCollisions(humanPlayer, allEntities) {
                 const dist = Math.sqrt(distSq);
                 const overlap = MIN_DIST - dist;
 
-                // Direzione di separazione normalizzata (da B verso A)
+                
                 const nx = dx / dist;
                 const nz = dz / dist;
 
-                // Peso asimmetrico: se uno dei due è il giocatore umano, spingiamo di più l'IA
+                
                 const aIsHuman = (a === humanPlayer);
                 const bIsHuman = (b === humanPlayer);
 
                 let weightA, weightB;
                 if (aIsHuman) {
-                    weightA = 0.2; // Il giocatore umano viene spostato poco
-                    weightB = 0.8; // L'IA viene spostata molto
+                    weightA = 0.2; 
+                    weightB = 0.8; 
                 } else if (bIsHuman) {
                     weightA = 0.8;
                     weightB = 0.2;
                 } else {
-                    weightA = 0.5; // Simmetrico tra IA
+                    weightA = 0.5; 
                     weightB = 0.5;
                 }
 
-                // Spingiamo A nella direzione positiva, B nella negativa
+                
                 a.model.position.x += nx * overlap * weightA;
                 a.model.position.z += nz * overlap * weightA;
                 b.model.position.x -= nx * overlap * weightB;
@@ -459,15 +459,15 @@ function resolvePlayerCollisions(humanPlayer, allEntities) {
     }
 }
 
-// Gestione Pointer Lock
-// Cliccando sullo sfondo (il blocker) riprende il gioco
+
+
 uiManager.blocker.addEventListener('click', () => {
     if (matchManager.isGameStarted && !player.controls.isLocked) {
         if (player.isTouchDevice) {
             document.getElementById('touch-controls').style.display = 'block';
             uiManager.blocker.style.display = 'none';
 
-            // Ripristina Fullscreen se si era usciti
+            
             const docEl = document.documentElement;
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 try {
@@ -486,10 +486,10 @@ uiManager.blocker.addEventListener('click', () => {
     }
 });
 
-// Intercettiamo in modo globale e forzato (useCapture = true) il click sul pulsante "RIPRENDI"
-// Questo aggira eventuali e.stopPropagation() presenti nel codice dell'interfaccia (UIManager)
+
+
 document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.menu-btn, button'); // Cerchiamo un bottone o un elemento con classe menu-btn
+    const btn = e.target.closest('.menu-btn, button'); 
     if (btn && (btn.innerText.trim().toUpperCase() === 'RIPRENDI' || btn.innerText.trim().toUpperCase() === 'RESUME' || btn.id === 'btn-resume')) {
         if (matchManager.isGameStarted && !player.controls.isLocked) {
             if (player.isTouchDevice) {
@@ -530,37 +530,37 @@ if (touchPauseBtn) {
     }, { passive: false });
 }
 
-// Stato Locale
+
 let stamina = 100;
 let matchTime = 0;
 let isBallInPlay = false;
 
-// --- GESTIONE SLOW MOTION ---
+
 let timeScale = 1.0;
 let slowMoTimer = 0;
-let targetCameraZoom = 1.0; // Livello di zoom base
+let targetCameraZoom = 1.0; 
 
 document.addEventListener('triggerSlowMotion', (e) => {
     timeScale = e.detail.scale;
     slowMoTimer = e.detail.duration;
-    targetCameraZoom = 1.4; // Effetto zoom-in intenso durante lo slow-mo
+    targetCameraZoom = 1.4; 
 });
 
 const replaySystem = new ReplaySystem();
 const gameEntities = { ball, player, teammates, bots, homeGK, awayGK, referee };
 
-// Ascoltatore per l'inizio del replay (lanciato dal MatchManager)
+
 document.addEventListener('triggerReplay', () => {
     replaySystem.startPlayback();
     uiManager.showReplayUI(true);
 
-    // Nasconde gli indicatori globali (ping giallo e freccia verde della porta)
+    
     if (effects) {
         if (effects.playerIndicator) effects.playerIndicator.visible = false;
         if (effects.targetGoalGroup) effects.targetGoalGroup.visible = false;
     }
 
-    // Nasconde gli indicatori visivi di mira del giocatore (frecce, mirino)
+    
     if (player) {
         if (player.passArrow) player.passArrow.visible = false;
         if (player.aimRing) player.aimRing.visible = false;
@@ -568,14 +568,14 @@ document.addEventListener('triggerReplay', () => {
     }
 });
 
-// Ascoltatore per skippare il replay con SPAZIO
+
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' && replaySystem.isPlaying) {
         skipReplay();
     }
 });
 
-// Ascoltatore per skippare il replay col touch/click
+
 document.addEventListener('mousedown', (e) => {
     if (replaySystem.isPlaying) skipReplay();
 });
@@ -589,35 +589,35 @@ function skipReplay() {
     matchManager.resetAfterGoal();
     isBallInPlay = false;
 
-    // RIATTIVA GLI INDICATORI
+    
     if (effects) {
         if (effects.playerIndicator) effects.playerIndicator.visible = true;
         if (effects.targetGoalGroup) effects.targetGoalGroup.visible = true;
     }
 }
 
-// --- GAME LOOP ---
+
 function animate(timestamp) {
     requestAnimationFrame(animate);
     clock.update(timestamp);
     let rawDelta = Math.min(clock.getDelta(), 0.1);
 
-    // --- SLOW MOTION UPDATE ---
+    
     if (slowMoTimer > 0) {
-        slowMoTimer -= rawDelta; // Usa il tempo reale per scalare il timer
+        slowMoTimer -= rawDelta; 
         if (slowMoTimer <= 0) {
             timeScale = 1.0;
-            targetCameraZoom = 1.0; // Reset istantaneo (backup di sicurezza)
+            targetCameraZoom = 1.0; 
         } else if (slowMoTimer < 0.4) {
-            timeScale = THREE.MathUtils.lerp(timeScale, 1.0, 0.1); // Ritorno fluido alla normalità
-            targetCameraZoom = 1.0; // Inizia a rimpicciolire fluidamente l'inquadratura
+            timeScale = THREE.MathUtils.lerp(timeScale, 1.0, 0.1); 
+            targetCameraZoom = 1.0; 
         }
     }
 
-    // --- EFFETTO ZOOM DINAMICO ---
+    
     if (Math.abs(camera.zoom - targetCameraZoom) > 0.005) {
         camera.zoom = THREE.MathUtils.lerp(camera.zoom, targetCameraZoom, 0.08);
-        camera.updateProjectionMatrix(); // Necessario in Three.js per applicare le modifiche allo zoom
+        camera.updateProjectionMatrix(); 
     }
 
     let deltaTime = rawDelta * timeScale;
@@ -627,13 +627,13 @@ function animate(timestamp) {
             const targetPos = player.model.position.clone();
 
             if (isFaceTabActive) {
-                // --- MODALITÀ FACE SCULPTING: zoom sulla testa ---
-                // Troviamo la posizione della testa in world-space
+                
+                
                 let headWorldPos = targetPos.clone().add(new THREE.Vector3(0, 1.55, 0));
                 if (player.animator && player.animator.bones && player.animator.bones.head) {
                     player.animator.bones.head.getWorldPosition(headWorldPos);
                 }
-                // Camera frontale ravvicinata al viso
+                
                 const faceCamPos = new THREE.Vector3(
                     headWorldPos.x,
                     headWorldPos.y,
@@ -642,23 +642,23 @@ function animate(timestamp) {
                 camera.position.lerp(faceCamPos, 0.12);
                 camera.lookAt(headWorldPos);
 
-                // Aggiorna gli handle del scultor
+                
                 if (faceSculptor) faceSculptor.update();
 
-                // Animazione idle fissa (non muovere il personaggio mentre scultiamo)
+                
                 if (player.animator) {
                     player.model.rotation.y = customizationRotation;
                     player.animator.animate(0, false, false, false, false, null, 0, null, false, 0);
                 }
             } else {
-                // --- MODALITÀ NORMALE ---
+                
                 const previewCamPos = new THREE.Vector3(targetPos.x, targetPos.y + customizationHeightOffset, targetPos.z + customizationDistance);
                 camera.position.lerp(previewCamPos, 0.1);
 
                 const lookTarget = new THREE.Vector3(targetPos.x, targetPos.y + customizationHeightOffset - 0.2, targetPos.z);
                 camera.lookAt(lookTarget);
 
-                // --- LOGICA ANIMAZIONE ---
+                
                 if (!isCustomizationPaused) {
                     customizationAnimTimer -= rawDelta;
 
@@ -695,41 +695,41 @@ function animate(timestamp) {
             camera.position.set(Math.cos(time * 0.1) * 60, 30, Math.sin(time * 0.1) * 60);
             camera.lookAt(0, 0, 0);
 
-            // Resetta la rotazione se esci dalla customizzazione
+            
             if (player.model) player.model.rotation.y = startYaw;
         }
     }
     else if (player.controls.isLocked || (player.isTouchDevice && document.getElementById('touch-controls').style.display !== 'none')) {
 
-        // --- LOGICA REPLAY ---
+        
         if (replaySystem.isPlaying) {
             const isStillPlaying = replaySystem.play(gameEntities, camera);
             if (!isStillPlaying) {
-                // Fine del replay
+                
                 uiManager.showReplayUI(false);
                 matchManager.resetAfterGoal();
-                isBallInPlay = false; // <--- NUOVO: Blocca i compagni per il nuovo calcio d'inizio
+                isBallInPlay = false; 
 
-                // RIATTIVA GLI INDICATORI
+                
                 if (effects) {
                     if (effects.playerIndicator) effects.playerIndicator.visible = true;
                     if (effects.targetGoalGroup) effects.targetGoalGroup.visible = true;
                 }
             }
         }
-        // --- LOGICA GIOCO NORMALE ---
+        
         else {
             if (!isBallInPlay && ball.velocity && ball.velocity.lengthSq() > 0.01) {
                 isBallInPlay = true;
             }
-            // Logica Stamina
+            
             const isMoving = player.keys.forward || player.keys.backward || player.keys.left || player.keys.right;
             const isRunning = player.keys.run && isMoving && player.stamina > 0;
 
             if (isRunning) {
-                player.stamina -= 1.5 * deltaTime; // Consumo molto più lento
+                player.stamina -= 1.5 * deltaTime; 
             }
-            // Eliminata la ricarica: la stamina non risale più!
+            
 
             player.stamina = Math.max(0, Math.min(100, player.stamina));
             if (player.stamina === 0) player.keys.run = false;
@@ -738,7 +738,7 @@ function animate(timestamp) {
             uiManager.updateHUD(player.playerName, player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
             scoreboard.updateScore(matchManager.homeScore, matchManager.awayScore, matchTime);
 
-            // Aggiornamento Entità
+            
             ball.update(deltaTime);
             player.update(deltaTime);
             referee.update(deltaTime);
@@ -755,14 +755,14 @@ function animate(timestamp) {
             const isBotActive = isBallInPlay && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick';
 
             teammates.forEach(t => t.update(
-                deltaTime,           // 1. deltaTime
-                ball,                // 2. ball
-                player,              // 3. giocatore umano
-                bots,                // 4. avversari (opponents)
-                teammates,           // 5. compagni
-                attackDirX,          // 6. direzione d'attacco
-                isBotActive,         // 7. se la partita è attiva
-                currentMatchState    // 8. stato del possesso palla
+                deltaTime,           
+                ball,                
+                player,              
+                bots,                
+                teammates,           
+                attackDirX,          
+                isBotActive,         
+                currentMatchState    
             ));
             const opponents = [player, ...teammates];
             bots.forEach(b => b.update(deltaTime, isBotActive, currentMatchState, attackDirX, opponents, bots));
@@ -770,7 +770,7 @@ function animate(timestamp) {
             homeGK.update(deltaTime, player.model);
             awayGK.update(deltaTime, player.model);
 
-            // --- COLLISIONI PLAYER-TO-PLAYER ---
+            
             resolvePlayerCollisions(player, [player, ...teammates, ...bots, homeGK, awayGK]);
             const isTraining = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick';
 
@@ -790,14 +790,14 @@ function animate(timestamp) {
             const boostFill = document.getElementById('boost-bar-fill');
             if (boostFill) boostFill.style.width = player.boost + '%';
 
-            // Effetti, Regole e Radar
+            
             updateEffects(effects, player, matchManager.playerTeam, clock.getElapsed(), isRunning, deltaTime, camera);
             matchManager.updateRules();
             uiManager.updateRadar(player.model, player.yaw, ball.mesh, ball.position, bots);
 
             updateWeatherParticles(deltaTime, player.model ? player.model.position : new THREE.Vector3());
 
-            // REGISTRA IL FRAME
+            
             replaySystem.record(gameEntities);
         }
     }
@@ -811,7 +811,7 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// --- LOGICA CAROSELLO COMANDI ---
+
 const slides = document.querySelectorAll('.carousel-slide');
 const dots = document.querySelectorAll('.dot');
 const btnPrev = document.getElementById('btn-prev-slide');
@@ -819,15 +819,15 @@ const btnNext = document.getElementById('btn-next-slide');
 let currentSlide = 0;
 
 function showSlide(index) {
-    // Rimuovi la classe active da tutto
+    
     slides.forEach(slide => slide.classList.remove('active'));
     dots.forEach(dot => dot.classList.remove('active'));
 
-    // Gestisci i limiti (loop continuo)
+    
     if (index >= slides.length) currentSlide = 0;
     if (index < 0) currentSlide = slides.length - 1;
 
-    // Aggiungi la classe active alla slide corrente
+    
     slides[currentSlide].classList.add('active');
     dots[currentSlide].classList.add('active');
 }
@@ -842,13 +842,13 @@ btnPrev.addEventListener('click', () => {
     showSlide(currentSlide);
 });
 
-// Resetta il carosello alla prima pagina ogni volta che apri il menu comandi
+
 document.getElementById('btn-commands').addEventListener('click', () => {
     currentSlide = 0;
     showSlide(currentSlide);
 });
 
-// --- SISTEMA SOSTITUZIONI ---
+
 let subsRemaining = 5;
 
 document.addEventListener('openSubstitutions', () => {
@@ -869,7 +869,7 @@ document.addEventListener('openSubstitutions', () => {
     const myGK = myTeam === 'home' ? matchManager.homeGK : matchManager.awayGK;
     const activePlayers = [player, teammates[0], teammates[1], myGK];
 
-    // Genera carte giocatori in campo
+    
     activePlayers.forEach((p, index) => {
         let displayData = p;
         if (window.pendingSubstitutions) {
@@ -881,7 +881,7 @@ document.addEventListener('openSubstitutions', () => {
         
         const card = createPlayerCard(displayData, true, index, p);
         
-        // Evidenzia che è una sostituzione pendente
+        
         if (displayData !== p) {
             card.style.boxShadow = '0 0 20px #FFEB3B';
             card.style.border = '2px solid #FFEB3B';
@@ -890,7 +890,7 @@ document.addEventListener('openSubstitutions', () => {
         activeContainer.appendChild(card);
     });
 
-    // Genera carte panchina
+    
     const myBench = benchPlayers.filter(bp => bp.team === myTeam && !bp.isSubbed);
 
     myBench.forEach((bp, index) => {
@@ -901,7 +901,7 @@ document.addEventListener('openSubstitutions', () => {
 
 function createPlayerCard(playerData, isActive, index, originalPlayer = null) {
     const card = document.createElement('div');
-    // Assegna la classe tattica per posizionare i giocatori sul campo
+    
     const positionClass = isActive ? `tactical-slot-${index}` : 'bench-slot';
     card.className = `fut-card ${positionClass}`;
     if (!isActive) card.draggable = true;
@@ -909,7 +909,7 @@ function createPlayerCard(playerData, isActive, index, originalPlayer = null) {
     const staminaClass = playerData.stamina > 50 ? 'stamina-high' : (playerData.stamina > 20 ? 'stamina-med' : 'stamina-low');
     const displayStamina = Math.floor(playerData.stamina || 100);
 
-    // Assegna sfondi diversi per carte diverse in base all'OVR
+    
     let cardTheme = 'gold';
     if (playerData.ovr >= 90) cardTheme = 'special';
     else if (playerData.ovr < 80) cardTheme = 'silver';
@@ -935,7 +935,7 @@ function createPlayerCard(playerData, isActive, index, originalPlayer = null) {
             e.dataTransfer.setData('text/plain', index);
         });
     } else {
-        // Drop zone
+        
         card.addEventListener('dragover', (e) => {
             e.preventDefault();
             card.classList.add('drag-over');
@@ -971,14 +971,14 @@ function performSubstitution(activePlayer, benchIndex) {
 
     if (subPlayer) {
         subsRemaining--;
-        subPlayer.isSubbed = true; // Rimuove dalla panchina temporaneamente
+        subPlayer.isSubbed = true; 
 
-        // Se c'è già una sostituzione pendente per questo slot, liberiamo il vecchio panchinaro
+        
         const existingSubIndex = window.pendingSubstitutions.findIndex(sub => sub.activePlayer === activePlayer);
         if (existingSubIndex !== -1) {
             window.pendingSubstitutions[existingSubIndex].subPlayer.isSubbed = false;
             window.pendingSubstitutions[existingSubIndex].subPlayer = subPlayer;
-            subsRemaining++; // Restituiamo il gettone sostituzione
+            subsRemaining++; 
         } else {
             window.pendingSubstitutions.push({
                 activePlayer: activePlayer,
@@ -991,7 +991,7 @@ function performSubstitution(activePlayer, benchIndex) {
             <div style="font-size: 14px;">It will happen on the next set piece.</div>
         `);
 
-        // Ricarica la UI
+        
         document.dispatchEvent(new Event('openSubstitutions'));
     }
 }
@@ -1008,7 +1008,7 @@ window.executePendingSubstitutions = function () {
         const oldName = activePlayer.playerName;
         const newName = subPlayer.playerName;
 
-        // Swap dati
+        
         activePlayer.playerName = subPlayer.playerName;
         activePlayer.avatar = subPlayer.avatar;
         activePlayer.ovr = subPlayer.ovr;

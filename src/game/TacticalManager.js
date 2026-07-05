@@ -10,7 +10,7 @@ export class TacticalManager {
         this.assignments = new Map();
     }
 
-    // Aggiunto default = [] per teammates
+    
     updateOffensiveLanes(player, teammates = [], ball, attackDirX) {
         if (!player || !teammates || teammates.length === 0) return;
 
@@ -22,7 +22,7 @@ export class TacticalManager {
         else if (playerFutureZ < -7) playerLane = 'RIGHT';
 
         const availableLanes = Object.keys(this.lanes).filter(lane => lane !== playerLane);
-        const unassignedBots = [...teammates]; // Ora è sicuro perché teammates è un array garantito
+        const unassignedBots = [...teammates]; 
 
         unassignedBots.forEach(bot => {
             if (!bot.id) bot.id = Math.random().toString(36).substr(2, 9);

@@ -2,46 +2,46 @@ import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 
 export function createEnvironment(scene) {
-    const pitchGroup = new THREE.Group(); // Creiamo un gruppo per muovere tutto insieme
+    const pitchGroup = new THREE.Group(); 
 
-    // --- PARAMETRI DEL CAMPO ---
-    const pWidth = 61.8;  // Larghezza (asse X)
-    const pLength = 100.8; // Lunghezza (asse Z)
+    
+    const pWidth = 61.8;  
+    const pLength = 100.8; 
     const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-    // --- 1. LE LINEE DEL CAMPO ---
+    
     function buildPitchLines() {
         const lines = new THREE.Group();
 
-        // Perimetro esterno
+        
         const outlineGeo = new THREE.PlaneGeometry(pWidth, pLength);
-        const edges = new THREE.EdgesGeometry(outlineGeo); // Crea solo i bordi
+        const edges = new THREE.EdgesGeometry(outlineGeo); 
         const outline = new THREE.LineSegments(edges, lineMat);
         outline.rotation.x = -Math.PI / 2;
         lines.add(outline);
 
-        // Linea di metà campo
+        
         const centerLineGeo = new THREE.PlaneGeometry(pWidth, 0.2);
         const centerLine = new THREE.Mesh(centerLineGeo, lineMat);
         centerLine.rotation.x = -Math.PI / 2;
         lines.add(centerLine);
 
-        // Cerchio centrale
+        
         const circleGeo = new THREE.RingGeometry(9, 9.2, 32);
         const circle = new THREE.Mesh(circleGeo, lineMat);
         circle.rotation.x = -Math.PI / 2;
         lines.add(circle);
 
-        // --- NUOVE LINEE: AREE E LUNETTE ---
-        // Dimensioni standard proporzionate
-        const penaltyBoxW = 40.3; // Larghezza area di rigore
-        const penaltyBoxL = 16.5; // Lunghezza (profondità) area di rigore
-        const goalBoxW = 18.3;    // Larghezza area piccola
-        const goalBoxL = 5.5;     // Lunghezza area piccola
-        const spotDist = 11.0;    // Distanza del dischetto dalla linea di porta
-        const arcRadius = 9.15;   // Raggio della lunetta
+        
+        
+        const penaltyBoxW = 40.3; 
+        const penaltyBoxL = 16.5; 
+        const goalBoxW = 18.3;    
+        const goalBoxL = 5.5;     
+        const spotDist = 11.0;    
+        const arcRadius = 9.15;   
 
-        // Funzione di supporto per disegnare rettangoli (Aree)
+        
         function createAreaBox(w, l, zPos) {
             const geo = new THREE.PlaneGeometry(w, l);
             const edgeGeo = new THREE.EdgesGeometry(geo);
@@ -51,21 +51,21 @@ export function createEnvironment(scene) {
             return mesh;
         }
 
-        // Aggiungiamo le Aree di Rigore (Grande)
-        // Posizionate alle due estremità calcolando il centro del rettangolo
+        
+        
         lines.add(createAreaBox(penaltyBoxW, penaltyBoxL, pLength / 2 - penaltyBoxL / 2));
         lines.add(createAreaBox(penaltyBoxW, penaltyBoxL, -pLength / 2 + penaltyBoxL / 2));
 
-        // Aggiungiamo le Aree del Portiere (Piccola)
+        
         lines.add(createAreaBox(goalBoxW, goalBoxL, pLength / 2 - goalBoxL / 2));
         lines.add(createAreaBox(goalBoxW, goalBoxL, -pLength / 2 + goalBoxL / 2));
 
-        // Funzione di supporto per disegnare le Lunette (Penalty Arcs)
-        // Calcoliamo matematicamente l'angolo esatto in cui il cerchio tocca l'area di rigore
+        
+        
         const arcAngle = Math.acos((penaltyBoxL - spotDist) / arcRadius);
 
         function createArc(zCenter, isTopGoal) {
-            // Definiamo verso dove guarda l'arco (verso il centro del campo)
+            
             const baseAngle = isTopGoal ? -Math.PI / 2 : Math.PI / 2;
             const curve = new THREE.ArcCurve(0, 0, arcRadius, baseAngle - arcAngle, baseAngle + arcAngle, false);
             const points = curve.getPoints(32);
@@ -77,34 +77,34 @@ export function createEnvironment(scene) {
             return arcMesh;
         }
 
-        // Aggiungiamo le lunette partendo dal centro del dischetto di rigore
-        lines.add(createArc(-pLength / 2 + spotDist, true));  // Porta Nord
-        lines.add(createArc(pLength / 2 - spotDist, false)); // Porta Sud
+        
+        lines.add(createArc(-pLength / 2 + spotDist, true));  
+        lines.add(createArc(pLength / 2 - spotDist, false)); 
 
         pitchGroup.add(lines);
     }
 
-    // --- 3. CARICAMENTO STADIO ---
+    
     function loadRealStadium() {
         modelManager.load(`${import.meta.env.BASE_URL}models/stadium.glb`, (gltf) => {
             const model = gltf.scene;
             model.scale.set(1, 1, 1);
 
-            // 1. Calcoliamo la Bounding Box del modello
+            
             const box = new THREE.Box3().setFromObject(model);
 
-            // 2. Troviamo il suo centro matematico
+            
             const center = new THREE.Vector3();
             box.getCenter(center);
 
-            // 3. Spostiamo il modello in X e Z per centrare il prato
+            
             model.position.x = -center.x;
             model.position.z = -center.z;
 
-            // 4. ALZIAMO LO STADIO: Ignoriamo center.y e lo mettiamo a 0 (o lo regoliamo a mano)
+            
             model.position.y = 0;
 
-            // Nascondiamo le porte modellate
+            
             model.traverse((child) => {
                 if (child.isMesh) {
                     child.castShadow = true;
@@ -116,14 +116,14 @@ export function createEnvironment(scene) {
         });
     }
 
-    // --- ESECUZIONE ---
+    
     buildPitchLines();
 
-    // Alziamo il gruppo del campo di un soffio per evitare che "tremi" sopra l'erba
+    
     pitchGroup.position.y = 0.02;
 
-    // SE IL CAMPO È GIRATO NEL VERSO SBAGLIATO RISPETTO ALLO STADIO:
-    // Scommenta la riga sotto per ruotarlo di 90 gradi
+    
+    
     pitchGroup.rotation.y = Math.PI / 2;
 
     scene.add(pitchGroup);

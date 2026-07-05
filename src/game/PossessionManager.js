@@ -1,4 +1,4 @@
-// game/PossessionManager.js
+
 
 export const MatchState = {
     HOME_POSSESSION: 'HOME_POSSESSION',
@@ -33,16 +33,16 @@ export class PossessionManager {
     update(ball, player, teammates, bots, deltaTime) {
         if (!ball || !ball.isLoaded) return;
 
-        // Il possesso viene gestito esclusivamente tramite eventi.
-        // Qui controlliamo SOLO se il giocatore attualmente controllato (Player) tocca la palla,
-        // in tal caso il possesso torna immediatamente a HOME. I tocchi dei bot alleati (Teammates) vengono ignorati.
+        
+        
+        
 
         if (this.currentState !== MatchState.HOME_POSSESSION) {
-            const touchRadius = 1.2; // Raggio di contatto con la palla
+            const touchRadius = 1.2; 
 
-            // 1. Controlla SOLO il Player
+            
             if (player && player.model) {
-                // Se il player sta battendo un calcio da fermo o rimessa, ripristina il possesso a HOME
+                
                 if (player.action && (player.action.isThrowingIn || player.action.isTakingCorner || player.action.isTakingGoalKick)) {
                     this.currentState = MatchState.HOME_POSSESSION;
                     return;

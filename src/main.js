@@ -871,7 +871,22 @@ document.addEventListener('openSubstitutions', () => {
 
     // Genera carte giocatori in campo
     activePlayers.forEach((p, index) => {
-        const card = createPlayerCard(p, true, index);
+        let displayData = p;
+        if (window.pendingSubstitutions) {
+            const pending = window.pendingSubstitutions.find(sub => sub.activePlayer === p);
+            if (pending) {
+                displayData = pending.subPlayer;
+            }
+        }
+        
+        const card = createPlayerCard(displayData, true, index, p);
+        
+        // Evidenzia che è una sostituzione pendente
+        if (displayData !== p) {
+            card.style.boxShadow = '0 0 20px #FFEB3B';
+            card.style.border = '2px solid #FFEB3B';
+        }
+
         activeContainer.appendChild(card);
     });
 
@@ -884,7 +899,7 @@ document.addEventListener('openSubstitutions', () => {
     });
 });
 
-function createPlayerCard(playerData, isActive, index) {
+function createPlayerCard(playerData, isActive, index, originalPlayer = null) {
     const card = document.createElement('div');
     // Assegna la classe tattica per posizionare i giocatori sul campo
     const positionClass = isActive ? `tactical-slot-${index}` : 'bench-slot';
@@ -933,7 +948,8 @@ function createPlayerCard(playerData, isActive, index) {
             card.classList.remove('drag-over');
             const benchIndex = e.dataTransfer.getData('text/plain');
             if (benchIndex !== "") {
-                performSubstitution(playerData, parseInt(benchIndex));
+                const targetPlayer = originalPlayer || playerData;
+                performSubstitution(targetPlayer, parseInt(benchIndex));
             }
         });
     }
@@ -957,10 +973,18 @@ function performSubstitution(activePlayer, benchIndex) {
         subsRemaining--;
         subPlayer.isSubbed = true; // Rimuove dalla panchina temporaneamente
 
-        window.pendingSubstitutions.push({
-            activePlayer: activePlayer,
-            subPlayer: subPlayer
-        });
+        // Se c'è già una sostituzione pendente per questo slot, liberiamo il vecchio panchinaro
+        const existingSubIndex = window.pendingSubstitutions.findIndex(sub => sub.activePlayer === activePlayer);
+        if (existingSubIndex !== -1) {
+            window.pendingSubstitutions[existingSubIndex].subPlayer.isSubbed = false;
+            window.pendingSubstitutions[existingSubIndex].subPlayer = subPlayer;
+            subsRemaining++; // Restituiamo il gettone sostituzione
+        } else {
+            window.pendingSubstitutions.push({
+                activePlayer: activePlayer,
+                subPlayer: subPlayer
+            });
+        }
 
         uiManager.showInGameMessage(`
             <div style="font-size: 16px; color: #aaa; margin-bottom: 5px;">SUBSTITUTION SCHEDULED</div>

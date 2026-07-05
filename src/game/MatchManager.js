@@ -394,7 +394,7 @@ export class MatchManager {
         if (!this.ball.isHeld) {
             const trackingRadius = 1.3; // Raggio entro cui consideriamo un "tocco"
             const playerHeight = 1.8;   // Altezza capsula giocatore (come in handleCollisions)
-            let closestDist = trackingRadius;
+            let closestDist = Infinity;
             let closestEntity = null;
 
             // Creiamo una lista di tutti i possibili giocatori in campo
@@ -409,12 +409,17 @@ export class MatchManager {
             // per non perdere i tocchi quando la palla è alta (petto/testa)
             for (let ent of allParticipants) {
                 if (ent && ent.model) {
-                    const closestY = Math.max(ent.model.position.y, Math.min(ent.model.position.y + playerHeight, this.ball.position.y));
+                    const isHeading = ent.action && ent.action.isHeading;
+                    const effectiveHeight = isHeading ? 4.0 : playerHeight;
+                    const effectiveRadius = isHeading ? 4.0 : trackingRadius;
+
+                    const closestY = Math.max(ent.model.position.y, Math.min(ent.model.position.y + effectiveHeight, this.ball.position.y));
                     const dx = ent.model.position.x - this.ball.position.x;
                     const dy = closestY - this.ball.position.y;
                     const dz = ent.model.position.z - this.ball.position.z;
                     const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    if (dist < closestDist) {
+                    
+                    if (dist <= effectiveRadius && dist < closestDist) {
                         closestDist = dist;
                         closestEntity = ent;
                     }
@@ -454,11 +459,11 @@ export class MatchManager {
             if (this.ball.position.x > 0) {
                 this.homeScore++;
                 this.kickOffTeam = 'away';
-                this.uiManager.showInGameMessage(this.playerTeam === 'home' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO 🤦‍♂️");
+                this.uiManager.showInGameMessage(this.playerTeam === 'home' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOAL CONCEDED 🤦‍♂️");
             } else {
                 this.awayScore++;
                 this.kickOffTeam = 'home';
-                this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOL SUBITO 🤦‍♂️");
+                this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOAL CONCEDED 🤦‍♂️");
             }
 
             // Lancia l'evento del replay dopo 3s (aspetta che il popup del goal scompaia prima di mostrare il replay)

@@ -9,7 +9,7 @@ export class ReplaySystem {
         this.currentFrame = 0;
     }
 
-    // Estrae in modo sicuro posizione, rotazione e STATO OSSA
+    
     _extractState(entity) {
         if (!entity || !entity.model) return null;
 
@@ -19,7 +19,7 @@ export class ReplaySystem {
             bones: {}
         };
 
-        // Salviamo lo stato di tutte le singole ossa animate manualmente
+        
         if (entity.animator && entity.animator.bones) {
             for (const [boneName, bone] of Object.entries(entity.animator.bones)) {
                 state.bones[boneName] = {
@@ -32,15 +32,15 @@ export class ReplaySystem {
         return state;
     }
 
-    // Applica posizione, rotazione e STATO OSSA
+    
     _applyState(entity, state) {
         if (!entity || !entity.model || !state) return;
         
-        // Applica i trasform globali
+       
         entity.model.position.copy(state.pos);
         entity.model.quaternion.copy(state.rot);
 
-        // Applica i trasform delle singole ossa
+      
         if (state.bones && entity.animator && entity.animator.bones) {
             for (const [boneName, boneState] of Object.entries(state.bones)) {
                 const bone = entity.animator.bones[boneName];
@@ -69,7 +69,7 @@ export class ReplaySystem {
 
         this.buffer.push(frame);
         if (this.buffer.length > this.maxFrames) {
-            this.buffer.shift(); // Rimuove il frame più vecchio
+            this.buffer.shift(); 
         }
     }
 
@@ -83,19 +83,19 @@ export class ReplaySystem {
     play(entities, camera) {
         if (!this.isPlaying || this.currentFrame >= this.buffer.length) {
             this.stopPlayback();
-            return false; // Replay terminato
+            return false; 
         }
 
         const frame = this.buffer[this.currentFrame];
 
-        // Applica stato palla
+        
         entities.ball.position.copy(frame.ball.pos);
         if (entities.ball.mesh) {
             entities.ball.mesh.position.copy(frame.ball.pos);
             entities.ball.mesh.quaternion.copy(frame.ball.rot);
         }
 
-        // Applica stato giocatori
+        
         this._applyState(entities.player, frame.player);
         this._applyState(entities.homeGK, frame.homeGK);
         this._applyState(entities.awayGK, frame.awayGK);
@@ -103,13 +103,13 @@ export class ReplaySystem {
         entities.teammates.forEach((t, i) => this._applyState(t, frame.teammates[i]));
         entities.bots.forEach((b, i) => this._applyState(b, frame.bots[i]));
 
-        // Telecamera Cinematica "TV" per il Replay
+   
         const targetCamPos = new THREE.Vector3(frame.ball.pos.x, 15, frame.ball.pos.z + 25);
-        camera.position.lerp(targetCamPos, 0.05); // Movimento fluido
+        camera.position.lerp(targetCamPos, 0.05); 
         camera.lookAt(frame.ball.pos);
 
         this.currentFrame++;
-        return true; // Replay in corso
+        return true;
     }
 
     stopPlayback() {

@@ -12,7 +12,7 @@ class ModelManager {
         if (this.cache.has(url)) {
             const gltf = this.cache.get(url);
             const clonedScene = clone(gltf.scene);
-            // Simulate async behavior for consistency
+
             setTimeout(() => {
                 callback({ ...gltf, scene: clonedScene });
             }, 0);

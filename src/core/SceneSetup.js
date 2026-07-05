@@ -10,7 +10,7 @@ let rainSystem = null;
 let snowSystem = null;
 let snowOverlay = null;
 
-// Funzione per creare dinamicamente una texture a chiazze di neve
+
 function createSnowPatchTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -34,7 +34,7 @@ function createSnowPatchTexture() {
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(40, 40); // Ripetizioni sul campo
+    texture.repeat.set(40, 40);
     return texture;
 }
 
@@ -56,19 +56,19 @@ export function setupScene() {
     directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
     directionalLight.position.set(50, 80, 20);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048; // Aumentata risoluzione per ombre più definite
+    directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.left = -60;
     directionalLight.shadow.camera.right = 60;
     directionalLight.shadow.camera.top = 60;
     directionalLight.shadow.camera.bottom = -60;
-    directionalLight.shadow.bias = -0.0005; // Evita artefatti visivi delle ombre
+    directionalLight.shadow.bias = -0.0005;
     scene.add(directionalLight);
 
-    // Caricamento del cielo predefinito (Giorno, Sereno)
+
     updateSceneEnvironment(scene, 'day', 'clear');
 
-    // Setup Erba
+
     const textureLoader = new THREE.TextureLoader();
     const grassRepeat = new THREE.Vector2(250, 250);
     function loadG(url) {
@@ -90,15 +90,15 @@ export function setupScene() {
     pitch.receiveShadow = true;
     scene.add(pitch);
 
-    // Livello "Neve" a chiazze invisibile di default, posizionato appena sopra l'erba
+
     const snowMat = new THREE.MeshStandardMaterial({ map: createSnowPatchTexture(), transparent: true, opacity: 0.0, roughness: 0.9, depthWrite: false });
     snowOverlay = new THREE.Mesh(pitchGeo, snowMat);
     snowOverlay.rotation.x = -Math.PI / 2;
-    snowOverlay.position.y = 0.01; // Si incastra tra il prato (y=0) e le linee (y=0.02)
+    snowOverlay.position.y = 0.01;
     snowOverlay.receiveShadow = true;
     scene.add(snowOverlay);
 
-    // Aggiungi il Tabellone Segnapunti
+
     const scoreboard = new Scoreboard(scene);
 
     return { scene, camera, renderer, scoreboard };
@@ -108,12 +108,12 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
     const rgbeLoader = new HDRLoader();
     const exrLoader = new EXRLoader();
 
-    // --- 1. GESTIONE ORARIO (LUCI E SKYBOX) ---
+
     if (timeOfDay === 'night') {
-        // Colore di fallback scuro immediato
+
         scene.background = new THREE.Color(0x020205);
 
-        // Carichiamo il file .exr che hai scaricato
+
         exrLoader.load(`${import.meta.env.BASE_URL}textures/skybox/night_sky.exr`, (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             scene.background = texture;
@@ -122,18 +122,18 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
             console.error("Errore nel caricamento dell'EXR notturno:", err);
         });
 
-        // Setup luci notturne
-        directionalLight.intensity = 0.6; // Luna più forte per far risaltare i giocatori
-        directionalLight.color.setHex(0x7777aa); // Tonalità bluastra più chiara
-        ambientLight.intensity = 0.5; // Luce di base alzata per illuminare i modelli 3D da ogni lato
-        ambientLight.color.setHex(0x606070); // Grigio/blu neutro
+
+        directionalLight.intensity = 0.6;
+        directionalLight.color.setHex(0x7777aa);
+        ambientLight.intensity = 0.5;
+        ambientLight.color.setHex(0x606070);
 
         createStadiumLights(scene);
     } else {
-        // Giorno: Colore di fallback azzurro
+
         scene.background = new THREE.Color(0x87CEEB);
 
-        // Carichiamo il file .hdr per il giorno
+
         rgbeLoader.load(`${import.meta.env.BASE_URL}textures/skybox/sky.hdr`, (texture) => {
             texture.mapping = THREE.EquirectangularReflectionMapping;
             scene.background = texture;
@@ -142,7 +142,7 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
             console.error("Errore nel caricamento dell'HDR diurno:", err);
         });
 
-        // Setup luci diurne (Sole pieno)
+
         directionalLight.intensity = 1.2;
         directionalLight.color.setHex(0xffffff);
         ambientLight.intensity = 0.5;
@@ -151,39 +151,39 @@ export function updateSceneEnvironment(scene, timeOfDay, weather) {
         removeStadiumLights(scene);
     }
 
-    // --- 2. GESTIONE METEO (NEBBIA E PARTICELLE) ---
-    // Reset preventivo
+
+
     scene.fog = null;
     if (rainSystem) { scene.remove(rainSystem); rainSystem = null; }
     if (snowSystem) { scene.remove(snowSystem); snowSystem = null; }
 
-    if (snowOverlay) snowOverlay.material.opacity = 0.0; // Reset della neve sul terreno
+    if (snowOverlay) snowOverlay.material.opacity = 0.0;
 
-    // Logica nebbia e parametri luce basati sul meteo
+
     switch (weather) {
         case 'fog':
-            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x444455 : 0xcccccc, 0.015); // Grigio invece che nero di notte
+            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x444455 : 0xcccccc, 0.015);
             ambientLight.intensity *= 0.8;
             directionalLight.intensity *= 0.5;
             break;
 
         case 'rain':
-            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x333344 : 0x888899, 0.01); // Grigio scuro invece che nero
+            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x333344 : 0x888899, 0.01);
             ambientLight.intensity *= 0.6;
             directionalLight.intensity *= 0.4;
             createRain(scene);
             break;
 
         case 'snow':
-            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x555566 : 0xeeeeff, 0.012); // Grigio chiaro bluastro
-            ambientLight.intensity *= 1.1; // La neve schiarisce l'ambiente
+            scene.fog = new THREE.FogExp2(timeOfDay === 'night' ? 0x555566 : 0xeeeeff, 0.012);
+            ambientLight.intensity *= 1.1;
             directionalLight.intensity *= 0.7;
-            if (snowOverlay) snowOverlay.material.opacity = 0.9; // Mostra le chiazze sul prato!
+            if (snowOverlay) snowOverlay.material.opacity = 0.9;
             createSnow(scene);
             break;
 
-        default: // 'clear'
-            // Nessuna nebbia o particelle aggiuntive
+        default:
+
             break;
     }
 }
@@ -192,36 +192,36 @@ let stadiumLights = [];
 function createStadiumLights(scene) {
     if (stadiumLights.length > 0) return;
 
-    // Posizioni basate sulle dimensioni del tuo Pitch.js (100x60)
-    // Le mettiamo leggermente esterne ai quattro angoli
+
+
     const positions = [
-        new THREE.Vector3(-80, 60, -60), // Angolo Nord-Ovest
-        new THREE.Vector3(80, 60, -60),  // Angolo Nord-Est
-        new THREE.Vector3(-80, 60, 60),  // Angolo Sud-Ovest
-        new THREE.Vector3(80, 60, 60)    // Angolo Sud-Est
+        new THREE.Vector3(-80, 60, -60),
+        new THREE.Vector3(80, 60, -60),
+        new THREE.Vector3(-80, 60, 60),
+        new THREE.Vector3(80, 60, 60)
     ];
 
     positions.forEach(pos => {
-        // Abbassiamo l'intensità per evitare di sovraesporre e far brillare troppo il campo
+
         const spotLight = new THREE.SpotLight(0xffffff, 10.0); 
         spotLight.position.copy(pos);
         
-        // PUNTAMENTO: Invece di puntare tutto a (0,0,0), 
-        // lasciamo che ogni luce punti verso il centro del campo per incrociarsi
+
+
         spotLight.target.position.set(0, 0, 0); 
         
-        // AMPIEZZA: Angolo molto largo (circa 90 gradi)
+
         spotLight.angle = Math.PI / 2; 
         
-        // SFUMATURA: Penumbra per bordi molto morbidi che si fondono tra loro
+
         spotLight.penumbra = 0.5;
         
-        // DECADIMENTO: 1.0 rende la luce meno soggetta a spegnersi subito
+
         spotLight.decay = 0.5; 
         spotLight.distance = 400; 
         
-        // OTTIMIZZAZIONE PRESTAZIONI: Disabilitiamo le ombre dei 4 fari angolari.
-        // Renderizzare 4 ombre sovrapposte ad alta risoluzione causa un calo massiccio di FPS.
+
+
         spotLight.castShadow = false;
 
         scene.add(spotLight);
@@ -247,7 +247,7 @@ function createRain(scene) {
         rainPos[i * 3] = (Math.random() - 0.5) * 150;
         rainPos[i * 3 + 1] = Math.random() * 60;
         rainPos[i * 3 + 2] = (Math.random() - 0.5) * 100;
-        rainVel.push(new THREE.Vector3(0, -10 - Math.random() * 10, 0)); // Velocità caduta
+        rainVel.push(new THREE.Vector3(0, -10 - Math.random() * 10, 0));
     }
     rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
 
@@ -264,7 +264,7 @@ function createRain(scene) {
 }
 
 function createSnow(scene) {
-    const snowCount = 3000; // Ridotta la neve che cade per maggiore visibilità
+    const snowCount = 3000;
     const snowGeo = new THREE.BufferGeometry();
     const snowPos = new Float32Array(snowCount * 3);
     const snowVel = [];
@@ -295,7 +295,7 @@ export function updateWeatherParticles(deltaTime, playerPosition) {
         const velocities = rainSystem.userData.velocities;
         for (let i = 0; i < velocities.length; i++) {
             positions[i * 3 + 1] += velocities[i].y * deltaTime;
-            // Se la goccia tocca terra, riposizionala sopra il giocatore per continuità
+
             if (positions[i * 3 + 1] < 0) {
                 positions[i * 3 + 1] = 60 + Math.random() * 10;
                 positions[i * 3] = playerPosition.x + (Math.random() - 0.5) * 150;
@@ -313,11 +313,11 @@ export function updateWeatherParticles(deltaTime, playerPosition) {
             positions[i * 3 + 1] += velocities[i].y * deltaTime;
             positions[i * 3 + 2] += velocities[i].z * deltaTime;
 
-            // Oscillazione laterale casuale per la neve con attrito
+
             velocities[i].x += (Math.random() - 0.5) * 0.1;
             velocities[i].z += (Math.random() - 0.5) * 0.1;
             
-            // Smorzamento (Friction) per evitare che i fiocchi accelerino all'infinito e sembrino linee orizzontali
+
             velocities[i].x *= 0.98; 
             velocities[i].z *= 0.98;
 
@@ -331,24 +331,24 @@ export function updateWeatherParticles(deltaTime, playerPosition) {
     }
 }
 
-// --- IMPOSTAZIONI GRAFICHE ---
+
 export function setGraphicsQuality(quality, renderer) {
     if (!renderer || !directionalLight) return;
 
     if (quality === 0) {
-        // Qualità Bassa: niente ombre, pixel ratio base
+
         renderer.shadowMap.enabled = false;
         renderer.setPixelRatio(1);
         directionalLight.castShadow = false;
     } else if (quality === 1) {
-        // Qualità Media: ombre standard, pixel ratio base
+
         renderer.shadowMap.enabled = true;
         renderer.setPixelRatio(1);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 1024;
         directionalLight.shadow.mapSize.height = 1024;
     } else {
-        // Qualità Alta: ombre alta risoluzione, pixel ratio retina
+
         renderer.shadowMap.enabled = true;
         renderer.setPixelRatio(window.devicePixelRatio);
         directionalLight.castShadow = true;

@@ -733,8 +733,7 @@ export class UIManager {
 
         
         const fakeBonuses = [
-            "VELOCITÀ FLASH", "MAGNETE", "SCUDO FERREO", "PALLA INFUOCATA", 
-            "TACKLE GIGANTE", "INVISIBILITÀ", "TELETRASPORTO"
+            "🔥 SUPER TIRO", "⚡ TIRO ELETTRICO"
         ];
 
         

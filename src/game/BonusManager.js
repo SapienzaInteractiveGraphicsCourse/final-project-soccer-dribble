@@ -91,7 +91,7 @@ export class BonusManager {
                 window.fireTrailEffect.activate(player.ball, 'electric');
             }
             if (this.uiManager) {
-                this.uiManager.triggerBonusRoulette("ELECTRIC SHOOT", "bonus-electricshot");
+                this.uiManager.triggerBonusRoulette("⚡ TIRO ELETTRICO", "bonus-electricshot");
             }
         } else {
             player.action.hasSuperShot = true;
@@ -100,7 +100,7 @@ export class BonusManager {
                 window.fireTrailEffect.activate(player.ball, 'fire');
             }
             if (this.uiManager) {
-                this.uiManager.triggerBonusRoulette("FIRE SHOOT", "bonus-supershot");
+                this.uiManager.triggerBonusRoulette("🔥 SUPER TIRO", "bonus-supershot");
             }
         }
 

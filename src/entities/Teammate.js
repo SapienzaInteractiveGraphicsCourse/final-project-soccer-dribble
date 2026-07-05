@@ -6,7 +6,7 @@ import { defensiveManager } from '../game/DefensiveManager.js';
 
 export class Teammate {
     constructor(scene, startPosition, startYaw = 0) {
-        this.id = Math.random().toString(36).substr(2, 9); // ID univoco per il manager
+        this.id = Math.random().toString(36).substr(2, 9); 
         this.scene = scene;
         this.model = null;
         this.animator = new PlayerAnimator();
@@ -14,7 +14,7 @@ export class Teammate {
         this.startPosition = startPosition;
         this.yaw = startYaw; 
 
-        // --- STATISTICHE GIOCATORE ---
+        
         this.stamina = 100;
         this.playerName = "Compagno";
         this.avatar = "👤";
@@ -33,16 +33,16 @@ export class Teammate {
             if(radarContainer) radarContainer.appendChild(this.radarDot);
         }, 500);
 
-        // --- CACHE VETTORI (OTTIMIZZAZIONE) ---
+        
         this._idealPos = new THREE.Vector3();
         this._avoidanceVector = new THREE.Vector3();
-        this._teammateSeparation = new THREE.Vector3(); // <--- NUOVO
+        this._teammateSeparation = new THREE.Vector3(); 
         this._pushAway = new THREE.Vector3();
         this._pushFromBall = new THREE.Vector3();
         this._moveDir = new THREE.Vector3();
         this._dirToBall = new THREE.Vector3();
 
-        // (Stati rimessa e corner omessi per brevità, mantieni i tuoi)
+        
         this.isReceivingGoalKick = false;
         this.goalKickRunDir = 1;
         this.isReceivingThrowIn = false;
@@ -58,7 +58,7 @@ export class Teammate {
             this.model = gltf.scene;
             this.model.scale.set(1.5, 1.5, 1.5);
             this.model.position.copy(this.startPosition);
-            this.model.rotation.y = this.yaw; // <--- Applichiamo la rotazione
+            this.model.rotation.y = this.yaw; 
             
             this.model.traverse((child) => {
                 if (child.isMesh) { 
@@ -91,16 +91,16 @@ export class Teammate {
             return; 
         }
 
-        // --- GESTIONE RICEVITORE RIMESSA LATERALE ---
+        
         if (this.isReceivingThrowIn) {
             if (ball && !ball.isHeld) {
-                // La palla è stata lanciata, torna alla logica normale
+                
                 this.isReceivingThrowIn = false;
             } else {
                 const distToSupport = this.model.position.distanceTo(this.throwInSupportPos);
                 if (distToSupport > 0.5) {
                     this.isMoving = true;
-                    // Isteresi per evitare flickering
+                    
                     if (this.isRunning) {
                         this.isRunning = distToSupport > 3;
                     } else {
@@ -132,7 +132,7 @@ export class Teammate {
             }
         }
 
-        // --- GESTIONE RICEVITORE RIMESSA DAL FONDO ---
+        
         if (this.isReceivingGoalKick) {
             const distToBallXZ = new THREE.Vector2(this.model.position.x, this.model.position.z)
                                  .distanceTo(new THREE.Vector2(ball.position.x, ball.position.z));
@@ -166,15 +166,15 @@ export class Teammate {
             }
         }
 
-        // --- GESTIONE RICEVITORE CALCIO D'ANGOLO ---
+        
         if (this.isReceivingCorner) {
             if (ball.velocity.lengthSq() > 2.0) {
-                this.isReceivingCorner = false; // Il cross è partito, torna alla logica normale per attaccare la palla
+                this.isReceivingCorner = false; 
             } else {
                 const distToSupport = this.model.position.distanceTo(this.cornerSupportPos);
                 if (distToSupport > 0.5) {
                     this.isMoving = true;
-                    // Isteresi per evitare flickering
+                    
                     if (this.isRunning) {
                         this.isRunning = distToSupport > 3;
                     } else {
@@ -214,7 +214,7 @@ export class Teammate {
                 break;
 
             case 'AWAY_POSSESSION':
-                // Passiamo tutto il contesto anche alla difesa
+                
                 defensiveManager.updateDefensiveAssignments(teammates, opponents, ball, attackDirX);
                 this.executeDefendBehavior(deltaTime, ball, player, opponents, teammates, attackDirX);
                 break;
@@ -289,10 +289,10 @@ export class Teammate {
         
         this._idealPos.set(0, 0, 0);
         
-        // 1. IDENTIFICAZIONE CORSIA DINAMICA (Position Replacement)
+        
         const laneZ = tacticalManager.getAssignedLaneZ(this.id);
 
-        // 2. CALCOLO AVANZAMENTO E PROFONDITÀ (Fix: Assegnazione diretta, il LERP avviene nel movimento fisico)
+        
         const isBallNearGoal = (attackDirX === 1 && ball.position.x > 30) ||
                                (attackDirX === -1 && ball.position.x < -30);
 
@@ -304,16 +304,16 @@ export class Teammate {
             targetX = attackDirX === 1 ? Math.min(targetX, maxDepth) : Math.max(targetX, -maxDepth);
 
             this._idealPos.x = targetX;
-            this._idealPos.z = targetZ; // <--- FIX: Niente LERP, posizione assoluta
+            this._idealPos.z = targetZ; 
         } else {
             this._idealPos.x = ball.position.x + (attackDirX * 14); 
-            this._idealPos.z = laneZ;   // <--- FIX: Niente LERP, posizione assoluta
+            this._idealPos.z = laneZ;   
         }
 
-        // 3. SEPARATION TRA COMPAGNI (Non calpestarsi i piedi)
+        
         const teamSeparationRadius = 6.0;
         this._teammateSeparation.set(0, 0, 0);
-        let forceMoveAway = false; // <--- FLAG PER FORZARE LO SPOSTAMENTO
+        let forceMoveAway = false; 
 
         const allAllies = [...teammates, player].filter(a => a && a !== this && a.model);
         allAllies.forEach(ally => {
@@ -321,16 +321,16 @@ export class Teammate {
             if (dist < teamSeparationRadius) {
                 const push = new THREE.Vector3().subVectors(this.model.position, ally.model.position);
                 push.y = 0;
-                // Spinta aumentata (x 1.5) per una repulsione chiara e netta
+                
                 push.normalize().multiplyScalar((teamSeparationRadius - dist) * 1.5); 
                 this._teammateSeparation.add(push);
                 
-                forceMoveAway = true; // Se siamo troppo vicini, IGNORA la deadzone e scappa
+                forceMoveAway = true; 
             }
         });
         this._idealPos.add(this._teammateSeparation);
 
-        // 4. SMARCAMENTO DAGLI AVVERSARI (Avoidance)
+        
         const avoidanceRadius = 15.0; 
         this._avoidanceVector.set(0, 0, 0);
         
@@ -355,11 +355,11 @@ export class Teammate {
         }
         this._idealPos.add(this._avoidanceVector);
 
-        // 5. LIMITI DEL CAMPO
+        
         this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
         this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
 
-        // 6. MOVIMENTO FISICO E SCHIVATA PALLA
+        
         const distToIdeal = this.model.position.distanceTo(this._idealPos);
         const distToBall = this.model.position.distanceTo(ball.position);
         
@@ -375,7 +375,7 @@ export class Teammate {
             this.isMoving = true;
             this.isRunning = true;
         } else {
-            // FIX: forceMoveAway salta la regola dei 2 metri di tolleranza
+            
             let shouldMove = forceMoveAway || (this.isMoving ? (distToIdeal > 0.8) : (distToIdeal > 2.0));
 
             if (shouldMove) {
@@ -394,7 +394,7 @@ export class Teammate {
             }
         }
 
-        // 7. ORIENTAMENTO VERSO LA PALLA
+        
         this._dirToBall.subVectors(ball.position, this.model.position);
         this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }
@@ -402,33 +402,33 @@ export class Teammate {
     executeDefendBehavior(deltaTime, ball, player = null, opponents = [], teammates = [], attackDirX = 1) {
         if (!ball || !ball.isLoaded) return;
         
-        // 1. IDENTIFICAZIONE PORTA (La porta da difendere è opposta a quella d'attacco)
+        
         const myGoalX = -49.5 * attackDirX; 
         const goalPos = new THREE.Vector3(myGoalX, 0, 0);
 
-        // 2. ASSEGNAZIONE MARCATURA A UOMO (Dinamica)
+        
         const myIndex = teammates.indexOf(this);
         let targetOpponent = defensiveManager.getAssignedOpponent(this.id, opponents);
 
-        // 3. POSIZIONAMENTO TATTICO
+        
         const isOpponentCorner = opponents.some(opp => opp && opp.isTakingCorner);
 
         if (isOpponentCorner) {
-            // Tutti in area a difendere durante il calcio d'angolo avversario
+            
             const dirFromGoal = attackDirX;
             const offsetX = 5 + (myIndex % 3) * 3;
             const offsetZ = -9 + (myIndex % 4) * 6;
             this._idealPos.set(myGoalX + dirFromGoal * offsetX, 0, offsetZ);
         } else if (targetOpponent) {
-            // Si mette in mezzo (al 10%) tra l'avversario e la propria porta
+            
             const oppPos = targetOpponent.model ? targetOpponent.model.position : targetOpponent.position;
             this._idealPos.lerpVectors(oppPos, goalPos, 0.1); 
         } else {
-            // Se non ha una marcatura, copre la sua zona di partenza
+            
             this._idealPos.copy(this.startPosition);
         }
 
-        // 4. AVOIDANCE COMPAGNI (Non sbattere contro il player o l'altro teammate)
+        
         const allAllies = [...teammates, player].filter(a => a && a !== this && a.model);
         const avoidanceRadius = 1.5; 
         
@@ -444,18 +444,18 @@ export class Teammate {
             });
         }
 
-        // 5. LIMITI DEL CAMPO
+        
         this._idealPos.x = THREE.MathUtils.clamp(this._idealPos.x, -47, 47);
         this._idealPos.z = THREE.MathUtils.clamp(this._idealPos.z, -29, 29);
 
-        // 6. MOVIMENTO FISICO CON ISTERESI
+        
         const distToIdeal = this.model.position.distanceTo(this._idealPos);
 
         let shouldMove;
         if (this.isMoving) {
-            shouldMove = distToIdeal > 0.5; // Una volta in moto, fermati solo se sei arrivato
+            shouldMove = distToIdeal > 0.5; 
         } else {
-            shouldMove = distToIdeal > 1.5; // Da fermo, parti solo se il target si allontana
+            shouldMove = distToIdeal > 1.5; 
         }
 
         if (shouldMove) {
@@ -477,26 +477,26 @@ export class Teammate {
             this.isRunning = false;
         }
 
-        // 7. ORIENTAMENTO (Guarda sempre la palla)
+        
         this._dirToBall.subVectors(ball.position, this.model.position);
         this.yaw = Math.atan2(this._dirToBall.x, this._dirToBall.z);
     }
 
     setReceiveThrowInTarget(throwerPos, side) {
         this.isReceivingThrowIn = true;
-        // Scegliamo un lato verso il centro del campo per non farlo stare proprio davanti
+        
         const dirX = throwerPos.x > 0 ? -1 : 1;
         this.throwInSupportPos.set(
-            throwerPos.x + (dirX * 5) + (Math.random() * 2 - 1), // 5 metri spostato lateralmente (lungo la fascia)
+            throwerPos.x + (dirX * 5) + (Math.random() * 2 - 1), 
             0,
-            throwerPos.z - (side * 8) // 8 metri dentro il campo (più distante per dare respiro)
+            throwerPos.z - (side * 8) 
         );
     }
 
     setReceiveCornerTarget(ballX, ballZ) {
         this.isReceivingCorner = true;
         const dirX = ballX > 0 ? -1 : 1;
-        // Posizionamento al centro dell'area di rigore (zona dischetto e limite area piccola)
+        
         this.cornerSupportPos.set(
             ballX + (dirX * (11 + Math.random() * 4)), 
             0,

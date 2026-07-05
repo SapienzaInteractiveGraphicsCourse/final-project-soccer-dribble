@@ -1,14 +1,14 @@
-// Player.js
+
 import * as THREE from 'three';
 import { modelManager } from '../core/ModelLoader.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
-// I nostri moduli esterni
+
 import { CoolArrow } from '../effects/Arrow.js';
 import { PlayerAnimator } from '../animation-action/PlayerAnimation.js';
 import { PlayerAction } from '../animation-action/PlayerAction.js';
 import { PhysicsWorld } from '../physics/PhysicsWorld.js';
-import { BoosterTrail } from '../effects/BoosTrail.js'; // Aggiusta il percorso se necessario
+import { BoosterTrail } from '../effects/BoosTrail.js'; 
 import { PlayerCustomizer } from '../effects/PlayerCustomizer.js';
 
 export class Player {
@@ -22,7 +22,7 @@ export class Player {
         this.yaw = startYaw;
         this.isTraining = false;
 
-        // --- CONTROLLI REINTEGRATI ---
+        
         this.controls = new PointerLockControls(this.camera, domElement);
         this.keys = { forward: false, backward: false, left: false, right: false, run: false, boost: false };
         this.isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
@@ -36,12 +36,12 @@ export class Player {
 
         this.pitch = 0;
 
-        // --- STATISTICHE GIOCATORE ---
+        
         this.stamina = 100;
         this.playerName = "Giocatore";
         this.avatar = "👤";
 
-        // --- ANIMAZIONE RIMESSA LATERALE ---
+        
         this.throwAnimPlaying = false;
         this.throwTimer = 0;
         this.ballThrown = false;
@@ -49,18 +49,18 @@ export class Player {
 
         this.customizer = new PlayerCustomizer(this);
 
-        // 🎥 CAMERA SETTINGS
+        
         this.cameraOffset = new THREE.Vector3(0, 3.5, -8);
         this.cameraTarget = new THREE.Vector3();
         this.modelRotationSpeed = 15;
 
-        // INIZIALIZZIAMO I MODULI
+        
         this.animator = new PlayerAnimator();
         this.action = new PlayerAction();
         this.physicsWorld = new PhysicsWorld(this.scene);
         this.boosterTrail = new BoosterTrail(this.scene);
 
-        // --- SISTEMA GRAFICO FRECCIA E MIRA ---
+        
         this.passArrow = new CoolArrow();
         scene.add(this.passArrow);
 
@@ -74,14 +74,14 @@ export class Player {
 
         const crosshairGeo = new THREE.RingGeometry(0.3, 0.5, 32);
         const crosshairMat = new THREE.MeshBasicMaterial({
-            color: 0xff0000, // Rosso di base
+            color: 0xff0000, 
             transparent: true,
             opacity: 0.8,
             side: THREE.DoubleSide,
-            depthTest: false // IMPORTANTE: fa sì che il mirino si veda sempre SOPRA la rete o i pali
+            depthTest: false 
         });
         this.goalCrosshair = new THREE.Mesh(crosshairGeo, crosshairMat);
-        this.goalCrosshair.rotation.y = Math.PI / 2; // Lo giriamo verso il campo
+        this.goalCrosshair.rotation.y = Math.PI / 2; 
         this.goalCrosshair.visible = false;
         scene.add(this.goalCrosshair);
 
@@ -118,7 +118,7 @@ export class Player {
         });
     }
 
-    // --- LOGICA INPUT ---
+    
     initListeners() {
         document.addEventListener('keydown', (e) => {
             if (e.code === 'KeyW') this.keys.forward = true;
@@ -126,7 +126,7 @@ export class Player {
             if (e.code === 'KeyA') this.keys.left = true;
             if (e.code === 'KeyD') this.keys.right = true;
             if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') this.keys.run = true;
-            if (e.code === 'Space') this.keys.boost = true; // <--- AGGIUNGI QUESTO
+            if (e.code === 'Space') this.keys.boost = true; 
         });
 
         document.addEventListener('keyup', (e) => {
@@ -148,18 +148,18 @@ export class Player {
             }
         });
 
-        // Deleghiamo le azioni a PlayerAction.js
+        
         document.addEventListener('mousedown', (e) => {
             if (this.controls.isLocked) {
                 if (this.action.isThrowingIn && e.button === 0) {
-                    // Avvia l'animazione di caricamento invece di lanciare immediatamente la palla
+                    
                     if (!this.throwAnimPlaying) {
                         this.throwAnimPlaying = true;
                         this.throwTimer = 0;
                         this.ballThrown = false;
                     }
                 } else if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
-                    // Durante corner/rimessa dal fondo, solo il passaggio (click sinistro) è permesso
+                    
                     const isSetPiece = this.action.isTakingCorner || this.action.isTakingGoalKick;
                     if (e.button === 0) {
                         this.action.startCharge('pass');
@@ -181,7 +181,7 @@ export class Player {
             }
         });
 
-        // --- LOGICA TOUCH (MOBILE/IPAD) ---
+        
         const touchZone = document.getElementById('touch-joystick-zone');
         const touchStick = document.getElementById('touch-joystick-stick');
         const touchBase = document.getElementById('touch-joystick-base');
@@ -189,7 +189,7 @@ export class Player {
         if (touchZone && touchStick && touchBase) {
             let joystickCenter = { x: 0, y: 0 };
             let joystickTouchId = null;
-            const maxRadius = 70; // Aumentato rispetto a prima per il joystick più grande
+            const maxRadius = 70; 
 
             touchZone.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -223,7 +223,7 @@ export class Player {
                         this.keys.backward = false;
                         this.keys.left = false;
                         this.keys.right = false;
-                        this.keys.run = false; // Ferma l'auto-corsa
+                        this.keys.run = false; 
                     }
                 }
             };
@@ -296,8 +296,8 @@ export class Player {
             let absX = Math.abs(dx);
             let absY = Math.abs(dy);
             
-            // Sensibilità ridotta: ignora movimenti diagonali lievi per evitare lo "strafe" o "orbita" involontario
-            // Devi muovere il dito nettamente verso i lati per girare, altrimenti andrà dritto verso la palla.
+            
+            
             if (absY > absX * 0.4) {
                 if (dy < 0) this.keys.forward = true;
                 else this.keys.backward = true;
@@ -308,23 +308,23 @@ export class Player {
             }
         }
         
-        // Auto-run su mobile quando il joystick è mosso oltre la soglia
+        
         this.keys.run = this.keys.forward || this.keys.backward || this.keys.left || this.keys.right;
     }
 
-    // Metodo che potrai chiamare da fuori per la rimessa
+    
     startThrowIn() {
         this.keys.forward = false;
         this.keys.backward = false;
         this.keys.left = false;
         this.keys.right = false;
 
-        // Resetta le variabili dell'animazione
+        
         this.throwAnimPlaying = false;
         this.throwTimer = 0;
         this.ballThrown = false;
 
-        // Passiamo la palla e l'osso della mano a PlayerAction
+        
         this.action.startThrowIn(this.ball, this.animator.bones.rightHand);
     }
 
@@ -340,7 +340,7 @@ export class Player {
         let smallestAngle = Infinity;
 
         for (const t of this.teammates) {
-            if (!t.model || t.model.position.y < -10) continue; // Ignora se nascosto sotto la mappa
+            if (!t.model || t.model.position.y < -10) continue; 
             
             const dirToTeammate = new THREE.Vector3().subVectors(t.model.position, this.model.position);
             dirToTeammate.y = 0;
@@ -361,38 +361,38 @@ export class Player {
         const isGameActive = this.controls.isLocked || (this.isTouchDevice && document.getElementById('touch-controls').style.display !== 'none');
         if (!isGameActive || !this.model) return;
         
-        // Reset manuale di X e Z per evitare flip visivi (es. dopo il ReplaySystem)
+        
         this.model.rotation.x = 0;
         this.model.rotation.z = 0;
 
-        // --- NUOVA LOGICA DIREZIONE MOVIMENTO E TELECAMERA (Lock-on sulla palla) ---
+        
         let dir, right;
 
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick) {
-            // Se siamo su Touch, la telecamera segue automaticamente la palla (evita swipe involontari)
+            
             if (this.isTouchDevice) {
                 const angleToBall = Math.atan2(this.ball.position.x - this.model.position.x, this.ball.position.z - this.model.position.z);
                 const diff = angleToBall - this.yaw;
                 const shortestAngle = Math.atan2(Math.sin(diff), Math.cos(diff));
-                this.yaw += shortestAngle * deltaTime * 6; // Segue fluidamente la palla
-                this.pitch = Math.PI / 8; // Leggermente inclinato in basso
+                this.yaw += shortestAngle * deltaTime * 6; 
+                this.pitch = Math.PI / 8; 
             }
 
-            // 1. Calcoliamo la direzione dal giocatore verso la palla sul piano XZ
+            
             dir = new THREE.Vector3()
                 .subVectors(this.ball.position, this.model.position)
                 .setY(0)
                 .normalize();
 
-            // Fallback se siamo esattamente sopra la palla per evitare errori matematici
+            
             if (dir.lengthSq() < 0.001) {
                 dir.set(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw);
             }
 
-            // 2. Calcoliamo il vettore destra perpendicolare alla palla
+            
             right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
         } else {
-            // Fallback originale: movimento basato sulla telecamera (per rimesse o se manca la palla)
+            
             dir = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.yaw);
             right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
         }
@@ -401,11 +401,11 @@ export class Player {
         let moving = false;
         let isChargingAnim = this.action.chargingAction;
 
-        // Controlliamo se il giocatore può muoversi
-        // Controlliamo se il giocatore può muoversi (non può farlo mentre salta di testa)
+        
+        
         const canMove = !this.action.isThrowingIn && !this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.action.chargingAction && !this.animator.isSliding && !this.action.isHeading;
 
-        // --- LOGICA CONSUMO BOOST ---
+        
         const isPressingMovement = (this.keys.forward || this.keys.backward || this.keys.left || this.keys.right) && canMove;
         const isBoosting = this.keys.boost && isPressingMovement && this.boost > 0;
         
@@ -417,7 +417,7 @@ export class Player {
         }
         this.wasBoosting = isBoosting;
 
-        // 🔥 NUOVO: Un'unica variabile per sapere se il giocatore sta scattando (Shift o Spazio)
+        
         const isSprinting = this.keys.run || isBoosting;
 
         if (isBoosting) {
@@ -427,7 +427,7 @@ export class Player {
 
 
 
-        // --- CALCOLO VELOCITÀ ---
+        
         const speed = isBoosting ? 15 : (this.keys.run ? 8 : 5);
         const finalSpeed = speed * deltaTime;
 
@@ -438,34 +438,34 @@ export class Player {
             if (this.keys.right) { this.model.position.addScaledVector(right, finalSpeed); moving = true; }
         }
 
-        // --- SPINTA FISICA SCIVOLATA ---
+        
         if (this.animator.isSliding) {
             const slideDir = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.model.rotation.y).normalize();
             const slideProgress = this.animator.slideTimer / 1.0;
             let slideSpeed = 0;
 
             if (slideProgress < 0.2) {
-                slideSpeed = 14 * (slideProgress / 0.2); // Accelerazione esplosiva iniziale ridotta
+                slideSpeed = 14 * (slideProgress / 0.2); 
             } else if (slideProgress < 0.7) {
-                slideSpeed = 14 * (1 - ((slideProgress - 0.2) / 0.5)); // Attrito sull'erba: rallenta fino a fermarsi
+                slideSpeed = 14 * (1 - ((slideProgress - 0.2) / 0.5)); 
             }
 
             this.model.position.addScaledVector(slideDir, slideSpeed * deltaTime);
 
-            // --- IMPATTO PALLA (TACKLE) ---
-            // Solo nelle prime due fasi dell'animazione (discesa e strisciata), non mentre si rialza (progress > 0.7)
+            
+            
             if (this.ball && this.ball.isLoaded && slideProgress < 0.7) {
                 const distToBall = this.model.position.distanceTo(this.ball.position);
 
-                // Raggio di 1.5 metri per simulare l'estensione della gamba
+                
                 if (distToBall < 1.5) {
-                    // Mixiamo la direzione della scivolata con il vettore d'impatto per un rimpallo realistico
+                    
                     const impactDir = new THREE.Vector3().subVectors(this.ball.position, this.model.position).setY(0).normalize();
                     const finalKickDir = new THREE.Vector3().lerpVectors(slideDir, impactDir, 0.5).normalize();
 
-                    this.ball.velocity.set(0, 0, 0); // "Sradica" la palla annullando la sua velocità precedente
-                    const impulse = finalKickDir.multiplyScalar(15); // Forza della spazzata ridotta
-                    impulse.y = 3; // La palla si alza meno a campanile a causa del contrasto
+                    this.ball.velocity.set(0, 0, 0); 
+                    const impulse = finalKickDir.multiplyScalar(15); 
+                    impulse.y = 3; 
                     this.ball.applyImpulse(impulse);
                 }
             }
@@ -473,56 +473,56 @@ export class Player {
 
 
 
-        // --- EFFETTO TURBO (RAZZO) ---
+        
         if (this.boosterTrail) {
             if (isBoosting) {
-                // Origine posizionata dietro la schiena del giocatore
+                
                 const boostPos = this.model.position.clone().add(new THREE.Vector3(0, 0.6, -0.3).applyQuaternion(this.model.quaternion));
                 this.boosterTrail.emit(boostPos, dir, deltaTime);
             }
             this.boosterTrail.update(deltaTime);
         }
 
-        // --- PARTICELLE TERRENO---
+        
         if ((moving && this.keys.run && Math.random() > 0.6) || (this.animator.isSliding && this.animator.slideTimer < 0.7 && Math.random() > 0.3)) {
             const burstDir = this.animator.isSliding ? new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.model.rotation.y).normalize() : dir;
             this.physicsWorld.spawnBurst(this.model.position, burstDir);
         }
         this.physicsWorld.updateParticles(deltaTime);
 
-        // Rotazione modello
+        
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner && !this.animator.isSliding) {
 
-            // 1. Calcoliamo l'angolo esatto verso la palla sul piano XZ
+            
             const angleToBall = Math.atan2(
                 this.ball.position.x - this.model.position.x,
                 this.ball.position.z - this.model.position.z
             );
 
-            // 2. Calcoliamo la differenza di angolo più breve (evita bug di rotazione a 360°)
+            
             const diff = angleToBall - this.model.rotation.y;
             const shortestAngle = Math.atan2(Math.sin(diff), Math.cos(diff));
 
-            // 3. Ruotiamo il modello fluidamente verso quell'angolo
+            
             this.model.rotation.y += shortestAngle * deltaTime * this.modelRotationSpeed;
 
         } else if ((moving || this.action.isThrowingIn || this.action.isTakingCorner || this.action.isTakingGoalKick) && !this.animator.isSliding) {
-            // Fallback originale: segue la direzione di corsa/mira se la palla non c'è o siamo su palla inattiva
+            
             this.model.rotation.y = THREE.MathUtils.lerp(
                 this.model.rotation.y, this.yaw, deltaTime * this.modelRotationSpeed
             );
         }
 
-        // Posizionamento Camera
-        // --- Posizionamento Camera Dinamico ---
-        let targetOffset = this.cameraOffset; // Offset di base (0, 3.5, -8)
+        
+        
+        let targetOffset = this.cameraOffset; 
 
-        // Se stiamo battendo un corner, la telecamera si avvicina molto e si abbassa un po'
+        
         if (this.action.isTakingCorner) {
-            // Inquadratura frontale, più bassa ma molto arretrata per inquadrare l'area
+            
             targetOffset = new THREE.Vector3(0, 15, 60);
         } else if (this.action.isTakingGoalKick) {
-            // Inquadratura dall'alto e spostata all'indietro per la rimessa dal fondo
+            
             targetOffset = new THREE.Vector3(0, 15, -12);
         }
 
@@ -533,11 +533,11 @@ export class Player {
         this.cameraTarget.y += 1.5 + (this.pitch * 4);
         this.camera.lookAt(this.cameraTarget);
 
-        // Interazioni con la Palla (MIRA E DRIBBLING)
+        
         let currentDribbleTouch = null;
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.throwAnimPlaying) {
 
-            // --- NUOVO: GESTIONE COOLDOWN COLPO DI TESTA ---
+            
             if (this.headerCooldown === undefined) this.headerCooldown = 0;
             if (this.headerCooldown > 0) this.headerCooldown -= deltaTime;
 
@@ -545,39 +545,39 @@ export class Player {
                 .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
             const ballHeight = this.ball.position.y;
 
-            // --- TRIGGER COLPO DI TESTA ---
+            
             const isBallHigh = ballHeight > 1.3 && ballHeight < 3.5; 
 
-            // Aggiunto il controllo: this.headerCooldown <= 0
+            
             if (!this.action.isHeading && isBallHigh && distanceToBall2D < 3.5 && this.headerCooldown <= 0) {
                 
-                // 1. Tiro o Passaggio
+                
                 if (this.kickButtonHeld && this.action.chargingAction) {
                     const actionType = this.action.chargingAction; 
                     this.action.cancelCharge(this.passArrow);      
                     this.action.startHeader(this.ball, actionType);
                     this.kickButtonHeld = false;
-                    this.headerCooldown = 1.2; // <-- COOLDOWN: Evita il loop!
+                    this.headerCooldown = 1.2; 
                 } 
-                // 2. Controllo palla automatico
+                
                 else if (distanceToBall2D < 2.8 && !this.action.chargingAction) {
                     this.action.startHeader(this.ball, 'control');
-                    this.headerCooldown = 1.2; // <-- COOLDOWN: Evita il loop!
+                    this.headerCooldown = 1.2; 
                 }
             }
 
-            // --- AGGIORNAMENTO FISICO COLPO DI TESTA ---
+            
             let headerProgress = 0;
             if (this.action.isHeading) {
                 headerProgress = this.action.updateHeader(deltaTime, this.ball, this.yaw, this.pitch);
                 
-                // 1. MAGNETISMO
+                
                 if (headerProgress < 0.42 && this.action.frozenBallPos) {
                     const targetPosXZ = new THREE.Vector3(this.action.frozenBallPos.x, this.model.position.y, this.action.frozenBallPos.z);
                     this.model.position.lerp(targetPosXZ, deltaTime * 12); 
                 }
 
-                // 2. MIRA INTELLIGENTE
+                
                 let targetAngle = this.yaw; 
                 
                 if (this.action.headerType === 'shoot') {
@@ -586,18 +586,18 @@ export class Player {
                     targetAngle = Math.atan2(targetGoalX - this.model.position.x, 0 - this.model.position.z);
                 }
 
-                // 3. APPLICA ROTAZIONE IN VOLO
+                
                 const diff = targetAngle - this.model.rotation.y;
                 const shortestAngle = Math.atan2(Math.sin(diff), Math.cos(diff));
                 this.model.rotation.y += shortestAngle * deltaTime * 25;
             }
             
-            // --- COLLISIONE FISICA CORPO INTERO ---
+            
             if (!this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.animator.isSliding) {
                 const playerHeight = 1.8;
-                const playerRadius = 0.45; // Raggio della capsula aumentato per hitbox più solida
+                const playerRadius = 0.45; 
                 
-                // Punto più vicino lungo l'asse Y del giocatore
+                
                 const closestY = Math.max(this.model.position.y, Math.min(this.model.position.y + playerHeight, this.ball.position.y));
                 const closestPointOnPlayer = new THREE.Vector3(this.model.position.x, closestY, this.model.position.z);
                 
@@ -618,14 +618,14 @@ export class Player {
                         pushDir.set((Math.random() - 0.5), 0.2, (Math.random() - 0.5)).normalize(); 
                     }
 
-                    // Risoluzione compenetrazione: sposta la palla fuori dal modello
+                    
                     const overlap = minDistance - distanceToBall3D;
                     this.ball.position.addScaledVector(pushDir, overlap);
 
-                    // Calcolo della velocità di rimbalzo
+                    
                     const dot = this.ball.velocity.dot(pushDir);
                     if (dot < 0) {
-                        const restitution = 0.3; // Il corpo assorbe l'urto
+                        const restitution = 0.3; 
                         const bounceImpulse = pushDir.clone().multiplyScalar(dot * (1 + restitution));
                         this.ball.velocity.sub(bounceImpulse);
 
@@ -638,7 +638,7 @@ export class Player {
                             
                             if (moveVec.lengthSq() > 0) {
                                 moveVec.normalize();
-                                const playerVel = moveVec.multiplyScalar(speed); // usa la speed calcolata sopra
+                                const playerVel = moveVec.multiplyScalar(speed); 
                                 
                                 const impactVel = playerVel.dot(pushDir);
                                 if (impactVel > 0) {
@@ -653,13 +653,13 @@ export class Player {
             const distance = new THREE.Vector2(this.model.position.x, this.model.position.z)
                 .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
 
-            const touchRadius = 1.2; // Aumentato per migliorare la collisione ravvicinata
-            const controlRadius = 2.0; // Distanza a cui inizia il controllo palla magnetico
+            const touchRadius = 1.2; 
+            const controlRadius = 2.0; 
             const aimRadius = 3.0;
 
-            // --- EFFETTO MAGNETE (Controllo palla a distanza) ---
+            
             if (distance < controlRadius && moving && !this.action.chargingAction && this.ball.velocity.lengthSq() < 600) {
-                // Punto ideale davanti ai piedi del giocatore
+                
                 const idealPos = this.model.position.clone().add(
                     new THREE.Vector3(0, 0, 0.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.model.rotation.y)
                 );
@@ -667,7 +667,7 @@ export class Player {
                 
                 const pullVec = new THREE.Vector3().subVectors(idealPos, this.ball.position);
                 if (pullVec.length() > 0.1) {
-                    // Forza proporzionale a quanto siamo vicini al raggio di controllo
+                    
                     const magnetForce = (1 - (distance / controlRadius)) * 25 * deltaTime;
                     this.ball.velocity.add(pullVec.normalize().multiplyScalar(magnetForce));
                 }
@@ -705,9 +705,9 @@ export class Player {
                     const shortestAngle = Math.atan2(Math.sin(diff), Math.cos(diff));
                     this.model.rotation.y += shortestAngle * deltaTime * this.modelRotationSpeed;
 
-                    isChargingAnim = null; // Non attivare la posa di carica finché corre
+                    isChargingAnim = null; 
                 } else {
-                    // Spara automaticamente se abbiamo rilasciato il tasto o raggunto il 100% di carica
+                    
                     if (!this.kickButtonHeld || this.action.getChargeRatio() >= 1.0) {
                         const wasTakingCorner = this.action.isTakingCorner;
                         const wasTakingGoalKick = this.action.isTakingGoalKick;
@@ -726,10 +726,10 @@ export class Player {
                         this.action.executeKick(this.ball, this.yaw, this.pitch, this.passArrow, passTarget);
                         
                         if (passTarget && !wasTakingCorner && !wasTakingGoalKick) {
-                            // Normale passaggio in gioco
+                            
                             document.dispatchEvent(new CustomEvent('passExecuted', { detail: { target: passTarget } }));
                         } else {
-                            // Se è un corner o rimessa, passiamo il target come dettaglio dell'evento del set piece
+                            
                             if (wasTakingCorner) {
                                 document.dispatchEvent(new CustomEvent('cornerKicked', { detail: { target: passTarget } }));
                             }
@@ -782,9 +782,9 @@ export class Player {
             if (this.goalCrosshair) this.goalCrosshair.visible = false;
         }
 
-        // Aggiorniamo la carica del tiro
+        
         if (this.action.chargingAction && !this.kickButtonHeld) {
-            // Tieni la potenza bloccata (il giocatore ha rilasciato il tasto ma sta correndo verso la palla)
+            
         } else {
             this.action.updateCharge(deltaTime, this.passArrow);
         }
@@ -792,7 +792,7 @@ export class Player {
         if (this.throwAnimPlaying) {
             this.throwTimer += deltaTime;
 
-            // A ~0.89s (Math.PI / speed) l'animazione scatta in avanti: lanciamo la palla!
+            
             if (this.throwTimer >= 0.65 && !this.ballThrown) {
                 this.action.executeThrow(this.ball, this.yaw, this.scene, this.targetReceiver);
                 if (this.targetReceiver) {
@@ -802,7 +802,7 @@ export class Player {
                 this.ballThrown = true;
             }
 
-            // A ~1.35s (Math.PI * 1.5 / speed) il follow-through è completo
+            
             if (this.throwTimer >= 1.35) {
                 this.throwAnimPlaying = false;
                 this.ballThrown = false;
@@ -811,8 +811,8 @@ export class Player {
 
         const chargeRatio = this.action.getChargeRatio();
 
-        // Aggiorniamo le animazioni (usando la nuova variabile isSprinting)
-        // Aggiorniamo le animazioni
+        
+        
         this.animator.animate(
             deltaTime,
             this.throwAnimPlaying,
@@ -822,8 +822,8 @@ export class Player {
             isChargingAnim,
             chargeRatio,
             currentDribbleTouch,
-            this.action.isHeading,  // NUOVO PARAMETRO
-            this.action.isHeading ? (this.action.headerTimer / this.action.headerDuration) : 0 // NUOVO PARAMETRO
+            this.action.isHeading,  
+            this.action.isHeading ? (this.action.headerTimer / this.action.headerDuration) : 0 
         );
 
     }

@@ -160,7 +160,7 @@ export class BonusManager {
             // Controllo Collisione con il giocatore
             if (player && player.model) {
                 const dist = player.model.position.distanceTo(b.mesh.position);
-                if (dist < 1.5) { // Se passa abbastanza vicino, lo rompe
+                if (dist < 3.0) { // Raggio aumentato per facilitare la rottura del diamante
                     this.breakDiamond(i, player);
                 }
             }

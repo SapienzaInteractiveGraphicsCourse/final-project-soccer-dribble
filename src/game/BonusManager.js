@@ -84,24 +84,28 @@ export class BonusManager {
         
         const isElectric = Math.random() > 0.5; 
 
+        let animDuration = 3;
+        
         if (isElectric) {
-            player.action.hasElectricShot = true;
-            
-            if (window.fireTrailEffect && player.ball) {
-                window.fireTrailEffect.activate(player.ball, 'electric');
-            }
             if (this.uiManager) {
-                this.uiManager.triggerBonusRoulette("⚡ TIRO ELETTRICO", "bonus-electricshot");
+                animDuration = this.uiManager.triggerBonusRoulette("⚡ TIRO ELETTRICO", "bonus-electricshot") || 3;
             }
+            setTimeout(() => {
+                player.action.hasElectricShot = true;
+                if (window.fireTrailEffect && player.ball) {
+                    window.fireTrailEffect.activate(player.ball, 'electric');
+                }
+            }, animDuration * 1000);
         } else {
-            player.action.hasSuperShot = true;
-            
-            if (window.fireTrailEffect && player.ball) {
-                window.fireTrailEffect.activate(player.ball, 'fire');
-            }
             if (this.uiManager) {
-                this.uiManager.triggerBonusRoulette("🔥 SUPER TIRO", "bonus-supershot");
+                animDuration = this.uiManager.triggerBonusRoulette("🔥 SUPER TIRO", "bonus-supershot") || 3;
             }
+            setTimeout(() => {
+                player.action.hasSuperShot = true;
+                if (window.fireTrailEffect && player.ball) {
+                    window.fireTrailEffect.activate(player.ball, 'fire');
+                }
+            }, animDuration * 1000);
         }
 
         this.createExplosion(bonus.mesh.position, isElectric);

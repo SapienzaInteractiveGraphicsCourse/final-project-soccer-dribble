@@ -776,6 +776,7 @@ export class UIManager {
         
         roller.style.transition = `transform ${animDuration}s cubic-bezier(0.15, 0.85, 0.3, 1)`; 
         roller.style.transform = `translateY(-${scrollDistance}px)`;
+        return animDuration;
     }
 
     clearBonus() {

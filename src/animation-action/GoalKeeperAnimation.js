@@ -5,12 +5,10 @@ export class GoalKeeperAnimator {
         this.basePos = {};
         this.idleTime = 0;
 
-        // Variabili per la parata semplice
         this.isSaving = false;
         this.saveTimer = 0;
         this.saveSide = 'left';
 
-        // --- VARIABILI AGGIUNTE PER TIRO E PASSAGGIO ---
         this.wasChargingShoot = false;
         this.wasChargingPass = false;
         this.shootFollowThroughTimer = 0;
@@ -31,7 +29,6 @@ export class GoalKeeperAnimator {
                 if (b.endsWith('rightforearm')) save('rightForeArm', child);
                 if (b.endsWith('hips')) save('hips', child);
 
-                // --- OSSA AGGIUNTE PER LE GAMBE ---
                 if (b.endsWith('leftupleg')) save('leftUpLeg', child);
                 if (b.endsWith('rightupleg')) save('rightUpLeg', child);
                 if (b.endsWith('leftleg')) save('leftLeg', child);
@@ -58,115 +55,96 @@ export class GoalKeeperAnimator {
         }
     }
 
-    // --- AGGIORNATA LA FIRMA DI ANIMATE PER RICEVERE I COMANDI ---
     animate(deltaTime, isThrowingInAnim, moving, isRunning, isThrowingInState, chargingAction, chargeRatio) {
         if (!this.bones.hips) return;
 
-        // 1. LA PARATA HA LA PRECEDENZA
         if (this.isSaving) {
             this.saveTimer += deltaTime;
-            
-            // Aumentiamo leggermente la durata a 1.2 secondi per dargli 
-            // il tempo di tuffarsi e rialzarsi con calma
-            const duration = 1.2; 
+
+            const duration = 1.2;
 
             if (this.saveTimer > duration) {
-                // IL RITORNO IN PIEDI: spegne la parata e resetta lo scheletro
                 this.isSaving = false;
-                this.resetToBasePose(); 
+                this.resetToBasePose();
             } else {
                 this.saveAnimation(duration);
             }
             return;
         }
 
-        // 2. LOGICA TIRO E PASSAGGIO
         if (chargingAction === 'shoot') {
             this.wasChargingShoot = true;
             this.shootFollowThroughTimer = 0;
             this.lastChargeRatio = chargeRatio;
             this.chargeShootAnimation(chargeRatio);
-            return; 
-        } 
+            return;
+        }
         else if (chargingAction === 'pass') {
             this.wasChargingPass = true;
             this.passFollowThroughTimer = 0;
             this.lastChargeRatio = chargeRatio;
             this.chargePassAnimation(chargeRatio);
-            return; 
+            return;
         }
         else if (this.wasChargingShoot) {
             this.shootFollowThroughTimer += deltaTime;
-            if (this.shootFollowThroughTimer > 0.4) { 
+            if (this.shootFollowThroughTimer > 0.4) {
                 this.wasChargingShoot = false;
                 this.resetToBasePose();
             } else {
                 this.executeKickAnimation(this.shootFollowThroughTimer, this.lastChargeRatio);
-                return; 
+                return;
             }
         }
         else if (this.wasChargingPass) {
             this.passFollowThroughTimer += deltaTime;
-            if (this.passFollowThroughTimer > 0.4) { 
+            if (this.passFollowThroughTimer > 0.4) {
                 this.wasChargingPass = false;
                 this.resetToBasePose();
             } else {
                 this.executePassAnimation(this.passFollowThroughTimer, this.lastChargeRatio);
-                return; 
+                return;
             }
         }
 
-        // 3. STATO DI ATTESA
         this.idleTime += deltaTime;
         this.idleAnimation();
     }
     saveAnimation(duration) {
         const progress = Math.min(this.saveTimer / duration, 1.0);
 
-        // Curva "ease-out" esplosiva: scatta velocissimo all'inizio e rallenta molto alla fine
         const easeOut = 1 - Math.pow(1 - progress, 4);
 
-        // Curva "hang-time" per il salto: sale veloce, resta in aria un attimo di più, cade
         const jumpArc = Math.pow(Math.sin(progress * Math.PI), 0.7);
 
         const dir = this.saveSide === 'left' ? -1 : 1;
 
-        // --- 1. IL VOLO (Spostamento del bacino) ---
         if (this.bones.hips) {
-            // Tuffo leggermente più lungo per maggiore epicità
             const diveDistance = 2.8;
             this.bones.hips.position.z = this.basePos.hips.z + (easeOut * diveDistance * dir);
 
-            // Salto leggermente più alto
             const jumpHeight = 1.4;
             this.bones.hips.position.y = this.basePos.hips.y + (jumpArc * jumpHeight) - (progress * 0.85);
 
-            // Ruota il bacino di 90 gradi ma con un extra twist per fargli guardare un po' in avanti/verso la palla
             this.bones.hips.rotation.z = this.baseRot.hips.z + (easeOut * (Math.PI / 2) * dir);
 
-            // Inclina il busto per aerodinamicità
             this.bones.hips.rotation.x = this.baseRot.hips.x + (easeOut * 0.5);
-            
-            // Aggiungiamo un leggero twist sull'asse Y per dare profondità al tuffo
+
             this.bones.hips.rotation.y = this.baseRot.hips.y - (easeOut * 0.2 * dir);
         }
-        
-        // --- EXTRA: SPINA DORSALE INARACATA (Plasticità del tuffo) ---
+
         if (this.bones.spine) {
-            // Inarca la schiena all'indietro nel momento di massima estensione
             this.bones.spine.rotation.x = this.baseRot.spine.x - (jumpArc * 0.3);
             this.bones.spine.rotation.y = this.baseRot.spine.y + (easeOut * 0.2 * dir);
         }
 
-        // --- 2. BRACCIA SUPER ESTESE ---
         if (this.bones.leftArm && this.bones.rightArm) {
-            // Un braccio (quello inferiore) va giù a protezione, l'altro (superiore) si allunga al massimo
-            if (dir === -1) { // Tuffo a Sinistra
-                this.bones.leftArm.rotation.z = this.baseRot.leftArm.z + (easeOut * 2.8); // Braccio sotto si allunga verso la palla
-                this.bones.rightArm.rotation.z = this.baseRot.rightArm.z + (easeOut * 2.0); // Braccio sopra segue
+            if (dir === -1) {
+                this.bones.leftArm.rotation.z = this.baseRot.leftArm.z + (easeOut * 2.8);
+                this.bones.rightArm.rotation.z = this.baseRot.rightArm.z + (easeOut * 2.0);
                 this.bones.leftArm.rotation.x = this.baseRot.leftArm.x - (easeOut * 1.5);
                 this.bones.rightArm.rotation.x = this.baseRot.rightArm.x - (easeOut * 0.8);
-            } else { // Tuffo a Destra
+            } else {
                 this.bones.rightArm.rotation.z = this.baseRot.rightArm.z - (easeOut * 2.8);
                 this.bones.leftArm.rotation.z = this.baseRot.leftArm.z - (easeOut * 2.0);
                 this.bones.rightArm.rotation.x = this.baseRot.rightArm.x - (easeOut * 1.5);
@@ -174,15 +152,13 @@ export class GoalKeeperAnimator {
             }
         }
 
-        // --- 3. GAMBE (A FORBICE DINAMICA) ---
         if (this.bones.leftUpLeg && this.bones.rightUpLeg && this.bones.leftLeg && this.bones.rightLeg) {
-            // Diamo un effetto "forbice" plastico tipico dei portieri
-            if (dir === -1) { // Tuffo a sinistra
-                this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (easeOut * 0.5) - (jumpArc * 0.5); // Gamba sopra sale
-                this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x - (easeOut * 1.5); // Piega il ginocchio sopra
-                this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x + (easeOut * 0.3); // Gamba sotto dritta
+            if (dir === -1) {
+                this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (easeOut * 0.5) - (jumpArc * 0.5);
+                this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x - (easeOut * 1.5);
+                this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x + (easeOut * 0.3);
                 this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x;
-            } else { // Tuffo a destra
+            } else {
                 this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (easeOut * 0.5) - (jumpArc * 0.5);
                 this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x - (easeOut * 1.5);
                 this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x + (easeOut * 0.3);
@@ -200,31 +176,23 @@ export class GoalKeeperAnimator {
     }
 
     chargePassAnimation(ratio) {
-        // 1. Piegamento gamba d'appoggio (più morbido del tiro)
         this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (ratio * 0.1);
         this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (ratio * 0.15);
 
-        // 2. Caricamento gamba destra 
         this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (ratio * 0.7);
         this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x - (ratio * 0.9);
 
-        // IL DETTAGLIO: Rotazione verso l'esterno dell'anca per aprire il piatto del piede (asse Y)
         this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x + (ratio * 0.8);
 
-        // IL DETTAGLIO ANCA: Rotazione verso l'esterno dell'anca
 
 
-        // --- NUOVO: IL DETTAGLIO PIEDE (PIATTO) ---
         if (this.bones.rightFoot) {
-            // Apre la punta del piede verso l'esterno (Y) e blocca la caviglia a martello (Z)
             this.bones.rightFoot.rotation.y = this.baseRot.rightFoot.y + (ratio * 0.6);
             this.bones.rightFoot.rotation.z = this.baseRot.rightFoot.z - (ratio * 0.7);
         }
 
-        // 3. Le braccia bilanciano il corpo (movimento più contenuto rispetto al tiro
         this.bones.rightArm.rotation.x = this.baseRot.rightArm.x + (ratio * 0.4);
 
-        // 4. Busto ruota per assecondare l'apertura della gamba
         if (this.bones.spine) {
             this.bones.spine.rotation.y = this.baseRot.spine.y + (ratio * 0.3);
             this.bones.spine.rotation.x = this.baseRot.spine.x + (ratio * 0.1);
@@ -242,17 +210,12 @@ export class GoalKeeperAnimator {
             kickForward = 1 - ((progress - 0.25) / 0.75);
         }
 
-        // Il passaggio è leggermente meno "violento" del tiro
         const intensity = 0.4 + (powerRatio * 0.4);
 
-        // --- 1. GAMBA CHE PASSA ---
-        // Scatta in avanti (X) 
         this.bones.rightUpLeg.rotation.x = this.baseRot.rightUpLeg.x - (kickForward * 1.0 * intensity);
-        // MANTIENE la rotazione esterna (Y) durante il calcio per colpire di piatto, poi sfuma
         this.bones.rightUpLeg.rotation.y = this.baseRot.rightUpLeg.y + (fade * powerRatio * 0.8) + (kickForward * 0.4);
         this.bones.rightLeg.rotation.x = this.baseRot.rightLeg.x;
 
-        // --- 2. RIENTRO MORBIDO DEL RESTO DEL CORPO ---
         this.bones.leftUpLeg.rotation.x = this.baseRot.leftUpLeg.x - (fade * powerRatio * 0.1);
         this.bones.leftLeg.rotation.x = this.baseRot.leftLeg.x + (fade * powerRatio * 0.15);
 

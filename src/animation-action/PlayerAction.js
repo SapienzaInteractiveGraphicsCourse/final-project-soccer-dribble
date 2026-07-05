@@ -1,4 +1,4 @@
-// PlayerAction.js
+
 import * as THREE from 'three';
 
 export class PlayerAction {
@@ -9,30 +9,29 @@ export class PlayerAction {
         this.chargingAction = null;
         this.kickPower = 0;
 
-        // --- PARAMETRI POTENZA REALISTICI (Metri al secondo) ---
+
         this.passBasePower = 8;
         this.passMaxPower = 24;
         this.passChargeSpeed = 35;
 
-        // --- COLPO DI TESTA ---
+
         this.isHeading = false;
         this.headerTimer = 0;
-        this.headerDuration = 0.55; // Durata totale del salto in secondi
-        this.headerImpactTime = 0.23; // Il momento in cui la testa tocca la palla (apice del salto)
+        this.headerDuration = 0.55;
+        this.headerImpactTime = 0.23;
         this.headerType = null;
         this.frozenBallPos = null;
 
         this.shootBasePower = 18;
-        this.shootMaxPower = 50;  // Abbassata per impedire tiri facili dalla propria metà campo
+        this.shootMaxPower = 50;
         this.shootChargeSpeed = 60;
         this.hasSuperShot = false;
         this.hasElectricShot = false;
 
-        // --- AUDIO ---
-        this.kickSound = new Audio(`${import.meta.env.BASE_URL}sound/kick.mp3`); // Assicurati che kick.mp3 sia nella cartella "public" (o root)
-        this.kickSound.volume = 1.0; // 1.0 è il volume massimo per l'elemento Audio HTML5
+
+        this.kickSound = new Audio(`${import.meta.env.BASE_URL}sound/kick.mp3`);
     }
-    // --- RIMESSA LATERALE ---
+
     startThrowIn(ball, rightHandBone) {
         this.isThrowingIn = true;
 
@@ -40,7 +39,7 @@ export class PlayerAction {
             ball.velocity.set(0, 0, 0);
             ball.isHeld = true;
 
-            // Attacchiamo la palla all'osso della mano
+
             if (rightHandBone && ball.mesh) {
                 rightHandBone.attach(ball.mesh);
                 ball.mesh.position.set(0.30, 30, 0.0);
@@ -49,14 +48,13 @@ export class PlayerAction {
         }
     }
 
-    // --- COLPO DI TESTA ---
+
     startHeader(ball, type) {
         this.isHeading = true;
         this.headerTimer = 0;
-        this.headerType = type; // 'shoot', 'pass' o 'control'
-        
+        this.headerType = type;
+
         if (ball && ball.isLoaded) {
-            // Congeliamo la fisica della palla
             ball.velocity.set(0, 0, 0);
             this.frozenBallPos = ball.position.clone();
         }
@@ -67,59 +65,53 @@ export class PlayerAction {
 
         this.headerTimer += deltaTime;
 
-        // Effetto "Time-Freeze": mantiene la palla bloccata esattamente dov'era
+        
         if (ball && this.frozenBallPos && this.headerTimer < this.headerImpactTime) {
             ball.position.copy(this.frozenBallPos);
             ball.velocity.set(0, 0, 0);
         }
 
-        // Momento dell'impatto (colpo frustato)
+        
         if (this.headerTimer >= this.headerImpactTime && (this.headerTimer - deltaTime) < this.headerImpactTime) {
             this.executeHeaderHit(ball, yaw, pitch);
         }
 
-        // Fine salto
+        
         if (this.headerTimer >= this.headerDuration) {
             this.isHeading = false;
             this.frozenBallPos = null;
         }
 
-        return this.headerTimer / this.headerDuration; // Ritorna il progresso per l'animatore (0.0 -> 1.0)
+        return this.headerTimer / this.headerDuration; 
     }
 
     executeHeaderHit(ball, yaw, pitch) {
         if (!ball || !ball.isLoaded) return;
-        
+
         let power = 0;
         let kickDir = new THREE.Vector3(0, 0, 1);
+
         
-        // Calibriamo la potenza e l'angolo in base a cosa sta facendo il giocatore
         if (this.headerType === 'shoot') {
-            power = 35; 
-            pitch = -0.15; // Schiaccia la palla verso il basso in porta
+            power = 35;
+            pitch = -0.15; 
         } else if (this.headerType === 'pass') {
             power = 18;
-            pitch = 0.1; // Passaggio morbido a campanile
+            pitch = 0.1; 
         } else {
-            // 'control': se ci corre semplicemente addosso, l'appoggia in avanti per continuare a correre
+            
             power = 7;
-            pitch = -0.4; 
+            pitch = -0.4;
         }
 
         kickDir.applyAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
         kickDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
         kickDir.normalize();
 
-        // Riapplichiamo la fisica
+       
         ball.velocity.set(0, 0, 0);
         ball.applyImpulse(kickDir.multiplyScalar(power));
-        
-        
 
-        // Eventuale effetto scia (DISATTIVATO PER I COLPI DI TESTA)
-        // if (this.headerType === 'shoot' && power > 30) {
-        //     ball.triggerPowerEffect && ball.triggerPowerEffect();
-        // }
     }
 
     executeThrow(ball, yaw, scene, targetReceiver = null) {
@@ -130,28 +122,28 @@ export class PlayerAction {
             const worldPos = new THREE.Vector3();
             ball.mesh.getWorldPosition(worldPos);
 
-            // Spingiamo la palla avanti per evitare collisioni col corpo
+            
             worldPos.addScaledVector(throwDir, 0.8);
             const safeX = 49.5 - 0.5;
             const safeZ = 30.5 - 0.5;
             worldPos.x = Math.max(-safeX, Math.min(safeX, worldPos.x));
             worldPos.z = Math.max(-safeZ, Math.min(safeZ, worldPos.z));
 
-            // Sganciamo la palla e riattiviamo la fisica
+            
             scene.attach(ball.mesh);
             ball.isHeld = false;
             ball.position.copy(worldPos);
             ball.velocity.set(0, 0, 0);
 
-            let throwForceForward = 14; 
-            let throwForceUpward = 6;   
+            let throwForceForward = 14;
+            let throwForceUpward = 6;
 
-            // Se abbiamo un ricevitore target (Bot), calibriamo la potenza sulla sua distanza
+            
             if (targetReceiver && targetReceiver.model) {
                 const targetPos = targetReceiver.model.position;
                 const distance = new THREE.Vector2(worldPos.x, worldPos.z).distanceTo(new THREE.Vector2(targetPos.x, targetPos.z));
-                throwForceForward = Math.max(8, distance * 1.6); // Più è lontano, più forte lancia
-                throwForceUpward = Math.min(6, distance * 0.4 + 2); // Crea una piccola parabola perfetta
+                throwForceForward = Math.max(8, distance * 1.6);
+                throwForceUpward = Math.min(6, distance * 0.4 + 2);
             }
 
             const impulse = new THREE.Vector3(
@@ -162,7 +154,7 @@ export class PlayerAction {
         }
     }
 
-    // --- CARICAMENTO TIRO/PASSAGGIO ---
+
     startCharge(type) {
         this.chargingAction = type;
         this.kickPower = type === 'pass' ? this.passBasePower : this.shootBasePower;
@@ -170,11 +162,11 @@ export class PlayerAction {
 
     updateCharge(deltaTime, passArrow) {
         if (!this.chargingAction) {
-            // Se non stiamo caricando, resettiamo la grafica della freccia
+
             if (passArrow && passArrow.material) {
                 passArrow.material.color.setHex(0xccffff);
                 passArrow.material.emissiveIntensity = 0.5;
-                // --- NUOVO: Resetta la lunghezza ---
+
                 if (passArrow.setChargeLevel) passArrow.setChargeLevel(0);
             }
             return;
@@ -184,24 +176,24 @@ export class PlayerAction {
         let basePow = this.chargingAction === 'pass' ? this.passBasePower : this.shootBasePower;
         let chargeSpd = this.chargingAction === 'pass' ? this.passChargeSpeed : this.shootChargeSpeed;
 
-        // Aumentiamo la potenza
+
         this.kickPower += chargeSpd * deltaTime;
         if (this.kickPower > maxPow) this.kickPower = maxPow;
 
-        // Aggiorniamo dinamicamente il colore e la lunghezza della freccia
+
         if (passArrow && passArrow.material) {
             const chargeRatio = (this.kickPower - basePow) / (maxPow - basePow);
             const startColor = new THREE.Color(0xccffff);
-            const endColor = new THREE.Color(0xff2200); // Rosso per massima potenza
+            const endColor = new THREE.Color(0xff2200);
 
             passArrow.material.color.lerpColors(startColor, endColor, chargeRatio);
 
-            // --- NUOVO: Passiamo la percentuale alla freccia per farla allungare ---
+
             if (passArrow.setChargeLevel) passArrow.setChargeLevel(chargeRatio);
         }
     }
 
-    // Aggiungi questo metodo in PlayerAction.js
+
     getChargeRatio() {
         if (!this.chargingAction) return 0;
         const base = this.chargingAction === 'pass' ? this.passBasePower : this.shootBasePower;
@@ -225,31 +217,31 @@ export class PlayerAction {
     executeKick(ball, yaw, pitch, passArrow, passTarget = null, isBot = false) {
         if (!ball || !ball.isLoaded || !this.chargingAction) return;
 
-        // Calcoliamo la direzione base
+
         let kickDir = new THREE.Vector3(0, 0, 1);
         kickDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
         kickDir.normalize();
 
-        // --- NUOVO: SE PASSI LA PALLA, PERDI I BONUS ---
+
         if (this.chargingAction === 'pass' && (this.hasSuperShot || this.hasElectricShot)) {
-            this.hasSuperShot = false; // Addio bonus
+            this.hasSuperShot = false;
             this.hasElectricShot = false;
-            if (window.fireTrailEffect) window.fireTrailEffect.deactivate(); // Spegni il fuoco
+            if (window.fireTrailEffect) window.fireTrailEffect.deactivate();
         }
 
-        // --- GESTIONE PASSAGGIO PRECISO CON PARABOLA ---
+
         if (this.chargingAction === 'pass' && passTarget && passTarget.model) {
             let targetPos = passTarget.model.position.clone();
-            
-            // Precisione ottimale sulla corsa se il compagno sta scattando per la rimessa dal fondo
+
+
             if (passTarget.isReceivingGoalKick && passTarget.goalKickRunDir) {
                 targetPos.x += passTarget.goalKickRunDir * 10 * 0.8;
             }
 
             const distanceToTarget = new THREE.Vector2(ball.position.x, ball.position.z).distanceTo(new THREE.Vector2(targetPos.x, targetPos.z));
-            
+
             const chargeRatio = this.getChargeRatio();
-            
+
             let passDir = new THREE.Vector3().subVectors(targetPos, ball.position);
             passDir.y = 0;
             if (passDir.lengthSq() < 0.001) {
@@ -259,33 +251,33 @@ export class PlayerAction {
             }
 
             let V_xz, V_y;
-            
-            // pitch = 0 significa freccia in basso/orizzontale. pitch > 0 significa freccia in alto.
-            // Soglia alzata a 0.20 (circa 11.5 gradi) per garantire che i passaggi standard siano rasoterra.
+
+
+
             if (pitch <= 0.20) {
-                // Rasoterra: Velocità base più alta e la carica la moltiplica fino a 3x.
+
                 const baseSpeed = Math.max(25, distanceToTarget * 3.5);
-                V_xz = baseSpeed * (1.0 + chargeRatio * 2.0); 
+                V_xz = baseSpeed * (1.0 + chargeRatio * 2.0);
                 V_y = 0;
             } else {
-                // Passaggio con parabola (pallonetto/cross). 
-                // L'altezza dipende SOLO dall'inclinazione oltre lo 0.20.
-                const pitchFactor = Math.min(1.0, (pitch - 0.20) / (Math.PI / 4)); // Massimo effetto a 45 gradi
-                const maxHeight = 1.0 + (pitchFactor * 4.5); // Altezza massima ridotta a 5.5 metri per maggiore realismo
-                
-                V_y = Math.sqrt(2 * 12.0 * maxHeight); // Inversione della formula dell'altezza massima
+
+
+                const pitchFactor = Math.min(1.0, (pitch - 0.20) / (Math.PI / 4));
+                const maxHeight = 1.0 + (pitchFactor * 4.5);
+
+                V_y = Math.sqrt(2 * 12.0 * maxHeight);
                 const flightTime = (2 * V_y) / 12.0;
-                
-                // La velocità orizzontale calcolata per far atterrare la palla sul compagno.
-                // Non applichiamo bonus di velocità dovuti alla carica, altrimenti la palla scavalcherebbe il bersaglio.
+
+
+
                 const dragCompensation = 1 + (distanceToTarget * 0.015);
                 V_xz = (distanceToTarget / flightTime) * dragCompensation;
             }
-            
-            V_xz = Math.min(V_xz, 90); // Limite di sicurezza alzato a 90 per permettere rasoterra fortissimi
-            
+
+            V_xz = Math.min(V_xz, 90);
+
             const impulse = new THREE.Vector3(passDir.x * V_xz, V_y, passDir.z * V_xz);
-            
+
             ball.velocity.set(0, 0, 0);
             ball.applyImpulse(impulse);
             ball.spin = 0;
@@ -304,68 +296,68 @@ export class PlayerAction {
             this.kickPower = 0;
             if (this.isTakingCorner) this.isTakingCorner = false;
             if (this.isTakingGoalKick) this.isTakingGoalKick = false;
-            
-            return; // Terminiamo l'esecuzione qui se è un passaggio
+
+            return;
         }
 
-        // --- SISTEMA INTELLIGENTE DI TRAIETTORIA (Solo per i Tiri) ---
+
         if (this.chargingAction === 'shoot') {
-            // 1. Capiamo verso quale porta sta tirando (Guardando la direzione X del vettore)
+
             const targetGoalX = kickDir.x > 0 ? 48.5 : -48.5;
 
-            // 2. Calcoliamo la distanza tra la palla e la porta
+
             const distanceToGoal = Math.abs(targetGoalX - ball.position.x);
 
-            // 3. Se stiamo tirando da lontano, forziamo l'angolo (pitch) ad alzarsi
-            // in modo che la fisica dell'aria crei quella parabola a scendere perfetta.
-            // (L'utente non deve mirare perfettamente in alto col mouse, lo fa il gioco in proporzione)
-            if (distanceToGoal > 15) {
-                // Da 15m in su, l'angolo varia da 15° a 30° (in radianti: da 0.26 a 0.52)
-                const distanceFactor = Math.min((distanceToGoal - 15) / 25, 1.0); // Normalizza da 0 a 1 fino a 40 metri
 
-                // Più il tiro è carico, più lo teniamo teso. Un tiro debole da lontano si alza a palombella.
+
+
+            if (distanceToGoal > 15) {
+
+                const distanceFactor = Math.min((distanceToGoal - 15) / 25, 1.0);
+
+
                 const powerRatio = (this.kickPower - this.shootBasePower) / (this.shootMaxPower - this.shootBasePower);
 
-                // Calcolo pitch ottimizzato: 
+
                 const optimalPitch = 0.20 + (distanceFactor * 0.25) - (powerRatio * 0.1);
 
-                // Sovrascriviamo l'angolo verticale (assumendo che verso l'alto sia negativo nel tuo sistema di rotazione asse X)
+
                 pitch = -optimalPitch;
             } else {
-                // Tiro ravvicinato, diamo solo un pelo di elevazione per non rasoterrare sempre
+
                 pitch = -0.1 - (pitch * 0.5);
             }
         }
 
-        // --- PARABOLA ALZATA PER I CALCI D'ANGOLO ---
+
         if (this.isTakingCorner) {
-            pitch -= 0.35; // Forza un angolo di tiro molto più alto per effettuare un cross in area
+            pitch -= 0.35;
         }
 
-        // Riapplichiamo l'angolo calcolato al vettore di direzione
+
         kickDir = new THREE.Vector3(0, 0, 1);
         kickDir.applyAxisAngle(new THREE.Vector3(1, 0, 0), pitch);
         kickDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
         kickDir.normalize();
 
-        // --- LOGICA SUPER TIRO / TIRO ELETTRICO ---
+
         let finalPower = this.kickPower;
         let isSuperShotActive = false;
 
-        // --- POTENZA MAGGIORATA PER IL CALCIO D'ANGOLO ---
+
         if (this.isTakingCorner) {
-            finalPower *= 1.2; // Aumenta la potenza del 60% per garantire che il cross arrivi in mezzo all'area
+            finalPower *= 1.2;
         }
 
-        // --- POTENZA RIDOTTA PER LA RIMESSA DAL FONDO ---
+
         if (this.isTakingGoalKick) {
-            finalPower *= 0.75; 
+            finalPower *= 0.75;
         }
 
         if (this.chargingAction === 'shoot' && (this.hasSuperShot || this.hasElectricShot)) {
             finalPower *= 2.5;
             isSuperShotActive = true;
-            
+
             if (this.hasElectricShot && !isBot) {
                 ball.triggerElectricEffect();
             }
@@ -376,19 +368,19 @@ export class PlayerAction {
             kickDir.y = Math.min(kickDir.y, 0.04);
             kickDir.normalize();
 
-            // --- SPEGNI LA SCIA DOPO IL TIRO ---
+
             if (window.fireTrailEffect) {
                 setTimeout(() => {
                     window.fireTrailEffect.deactivate();
                 }, 2000);
             }
 
-            // --- RIMUOVI L'EFFETTO GLOW DAL GIOCATORE ---
+
             if (this.glowingModel) {
                 this.glowingModel.traverse((child) => {
                     if (child.isMesh && child.material && child.userData.originalEmissive) {
                         child.material.emissive.copy(child.userData.originalEmissive);
-                        child.material.emissiveIntensity = 1.0; 
+                        child.material.emissiveIntensity = 1.0;
                         delete child.userData.originalEmissive;
                     }
                 });
@@ -396,57 +388,57 @@ export class PlayerAction {
             }
         }
 
-        // --- EFFETTO MAGNUS (TIRO A GIRO SUL SECONDO PALO) ---
-        ball.spin = 0; // Resetta l'effetto ad ogni tocco per un tiro dritto per dritto
+
+        ball.spin = 0;
 
         if (this.chargingAction === 'shoot' && !isSuperShotActive) {
             const targetGoalDirX = kickDir.x > 0 ? 1 : -1;
             const targetGoalX = targetGoalDirX > 0 ? 48.5 : -48.5;
             const distanceToGoal = Math.abs(targetGoalX - ball.position.x);
 
-            // Condizione: posizione angolata (abs(Z) > 6) e mira incrociata verso il secondo palo
+
             const isAimingAtFarPost = (ball.position.z > 6 && kickDir.z < -0.05) || (ball.position.z < -6 && kickDir.z > 0.05);
 
-            // Attivazione: da distanza media-corta (8-35 metri) a prescindere dalla potenza
+
             if (distanceToGoal > 8 && distanceToGoal < 35 && isAimingAtFarPost) {
-                const curveIntensity = 2.0; // Intensità ESAGERATA (oltre le leggi della fisica)
-                ball.spin = curveIntensity * targetGoalDirX * Math.sign(ball.position.z); // Tolto il segno meno per curvare verso la porta
-                
-                // --- TRUCCO PER COLPIRE IL BERSAGLIO ---
-                // Calcoliamo il tempo di volo stimato (moltiplicato per 0.8 per compensare il forte attrito dell'aria)
+                const curveIntensity = 2.0;
+                ball.spin = curveIntensity * targetGoalDirX * Math.sign(ball.position.z);
+
+
+
                 const flightTime = distanceToGoal / (finalPower * 0.8);
-                
-                // In una traiettoria aerodinamica, l'angolo per compensare la curva è esattamente 
-                // la metà della rotazione totale moltiplicata per il tempo di volo. Usiamo 0.55 per via dell'attrito.
-                const aimCompensation = 0.55 * ball.spin * flightTime; 
-                
-                // Sfalsiamo la mira verso l'esterno: la curva la riporterà proprio sul mirino verde!
+
+
+
+                const aimCompensation = 0.55 * ball.spin * flightTime;
+
+
                 kickDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), aimCompensation);
 
-                // Manteniamo una traiettoria fissa "laser": 0.15 era un pallonetto, 0.06 rasoterra. 
-                // 0.11 è perfetto per viaggiare dritto a mezz'aria senza mai toccare terra e perdere l'effetto!
+
+
                 kickDir.y = 0.20;
                 kickDir.normalize();
-                
-                // --- EFFETTO SLOW MOTION ---
+
+
                 if (!isBot) {
                     document.dispatchEvent(new CustomEvent('triggerSlowMotion', { detail: { duration: 1.0, scale: 0.25 } }));
                 }
             }
         }
 
-        // Applichiamo l'impulso fisico
+
         const impulse = kickDir.multiplyScalar(finalPower);
         ball.velocity.set(0, 0, 0);
         ball.applyImpulse(impulse);
 
-        // --- RIPRODUCI SUONO KICK ---
+
         if (this.kickSound) {
-            this.kickSound.currentTime = 0; // Resetta l'audio all'inizio (permette tiri/passaggi in rapida successione)
+            this.kickSound.currentTime = 0;
             this.kickSound.play().catch(e => console.warn("Autoplay audio bloccato dal browser:", e));
         }
 
-        // Effetto WOW: scatta se hai il super tiro O se carichi un tiro normale oltre l'85%
+
         if (this.chargingAction === 'shoot') {
             if (isSuperShotActive || this.kickPower >= this.shootMaxPower * 0.85) {
                 if (!isBot) {
@@ -470,16 +462,16 @@ export class PlayerAction {
         }
     }
 
-    // --- DRIBBLING REALISTICO ---
-    // --- DRIBBLING REALISTICO ---
+
+
     dribble(ball, yaw, isRunning, isBoosting, keys, deltaTime) {
         if (!ball || !ball.isLoaded) return null;
 
-        // Inizializza il cooldown se non esiste
+
         if (this.dribbleCooldown === undefined) this.dribbleCooldown = 0;
         this.dribbleCooldown -= deltaTime;
 
-        // Determiniamo il vettore di movimento del giocatore
+
         let moveX = 0;
         let moveZ = 0;
         if (keys.forward) moveZ = 1;
@@ -487,67 +479,67 @@ export class PlayerAction {
         if (keys.left) moveX = -1;
         if (keys.right) moveX = 1;
 
-        if (moveX === 0 && moveZ === 0) return null; // Fermo, non dribbla
+        if (moveX === 0 && moveZ === 0) return null;
 
-        // Tipo di animazione
+
         let touchType = 'straight';
         if (isRunning || isBoosting) {
-            touchType = 'run_push'; 
+            touchType = 'run_push';
         } else {
             if (keys.right) touchType = 'right_outside';
             if (keys.left) touchType = 'right_inside';
         }
 
-        // Se il cooldown non è finito, non tocchiamo la palla
+
         if (this.dribbleCooldown > 0) return null;
 
         const lookDirection = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw).normalize();
         const rightDirection = new THREE.Vector3().crossVectors(lookDirection, new THREE.Vector3(0, 1, 0)).normalize();
 
-        // Vettore di spinta finale basato sui tasti premuti
+
         const pushDirection = new THREE.Vector3()
             .addScaledVector(lookDirection, moveZ)
             .addScaledVector(rightDirection, moveX)
             .normalize();
 
-        // --- VALORI BASE (Camminata) ---
+
         let maxDribbleSpeed = 8;
         let pushForce = 8;
         let touchInterval = 0.5;
 
-        // Se ci stiamo muovendo lateralmente (A o D), diamo un impulso leggermente maggiore per allontanare la palla dai piedi
+
         if (Math.abs(moveX) > 0 && moveZ === 0) {
             pushForce += 3;
         }
 
-        // --- VALORI DINAMICI IN BASE ALLO STATO ---
+
         if (isBoosting) {
-            maxDribbleSpeed = 30; // La palla può viaggiare molto veloce
-            pushForce = 35;       // SPINTA FORTISSIMA (Palla lunga)
-            touchInterval = 0.65; // Cooldown più lungo: deve rincorrere la palla
-            if (Math.abs(moveX) > 0) pushForce += 5; // Spinta extra laterale col boost
+            maxDribbleSpeed = 30;
+            pushForce = 35;
+            touchInterval = 0.65;
+            if (Math.abs(moveX) > 0) pushForce += 5;
         } else if (isRunning) {
             maxDribbleSpeed = 18;
-            pushForce = 20;       // Spinta normale da corsa
-            touchInterval = 0.35; // Tocchi ravvicinati
-            if (Math.abs(moveX) > 0) pushForce += 4; // Più spinta laterale in corsa
+            pushForce = 20;
+            touchInterval = 0.35;
+            if (Math.abs(moveX) > 0) pushForce += 4;
         }
 
-        // Applichiamo il tocco alla palla
+
         if (ball.velocity.length() < maxDribbleSpeed) {
-            // Fermiamo un attimo la palla per evitare che sfugga via (controllo)
+
             ball.velocity.multiplyScalar(0.7);
-            
-            // Applichiamo la botta
+
+
             ball.applyImpulse(pushDirection.multiplyScalar(pushForce));
 
-            // Resettiamo il timer del passo
+
             this.dribbleCooldown = touchInterval;
         }
 
-        return touchType; 
+        return touchType;
     }
-    // --- NUOVO: Annulla il caricamento se si esce dal raggio ---
+
     cancelCharge(passArrow) {
         this.chargingAction = null;
         this.kickPower = 0;

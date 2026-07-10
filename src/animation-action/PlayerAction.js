@@ -230,12 +230,20 @@ export class PlayerAction {
         }
 
 
-        if (this.chargingAction === 'pass' && passTarget && passTarget.model) {
-            let targetPos = passTarget.model.position.clone();
-
-
-            if (passTarget.isReceivingGoalKick && passTarget.goalKickRunDir) {
-                targetPos.x += passTarget.goalKickRunDir * 10 * 0.8;
+        if (this.chargingAction === 'pass' && passTarget) {
+            let targetPos;
+            
+            if (this.isTakingCorner && passTarget.clone) {
+                targetPos = passTarget.clone(); 
+            } else if (this.isTakingCorner && passTarget.model) {
+                targetPos = passTarget.model.position.clone(); 
+            } else if (passTarget.model) {
+                targetPos = passTarget.model.position.clone();
+                if (passTarget.isReceivingGoalKick && passTarget.goalKickRunDir) {
+                    targetPos.x += passTarget.goalKickRunDir * 10 * 0.8;
+                }
+            } else {
+                return;
             }
 
             const distanceToTarget = new THREE.Vector2(ball.position.x, ball.position.z).distanceTo(new THREE.Vector2(targetPos.x, targetPos.z));
@@ -252,26 +260,25 @@ export class PlayerAction {
 
             let V_xz, V_y;
 
-
-
-            if (pitch <= 0.20) {
-
-                const baseSpeed = Math.max(25, distanceToTarget * 3.5);
-                V_xz = baseSpeed * (1.0 + chargeRatio * 2.0);
-                V_y = 0;
-            } else {
-
-
-                const pitchFactor = Math.min(1.0, (pitch - 0.20) / (Math.PI / 4));
-                const maxHeight = 1.0 + (pitchFactor * 4.5);
-
+            if (this.isTakingCorner) {
+                const maxHeight = 15.0; 
                 V_y = Math.sqrt(2 * 12.0 * maxHeight);
                 const flightTime = (2 * V_y) / 12.0;
-
-
-
                 const dragCompensation = 1 + (distanceToTarget * 0.015);
                 V_xz = (distanceToTarget / flightTime) * dragCompensation;
+            } else {
+                if (pitch <= 0.20) {
+                    const baseSpeed = Math.max(25, distanceToTarget * 3.5);
+                    V_xz = baseSpeed * (1.0 + chargeRatio * 2.0);
+                    V_y = 0;
+                } else {
+                    const pitchFactor = Math.min(1.0, (pitch - 0.20) / (Math.PI / 4));
+                    const maxHeight = 1.0 + (pitchFactor * 4.5);
+                    V_y = Math.sqrt(2 * 12.0 * maxHeight);
+                    const flightTime = (2 * V_y) / 12.0;
+                    const dragCompensation = 1 + (distanceToTarget * 0.015);
+                    V_xz = (distanceToTarget / flightTime) * dragCompensation;
+                }
             }
 
             V_xz = Math.min(V_xz, 90);

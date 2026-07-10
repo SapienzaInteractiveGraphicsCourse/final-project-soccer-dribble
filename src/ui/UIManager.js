@@ -430,6 +430,12 @@ export class UIManager {
                 this.startGame('penalty');
             });
             
+            document.getElementById('btn-train-corner').addEventListener('click', (e) => {
+                e.stopPropagation();
+                trainingMenu.style.display = 'none';
+                this.startGame('corner');
+            });
+            
             
             const settingsMenu = document.getElementById('settings-menu');
             this.settingsMenu = settingsMenu;

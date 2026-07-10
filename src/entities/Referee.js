@@ -60,45 +60,87 @@ export class Referee {
         });
     }
 
-    update(deltaTime) {
-        if (!this.model || !this.ball || !this.ball.isLoaded) return;
+    _isInPenaltyArea(x, z) {
+        const penaltyX = 33;
+        const penaltyZ = 20.16;
+        return Math.abs(x) >= penaltyX && Math.abs(z) <= penaltyZ;
+    }
+
+    
+    _getSafeWatchPosition(ballX, ballZ) {
+        const penaltyX = 33;
+        const penaltyZ = 20.16;
+        const margin = 2.0;
 
         
-        
-        this._ballPosOnGround.set(this.ball.position.x, this.model.position.y, this.ball.position.z);
-        
-        
-        const distanceToBall = this.model.position.distanceTo(this._ballPosOnGround);
-
-        let moving = false;
-        let running = false;
-
-        
-        this.model.lookAt(this._ballPosOnGround);
-
-        
-        if (distanceToBall > this.maxDistance) {
-            
-            this._direction.subVectors(this._ballPosOnGround, this.model.position).normalize();
-            
-            
-            running = distanceToBall > 25;
-            const currentSpeed = running ? this.speed * 1.8 : this.speed;
-            
-            this.model.position.addScaledVector(this._direction, currentSpeed * deltaTime);
-            moving = true;
-
-        } else if (distanceToBall < this.minDistance) {
-            
-            this._direction.subVectors(this.model.position, this._ballPosOnGround).normalize();
-            this.model.position.addScaledVector(this._direction, (this.speed * 0.7) * deltaTime);
-            moving = true;
-            running = false;
+        if (!this._isInPenaltyArea(ballX, ballZ)) {
+            return new THREE.Vector3(ballX, 0, ballZ);
         }
 
         
         
-        
+        const watchX = ballX > 0 ? penaltyX - margin : -penaltyX + margin;
+        const watchZ = THREE.MathUtils.clamp(ballZ, -penaltyZ - 2, penaltyZ + 2);
+
+        return new THREE.Vector3(watchX, 0, watchZ);
+    }
+
+    update(deltaTime) {
+        if (!this.model || !this.ball || !this.ball.isLoaded) return;
+
+        this._ballPosOnGround.set(this.ball.position.x, this.model.position.y, this.ball.position.z);
+
+        const watchPos = this._getSafeWatchPosition(this.ball.position.x, this.ball.position.z);
+        watchPos.y = this.model.position.y;
+
+        const distanceToWatch = this.model.position.distanceTo(watchPos);
+
+        let moving = false;
+        let running = false;
+
+        // Always look at the ball
+        this.model.lookAt(this._ballPosOnGround);
+
+        const ballInArea = this._isInPenaltyArea(this.ball.position.x, this.ball.position.z);
+
+        let wantToMove = false;
+        let moveSpeed = 0;
+
+        if (ballInArea) {
+            if (distanceToWatch > 1.5) {
+                this._direction.subVectors(watchPos, this.model.position).normalize();
+                running = distanceToWatch > 15;
+                moveSpeed = running ? this.speed * 1.8 : this.speed;
+                wantToMove = true;
+            }
+        } else {
+            if (distanceToWatch > this.maxDistance) {
+                this._direction.subVectors(watchPos, this.model.position).normalize();
+                running = distanceToWatch > 25;
+                moveSpeed = running ? this.speed * 1.8 : this.speed;
+                wantToMove = true;
+            } else if (distanceToWatch < this.minDistance) {
+                this._direction.subVectors(this.model.position, watchPos).normalize();
+                moveSpeed = this.speed * 0.7;
+                wantToMove = true;
+                running = false;
+            }
+        }
+
+        if (wantToMove) {
+            const step = moveSpeed * deltaTime;
+            const nextX = this.model.position.x + this._direction.x * step;
+            const nextZ = this.model.position.z + this._direction.z * step;
+
+            // Only apply the move if it doesn't enter a penalty area
+            if (!this._isInPenaltyArea(nextX, nextZ)) {
+                this.model.position.x = nextX;
+                this.model.position.z = nextZ;
+                moving = true;
+            }
+            // If blocked, just stand still — no teleport, no flicker
+        }
+
         this.animator.animate(deltaTime, false, moving, running, false);
     }
 }

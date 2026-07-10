@@ -53,7 +53,7 @@ export class MatchManager {
     setupAutoSwitchEvent() {
         document.addEventListener('autoSwitchRequested', (e) => {
             
-            if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return;
+            if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') return;
             if (this.isControllingGK) return;
 
             const targetTeammate = e.detail.target;
@@ -98,7 +98,7 @@ export class MatchManager {
 
     setupPassEvent() {
         document.addEventListener('passExecuted', (e) => {
-            if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return;
+            if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') return;
             const targetTeammate = e.detail.target;
             if (targetTeammate && targetTeammate.model) {
                 this.switchCharacter(targetTeammate);
@@ -112,13 +112,13 @@ export class MatchManager {
             if (!isGameActive) return;
 
             
-            if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick')) {
+            if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner')) {
                 this.startGame(this.gameMode);
                 this.uiManager.showInGameMessage("BALL REPOSITIONED");
             }
 
             if (e.code === 'KeyE') {
-                if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; 
+                if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') return; 
                 if (this.isControllingGK) return; 
                 if (this.player.action.isTakingCorner || this.player.action.isTakingGoalKick) return; 
                 if (!this.ball.mesh || !this.currentT1.model || !this.currentT2.model) return;
@@ -128,7 +128,7 @@ export class MatchManager {
                 this.switchCharacter(distT1 < distT2 ? this.currentT1 : this.currentT2);
             }
             else if (e.code === 'KeyT') {
-                if (this.gameMode === 'penalty' || this.gameMode === 'freekick') return; 
+                if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') return; 
                 if (this.isControllingGK) return; 
                 if (this.player.action.isTakingCorner || this.player.action.isTakingGoalKick) return; 
                 if (this.player && this.player.animator) {
@@ -235,7 +235,8 @@ export class MatchManager {
         if (this.bgMusic && this.bgMusic.paused) {
             this.bgMusic.play().catch(() => {});
         }
-        this.player.isTraining = (mode === 'penalty' || mode === 'freekick'); 
+        this.player.isTraining = (mode === 'penalty' || mode === 'freekick' || mode === 'corner'); 
+        this.trainingKickTime = null;
 
         if (mode === '2-1' || mode === '1-2') {
             this.currentFormation = mode;
@@ -246,6 +247,9 @@ export class MatchManager {
         } else if (mode === 'freekick') {
             this.setupFreeKick();
             this.uiManager.showInGameMessage("TRAINING FREEKICK<br><span style='font-size:20px'>Press 'R' to reposition</span>");
+        } else if (mode === 'corner') {
+            this.setupCorner();
+            this.uiManager.showInGameMessage("TRAINING CORNER<br><span style='font-size:20px'>Press 'R' to reposition</span>");
         }
 
         
@@ -335,6 +339,66 @@ export class MatchManager {
         if (this.homeGK.model) { this.homeGK.model.position.set(-48.5, -100, 0); }
     }
 
+    setupCorner() {
+        this.playerTeam = 'home';
+        this.homeScore = 0;
+        this.awayScore = 0;
+
+        if (!this.trainingCornerSide) {
+            this.trainingCornerSide = 'right';
+        }
+
+        const fieldEndX = 49.5;
+        const fieldEndZ = 30.5;
+
+        const ballX = fieldEndX;
+        const ballZ = this.trainingCornerSide === 'left' ? fieldEndZ : -fieldEndZ;
+        
+        const targetFocusX = 40;
+        const targetYaw = Math.atan2(targetFocusX - ballX, 0 - ballZ);
+
+        this.ball.position.set(ballX, this.ball.radius, ballZ);
+        this.ball.velocity.set(0, 0, 0);
+        this.ball.isGoal = false;
+        this.ball.isOut = false;
+        this.ball.isOutBaseline = false;
+        this.ball.isElectricShot = false;
+        this.ball.isPowerShot = false;
+        this.ball.spin = 0;
+
+        if (this.player.model) {
+            this.player.model.position.set(ballX - Math.sin(targetYaw) * 1.0, 0, ballZ - Math.cos(targetYaw) * 1.0);
+            this.player.yaw = targetYaw;
+            this.player.model.rotation.y = targetYaw;
+            
+            if (this.player.cornerTargetPos) {
+                this.player.cornerTargetPos.set(40, 0, 0);
+            }
+            this.player.action.startCorner(this.ball);
+        }
+
+        if (this.currentT1.model) { this.currentT1.model.position.set(40 + (Math.random()*8-4), 0, Math.random()*16-8); this.currentT1.isWaitingInArea = true; }
+        if (this.currentT2.model) { this.currentT2.model.position.set(40 + (Math.random()*8-4), 0, Math.random()*16-8); this.currentT2.isWaitingInArea = true; }
+        
+        if (this.currentO1.model) { this.currentO1.model.position.set(40 + (Math.random()*8-4), 0, Math.random()*16-8); this.currentO1.isWaitingInArea = true; }
+        if (this.currentO2.model) { this.currentO2.model.position.set(40 + (Math.random()*8-4), 0, Math.random()*16-8); this.currentO2.isWaitingInArea = true; }
+        if (this.currentO3.model) { this.currentO3.model.position.set(40 + (Math.random()*8-4), 0, Math.random()*16-8); this.currentO3.isWaitingInArea = true; }
+
+        [this.currentT1, this.currentT2].forEach(teammate => {
+            if (teammate && teammate.model && teammate.setReceiveCornerTarget) {
+                teammate.setReceiveCornerTarget(ballX, ballZ);
+            }
+        });
+
+        if (this.awayGK.model) {
+            this.awayGK.model.position.set(48.5, 0, 0);
+            this.awayGK.model.rotation.y = 3 / 2 * Math.PI;
+            this.awayGK.yaw = 3 / 2 * Math.PI;
+            this.awayGK.isSwappedOut = false;
+        }
+        if (this.homeGK.model) { this.homeGK.model.position.set(-48.5, -100, 0); }
+    }
+
     resetKickOff() {
         this.ball.position.set(0, this.ball.radius, 0);
         this.ball.velocity.set(0, 0, 0);
@@ -395,7 +459,19 @@ export class MatchManager {
     }
 
     updateRules() {
-        
+        if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
+            if (this.ball.velocity.lengthSq() > 1.0 && this.trainingKickTime === null) {
+                this.trainingKickTime = Date.now();
+            }
+            if (this.trainingKickTime !== null && Date.now() - this.trainingKickTime > 4000) {
+                if (!this.ball.isGoal && !this.ball.isOut && !this.ball.isOutBaseline) {
+                    this.trainingKickTime = null;
+                    this.uiManager.showInGameMessage("TEMPO SCADUTO!<br><span style='font-size:20px'>Riposizionamento in corso...</span>");
+                    setTimeout(() => { this.startGame(this.gameMode); }, 1500);
+                    return;
+                }
+            }
+        }
         
         if (!this.ball.isHeld) {
             const trackingRadius = 1.3; 
@@ -472,10 +548,15 @@ export class MatchManager {
                 this.uiManager.showInGameMessage(this.playerTeam === 'away' ? "⚽ GOOOAAALLL!!! ⚽" : "🤦‍♂️ GOAL CONCEDED 🤦‍♂️");
             }
 
-            
-            setTimeout(() => {
-                document.dispatchEvent(new CustomEvent('triggerReplay'));
-            }, 3000);
+            if (this.gameMode !== 'corner') {
+                setTimeout(() => {
+                    document.dispatchEvent(new CustomEvent('triggerReplay'));
+                }, 3000);
+            } else {
+                setTimeout(() => {
+                    this.resetAfterGoal();
+                }, 2000);
+            }
         }
 
         
@@ -486,7 +567,10 @@ export class MatchManager {
             this.ball.spin = 0;
 
             
-            if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
+            if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') {
+                if (this.gameMode === 'corner') {
+                    this.trainingCornerSide = this.trainingCornerSide === 'left' ? 'right' : 'left';
+                }
                 this.uiManager.showInGameMessage("TRY AGAIN!<br><span style='font-size:20px'>Press 'R' to reposition</span>");
                 setTimeout(() => { this.startGame(this.gameMode); }, 1500);
                 return;
@@ -670,7 +754,10 @@ export class MatchManager {
             this.ball.spin = 0;
             
 
-            if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
+            if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') {
+                if (this.gameMode === 'corner') {
+                    this.trainingCornerSide = this.trainingCornerSide === 'left' ? 'right' : 'left';
+                }
                 this.uiManager.showInGameMessage("RITENTA!<br><span style='font-size:20px'>Premi 'R' per riposizionare</span>");
                 setTimeout(() => { this.startGame(this.gameMode); }, 1500);
                 return;
@@ -784,7 +871,10 @@ export class MatchManager {
         this.restoreGoalkeeper();
         if (window.executePendingSubstitutions) window.executePendingSubstitutions();
 
-        if (this.gameMode === 'penalty' || this.gameMode === 'freekick') {
+        if (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') {
+            if (this.gameMode === 'corner') {
+                this.trainingCornerSide = this.trainingCornerSide === 'left' ? 'right' : 'left';
+            }
             this.startGame(this.gameMode); 
         } else {
             this.resetKickOff();

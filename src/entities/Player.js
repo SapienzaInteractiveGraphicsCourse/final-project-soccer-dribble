@@ -85,6 +85,21 @@ export class Player {
         this.goalCrosshair.visible = false;
         scene.add(this.goalCrosshair);
 
+        this.cornerTargetPos = new THREE.Vector3(40, 0, 0);
+        
+        const cornerCrosshairGeo = new THREE.RingGeometry(1.0, 1.3, 32);
+        const cornerCrosshairMat = new THREE.MeshBasicMaterial({
+            color: 0x00ff00, 
+            transparent: true,
+            opacity: 0.8,
+            side: THREE.DoubleSide,
+            depthTest: false 
+        });
+        this.cornerCrosshair = new THREE.Mesh(cornerCrosshairGeo, cornerCrosshairMat);
+        this.cornerCrosshair.rotation.x = -Math.PI / 2;
+        this.cornerCrosshair.visible = false;
+        scene.add(this.cornerCrosshair);
+
         this.loadGLB();
         this.initListeners();
     }
@@ -142,9 +157,27 @@ export class Player {
             if (this.controls.isLocked) {
                 const sensX = window.gameSettings ? window.gameSettings.sensitivityX : 1.0;
                 const sensY = window.gameSettings ? window.gameSettings.sensitivityY : 1.0;
-                this.yaw -= e.movementX * 0.003 * sensX;
-                this.pitch -= e.movementY * 0.003 * sensY;
-                this.pitch = Math.max(0, Math.min(Math.PI / 3, this.pitch));
+                
+                if (this.action && this.action.isTakingCorner) {
+                    const cornerSens = 0.05 * sensX;
+                    const fx = Math.sin(this.yaw);
+                    const fz = Math.cos(this.yaw);
+                    const rx = -fz;
+                    const rz = fx;
+                    
+                    this.cornerTargetPos.x += fx * e.movementY * cornerSens;
+                    this.cornerTargetPos.z += fz * e.movementY * cornerSens;
+                    
+                    this.cornerTargetPos.x -= rx * e.movementX * cornerSens;
+                    this.cornerTargetPos.z -= rz * e.movementX * cornerSens;
+                    
+                    this.cornerTargetPos.x = Math.max(25, Math.min(49.5, this.cornerTargetPos.x));
+                    this.cornerTargetPos.z = Math.max(-25, Math.min(25, this.cornerTargetPos.z));
+                } else {
+                    this.yaw -= e.movementX * 0.003 * sensX;
+                    this.pitch -= e.movementY * 0.003 * sensY;
+                    this.pitch = Math.max(0, Math.min(Math.PI / 3, this.pitch));
+                }
             }
         });
 
@@ -361,7 +394,14 @@ export class Player {
         const isGameActive = this.controls.isLocked || (this.isTouchDevice && document.getElementById('touch-controls').style.display !== 'none');
         if (!isGameActive || !this.model) return;
         
-        
+        if (this.action && this.action.isTakingCorner) {
+            this.cornerCrosshair.visible = true;
+            this.cornerCrosshair.position.copy(this.cornerTargetPos);
+            this.cornerCrosshair.position.y = 0.05;
+        } else if (this.cornerCrosshair) {
+            this.cornerCrosshair.visible = false;
+        }
+
         this.model.rotation.x = 0;
         this.model.rotation.z = 0;
 
@@ -673,7 +713,7 @@ export class Player {
                 }
             }
 
-            if (distance < touchRadius) {
+            if (distance < touchRadius && !this.action.isTakingCorner && !this.action.isTakingGoalKick) {
                 currentDribbleTouch = this.action.dribble(this.ball, this.yaw, isSprinting, isBoosting, this.keys, deltaTime);
             }
             if (this.aimRing) {
@@ -723,7 +763,11 @@ export class Player {
                             passTarget = this.getBestPassTarget();
                         }
 
-                        this.action.executeKick(this.ball, this.yaw, this.pitch, this.passArrow, passTarget);
+                        if (wasTakingCorner) {
+                            this.action.executeKick(this.ball, this.yaw, this.pitch, this.passArrow, this.cornerTargetPos);
+                        } else {
+                            this.action.executeKick(this.ball, this.yaw, this.pitch, this.passArrow, passTarget);
+                        }
                         
                         if (passTarget && !wasTakingCorner && !wasTakingGoalKick) {
                             

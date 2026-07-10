@@ -772,7 +772,7 @@ function animate(timestamp) {
 
             
             resolvePlayerCollisions(player, [player, ...teammates, ...bots, homeGK, awayGK]);
-            const isTraining = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick';
+            const isTraining = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick' || matchManager.gameMode === 'corner';
 
             if (isTraining !== window.isTrainingState) {
                 window.isTrainingState = isTraining;

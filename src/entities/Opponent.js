@@ -27,6 +27,7 @@ export class Opponent {
         this.receiveLockTimer = 0;
         this.chosenReceiver = null;
         this.wasPossessingBall = false;
+        this.ignoreBallTimer = 0;
 
         
         this.isThrowingIn = false;
@@ -93,6 +94,10 @@ export class Opponent {
     update(deltaTime, isMatchStarted = true, matchState = 'HOME_POSSESSION', defendDirX = 1, opponents = [], bots = []) {
         if (!this.model) return;
         
+        if (this.ignoreBallTimer > 0) {
+            this.ignoreBallTimer -= deltaTime;
+        }
+
         
         this.model.rotation.x = 0;
         this.model.rotation.z = 0;
@@ -139,9 +144,9 @@ export class Opponent {
                 if (this.throwInTimer >= releaseTime && this.ball.isHeld) {
                     let throwYaw = this.yaw; 
                     this.action.executeThrow(this.ball, throwYaw, this.scene, this.targetReceiver);
+                    this.ignoreBallTimer = 1.5;
 
                     if (this.targetReceiver) {
-                        this.targetReceiver.isReceivingThrowIn = false;
                         this.targetReceiver = null;
                     }
                 }
@@ -243,6 +248,7 @@ export class Opponent {
                 
                 
                 this.action.executeKick(this.ball, this.yaw, 0, null, fakeTarget, true);
+                this.ignoreBallTimer = 1.5;
 
                 if (this.targetReceiver) {
                     this.targetReceiver = null;
@@ -421,6 +427,7 @@ export class Opponent {
                 let passTarget = this.targetReceiver;
                 this.action.executeKick(this.ball, this.yaw, 0, null, passTarget, true);
                 this.targetReceiver = null;
+                this.ignoreBallTimer = 1.5;
             }
 
             if (this.kickOffTimer >= endTime) {
@@ -582,9 +589,14 @@ export class Opponent {
         const myDistToBall = this.model.position.distanceTo(this.ball.position);
         let minDist = Infinity;
         
+        if (this.ignoreBallTimer > 0) {
+            isClosest = false;
+        }
+
         if (bots && bots.length > 0) {
             bots.forEach(otherBot => {
                 if (otherBot && otherBot.model) {
+                    if (otherBot.ignoreBallTimer > 0) return; // skip bots ignoring the ball
                     const dist = otherBot.model.position.distanceTo(this.ball.position);
                     if (dist < minDist) {
                         minDist = dist;

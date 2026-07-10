@@ -46,6 +46,7 @@ export class Player {
         this.throwTimer = 0;
         this.ballThrown = false;
         this.kickButtonHeld = false;
+        this.headerCooldown = 0;
 
         this.customizer = new PlayerCustomizer(this);
 
@@ -531,7 +532,7 @@ export class Player {
         this.physicsWorld.updateParticles(deltaTime);
 
         
-        if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner && !this.animator.isSliding) {
+        if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.action.isTakingCorner && !this.animator.isSliding && !this.action.isHeading) {
 
             
             const angleToBall = Math.atan2(
@@ -578,7 +579,6 @@ export class Player {
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.throwAnimPlaying) {
 
             
-            if (this.headerCooldown === undefined) this.headerCooldown = 0;
             if (this.headerCooldown > 0) this.headerCooldown -= deltaTime;
 
             const distanceToBall2D = new THREE.Vector2(this.model.position.x, this.model.position.z)
@@ -586,7 +586,10 @@ export class Player {
             const ballHeight = this.ball.position.y;
 
             
-            const isBallHigh = ballHeight > 1.3 && ballHeight < 3.5; 
+            const isBallHigh = ballHeight > 1.5 && ballHeight < 3.5; 
+
+            
+            const ballSpeed = this.ball.velocity.length();
 
             
             if (!this.action.isHeading && isBallHigh && distanceToBall2D < 3.5 && this.headerCooldown <= 0) {
@@ -600,9 +603,9 @@ export class Player {
                     this.headerCooldown = 1.2; 
                 } 
                 
-                else if (distanceToBall2D < 2.8 && !this.action.chargingAction) {
+                else if (distanceToBall2D < 2.5 && !this.action.chargingAction && ballSpeed > 2.0) {
                     this.action.startHeader(this.ball, 'control');
-                    this.headerCooldown = 1.2; 
+                    this.headerCooldown = 1.5; 
                 }
             }
 
@@ -633,7 +636,7 @@ export class Player {
             }
             
             
-            if (!this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.animator.isSliding) {
+            if (!this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.animator.isSliding && !this.action.isHeading) {
                 const playerHeight = 1.8;
                 const playerRadius = 0.45; 
                 
@@ -698,7 +701,7 @@ export class Player {
             const aimRadius = 3.0;
 
             
-            if (distance < controlRadius && moving && !this.action.chargingAction && this.ball.velocity.lengthSq() < 600) {
+            if (distance < controlRadius && moving && !this.action.chargingAction && !this.action.isHeading && this.ball.velocity.lengthSq() < 600) {
                 
                 const idealPos = this.model.position.clone().add(
                     new THREE.Vector3(0, 0, 0.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), this.model.rotation.y)
@@ -713,7 +716,7 @@ export class Player {
                 }
             }
 
-            if (distance < touchRadius && !this.action.isTakingCorner && !this.action.isTakingGoalKick) {
+            if (distance < touchRadius && !this.action.isTakingCorner && !this.action.isTakingGoalKick && !this.action.isHeading) {
                 currentDribbleTouch = this.action.dribble(this.ball, this.yaw, isSprinting, isBoosting, this.keys, deltaTime);
             }
             if (this.aimRing) {

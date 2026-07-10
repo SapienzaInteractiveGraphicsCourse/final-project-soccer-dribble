@@ -778,6 +778,7 @@ function animate(timestamp) {
                 window.isTrainingState = isTraining;
                 bonusManager.setVisible(!isTraining);
                 boostPadManager.setVisible(!isTraining);
+                uiManager.toggleTrainingHUD(isTraining);
             }
 
             if (!isTraining) {

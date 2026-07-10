@@ -21,6 +21,7 @@ export class PlayerAction {
         this.headerImpactTime = 0.23;
         this.headerType = null;
         this.frozenBallPos = null;
+        this.headerHitExecuted = false;
 
         this.shootBasePower = 18;
         this.shootMaxPower = 50;
@@ -53,6 +54,7 @@ export class PlayerAction {
         this.isHeading = true;
         this.headerTimer = 0;
         this.headerType = type;
+        this.headerHitExecuted = false;
 
         if (ball && ball.isLoaded) {
             ball.velocity.set(0, 0, 0);
@@ -66,20 +68,22 @@ export class PlayerAction {
         this.headerTimer += deltaTime;
 
         
-        if (ball && this.frozenBallPos && this.headerTimer < this.headerImpactTime) {
+        if (ball && this.frozenBallPos && !this.headerHitExecuted && this.headerTimer < this.headerImpactTime) {
             ball.position.copy(this.frozenBallPos);
             ball.velocity.set(0, 0, 0);
         }
 
         
-        if (this.headerTimer >= this.headerImpactTime && (this.headerTimer - deltaTime) < this.headerImpactTime) {
+        if (!this.headerHitExecuted && this.headerTimer >= this.headerImpactTime && (this.headerTimer - deltaTime) < this.headerImpactTime) {
             this.executeHeaderHit(ball, yaw, pitch);
+            this.headerHitExecuted = true;
         }
 
         
         if (this.headerTimer >= this.headerDuration) {
             this.isHeading = false;
             this.frozenBallPos = null;
+            this.headerHitExecuted = false;
         }
 
         return this.headerTimer / this.headerDuration; 

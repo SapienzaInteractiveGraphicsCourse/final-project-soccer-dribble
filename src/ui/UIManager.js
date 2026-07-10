@@ -793,6 +793,31 @@ export class UIManager {
         roller.innerHTML = '<div class="bonus-item bonus-empty">NESSUNO</div>';
     }
 
+    toggleTrainingHUD(isTraining) {
+        const radar = document.getElementById('radar');
+        const stamina = document.getElementById('stamina-container');
+        const boost = document.getElementById('boost-container');
+        const playerNameHud = document.getElementById('player-name-hud');
+        const scoreboardHud = document.getElementById('scoreboard-hud');
+        const bonusHud = document.getElementById('bonus-hud'); 
+        
+        if (isTraining) {
+            if (radar) radar.style.display = 'none';
+            if (stamina) stamina.style.display = 'none';
+            if (boost) boost.style.display = 'none';
+            if (bonusHud) bonusHud.style.display = 'none';
+            if (playerNameHud) playerNameHud.style.display = 'none';
+            if (scoreboardHud) scoreboardHud.style.display = 'none';
+        } else {
+            if (radar) radar.style.display = '';
+            if (stamina) stamina.style.display = '';
+            if (boost) boost.style.display = '';
+            if (bonusHud) bonusHud.style.display = '';
+            if (playerNameHud) playerNameHud.style.display = '';
+            if (scoreboardHud) scoreboardHud.style.display = 'flex';
+        }
+    }
+
     showReplayUI(isActive) {
         let replayIcon = document.getElementById('replay-indicator');
         
@@ -824,15 +849,14 @@ export class UIManager {
                 replayIcon.style.display = 'none';
             }
 
-            
-            
-            
-            if (radar) radar.style.display = '';
-            if (stamina) stamina.style.display = '';
-            if (boost) boost.style.display = '';
-            if (bonusHud) bonusHud.style.display = '';
-            if (playerNameHud) playerNameHud.style.display = '';
-            if (scoreboardHud) scoreboardHud.style.display = 'flex';
+            if (!window.isTrainingState) {
+                if (radar) radar.style.display = '';
+                if (stamina) stamina.style.display = '';
+                if (boost) boost.style.display = '';
+                if (bonusHud) bonusHud.style.display = '';
+                if (playerNameHud) playerNameHud.style.display = '';
+                if (scoreboardHud) scoreboardHud.style.display = 'flex';
+            }
         }
     }
 }

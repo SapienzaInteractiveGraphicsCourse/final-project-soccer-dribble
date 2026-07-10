@@ -596,7 +596,7 @@ export class Opponent {
         if (bots && bots.length > 0) {
             bots.forEach(otherBot => {
                 if (otherBot && otherBot.model) {
-                    if (otherBot.ignoreBallTimer > 0) return; // skip bots ignoring the ball
+                    if (otherBot.ignoreBallTimer > 0) return; 
                     const dist = otherBot.model.position.distanceTo(this.ball.position);
                     if (dist < minDist) {
                         minDist = dist;

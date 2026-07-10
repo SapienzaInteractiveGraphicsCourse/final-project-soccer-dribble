@@ -98,7 +98,7 @@ export class Referee {
         let moving = false;
         let running = false;
 
-        // Always look at the ball
+        
         this.model.lookAt(this._ballPosOnGround);
 
         const ballInArea = this._isInPenaltyArea(this.ball.position.x, this.ball.position.z);
@@ -132,13 +132,13 @@ export class Referee {
             const nextX = this.model.position.x + this._direction.x * step;
             const nextZ = this.model.position.z + this._direction.z * step;
 
-            // Only apply the move if it doesn't enter a penalty area
+            
             if (!this._isInPenaltyArea(nextX, nextZ)) {
                 this.model.position.x = nextX;
                 this.model.position.z = nextZ;
                 moving = true;
             }
-            // If blocked, just stand still — no teleport, no flicker
+            
         }
 
         this.animator.animate(deltaTime, false, moving, running, false);

@@ -48,6 +48,9 @@ export class MatchManager {
         this.bgMusic = new Audio(`${import.meta.env.BASE_URL}sound/confusion.mp3`);
         this.bgMusic.loop = true; 
         this.bgMusic.volume = 0.4; 
+        
+        this.whistleSound = new Audio(`${import.meta.env.BASE_URL}sound/freesound_community-referee-whistle-blow-gymnasium-6320.mp3`);
+        this.whistleSound.volume = 1.0;
     }
 
     setupAutoSwitchEvent() {
@@ -455,6 +458,10 @@ export class MatchManager {
                 this.awayGK.model.rotation.y = 3 / 2 * Math.PI;
                 this.awayGK.yaw = 3 / 2 * Math.PI;
             }
+        }
+        
+        if (this.whistleSound) {
+            this.whistleSound.play().catch(e => console.warn("Autoplay whistle bloccato:", e));
         }
     }
 

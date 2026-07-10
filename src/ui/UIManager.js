@@ -696,7 +696,7 @@ export class UIManager {
         if (subtitleEl) subtitleEl.innerText = subtitle;
         
         if (endScreen) endScreen.style.display = 'flex';
-        this.gameUI.style.display = 'none';
+        if (this.gameUi) this.gameUi.style.display = 'none';
     }
 
     updateRadar(playerModel, playerYaw, ballMesh, ballPosition, bots = []) {

@@ -734,7 +734,9 @@ function animate(timestamp) {
             player.stamina = Math.max(0, Math.min(100, player.stamina));
             if (player.stamina === 0) player.keys.run = false;
 
-            matchTime += deltaTime;
+            if (isBallInPlay) {
+                matchTime += deltaTime;
+            }
             uiManager.updateHUD(player.playerName, player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
             scoreboard.updateScore(matchManager.homeScore, matchManager.awayScore, matchTime);
 
@@ -744,6 +746,16 @@ function animate(timestamp) {
                 document.exitPointerLock();
                 if (player.controls) player.controls.unlock();
                 uiManager.showEndMatchScreen(matchManager.homeScore, matchManager.awayScore, matchManager.playerTeam);
+                
+                if (matchManager.whistleSound) {
+                    const src = matchManager.whistleSound.src;
+                    const w1 = new Audio(src); w1.volume = 1.0;
+                    const w2 = new Audio(src); w2.volume = 1.0;
+                    const w3 = new Audio(src); w3.volume = 1.0;
+                    w1.play().catch(e=>console.warn(e));
+                    setTimeout(() => w2.play().catch(e=>console.warn(e)), 800);
+                    setTimeout(() => w3.play().catch(e=>console.warn(e)), 1600);
+                }
             }
 
             

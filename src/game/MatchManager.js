@@ -466,7 +466,7 @@ export class MatchManager {
             if (this.trainingKickTime !== null && Date.now() - this.trainingKickTime > 4000) {
                 if (!this.ball.isGoal && !this.ball.isOut && !this.ball.isOutBaseline) {
                     this.trainingKickTime = null;
-                    this.uiManager.showInGameMessage("TEMPO SCADUTO!<br><span style='font-size:20px'>Riposizionamento in corso...</span>");
+                    this.uiManager.showInGameMessage("TIME IS UP!<br><span style='font-size:20px'>Repositioning in progress...</span>");
                     setTimeout(() => { this.startGame(this.gameMode); }, 1500);
                     return;
                 }

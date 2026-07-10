@@ -412,6 +412,23 @@
     <button id="btn-touch-pause" class="touch-action-btn" style="position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; font-size: 24px; border-radius: 10px; z-index: 100;">⏸</button>
   </div>
 
+  <div id="end-match-screen" class="menu-screen" style="display: none; background: rgba(0,0,0,0.92); flex-direction: column; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999; pointer-events: auto;">
+      <h1 style="font-size: 70px; text-shadow: 0 0 25px #FFD700; margin-bottom: 10px; color: white; letter-spacing: 5px;">FULL TIME</h1>
+      <h2 id="end-match-subtitle" style="font-size: 50px; color: #FFF; margin-bottom: 50px; letter-spacing: 2px;">MATCH OVER</h2>
+      <div style="display: flex; gap: 50px; align-items: center; margin-bottom: 60px; background: rgba(255,255,255,0.1); padding: 30px 60px; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+          <div style="text-align: center;">
+              <div style="font-size: 28px; color: #4CAF50; margin-bottom: 15px; font-weight: bold; letter-spacing: 2px;">HOME</div>
+              <div id="end-home-score" style="font-size: 90px; font-weight: bold; color: white; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);">0</div>
+          </div>
+          <div style="font-size: 50px; color: #777;">-</div>
+          <div style="text-align: center;">
+              <div style="font-size: 28px; color: #f44336; margin-bottom: 15px; font-weight: bold; letter-spacing: 2px;">AWAY</div>
+              <div id="end-away-score" style="font-size: 90px; font-weight: bold; color: white; text-shadow: 2px 2px 5px rgba(0,0,0,0.8);">0</div>
+          </div>
+      </div>
+      <button id="btn-return-menu" class="menu-btn" onmousedown="window.location.reload();" ontouchstart="window.location.reload();" onclick="window.location.reload();" style="pointer-events: auto; position: relative; z-index: 999999; cursor: pointer; padding: 20px 50px; font-size: 28px; border-radius: 15px; background: linear-gradient(45deg, #4CAF50, #45a049); box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: all 0.3s ease;">RETURN TO MENU</button>
+  </div>
+
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

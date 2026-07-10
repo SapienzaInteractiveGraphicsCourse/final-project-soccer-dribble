@@ -677,6 +677,28 @@ export class UIManager {
         if (this.hudScoreAway) this.hudScoreAway.innerText = awayScore;
     }
 
+    showEndMatchScreen(homeScore, awayScore, playerTeam) {
+        const homeScoreEl = document.getElementById('end-home-score');
+        const awayScoreEl = document.getElementById('end-away-score');
+        const subtitleEl = document.getElementById('end-match-subtitle');
+        const endScreen = document.getElementById('end-match-screen');
+        const btnReturn = document.getElementById('btn-return-menu');
+
+        if (homeScoreEl) homeScoreEl.innerText = homeScore;
+        if (awayScoreEl) awayScoreEl.innerText = awayScore;
+        
+        let subtitle = "DRAW";
+        if (homeScore > awayScore) {
+            subtitle = playerTeam === 'home' ? "YOU WIN!" : "YOU LOSE!";
+        } else if (awayScore > homeScore) {
+            subtitle = playerTeam === 'away' ? "YOU WIN!" : "YOU LOSE!";
+        }
+        if (subtitleEl) subtitleEl.innerText = subtitle;
+        
+        if (endScreen) endScreen.style.display = 'flex';
+        this.gameUI.style.display = 'none';
+    }
+
     updateRadar(playerModel, playerYaw, ballMesh, ballPosition, bots = []) {
         const FIELD_WIDTH_X = 97;
         const FIELD_LENGTH_Z = 65;

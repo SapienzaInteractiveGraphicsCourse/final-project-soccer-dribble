@@ -752,7 +752,7 @@ function animate(timestamp) {
 
 
 
-            const isBotActive = isBallInPlay && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick';
+            const isBotActive = isBallInPlay && !matchManager.isCelebrating && !ball.isGoal && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick';
 
             teammates.forEach(t => t.update(
                 deltaTime,           

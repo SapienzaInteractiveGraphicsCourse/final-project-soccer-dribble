@@ -192,7 +192,7 @@ export class Player {
                         this.throwTimer = 0;
                         this.ballThrown = false;
                     }
-                } else if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
+                } else if (this.ball && this.ball.isLoaded && !this.action.chargingAction && this.canKickBall()) {
                     
                     const isSetPiece = this.action.isTakingCorner || this.action.isTakingGoalKick;
                     if (e.button === 0) {
@@ -275,7 +275,7 @@ export class Player {
         };
 
         bindTouchButton('btn-touch-pass', () => {
-            if (this.ball && this.ball.isLoaded && !this.action.chargingAction) {
+            if (this.ball && this.ball.isLoaded && !this.action.chargingAction && this.canKickBall()) {
                 this.action.startCharge('pass');
                 this.kickButtonHeld = true;
             }
@@ -287,7 +287,7 @@ export class Player {
 
         bindTouchButton('btn-touch-shoot', () => {
             const isSetPiece = this.action.isTakingCorner || this.action.isTakingGoalKick;
-            if (this.ball && this.ball.isLoaded && !this.action.chargingAction && !isSetPiece) {
+            if (this.ball && this.ball.isLoaded && !this.action.chargingAction && !isSetPiece && this.canKickBall()) {
                 this.action.startCharge('shoot');
                 this.kickButtonHeld = true;
             }
@@ -388,6 +388,16 @@ export class Player {
             }
         }
         return bestTeammate;
+    }
+
+    canKickBall() {
+        if (!this.ball || !this.ball.isLoaded || !this.model) return false;
+        
+        if (this.action.isTakingCorner || this.action.isTakingGoalKick) return true;
+        const dist2D = new THREE.Vector2(this.model.position.x, this.model.position.z)
+            .distanceTo(new THREE.Vector2(this.ball.position.x, this.ball.position.z));
+        const ballHeight = this.ball.position.y;
+        return dist2D < 3.5 && ballHeight < 3.0;
     }
 
     update(deltaTime) {

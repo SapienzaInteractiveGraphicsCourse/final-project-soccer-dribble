@@ -112,7 +112,7 @@ export class MatchManager {
             if (!isGameActive) return;
 
             
-            if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner')) {
+            if (e.code === 'KeyR' && (this.gameMode === 'penalty' || this.gameMode === 'freekick' || this.gameMode === 'corner') && !this.isCelebrating) {
                 this.startGame(this.gameMode);
                 this.uiManager.showInGameMessage("BALL REPOSITIONED");
             }

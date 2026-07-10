@@ -661,8 +661,7 @@ export class Opponent {
                         }
 
                         if (opponentNear && bots.length > 1) {
-                            console.log(`Opponent ${this.id} under pressure (dist: ${closestOppDist.toFixed(2)}). Searching for receiver...`);
-
+                            
                             let bestScore = -Infinity;
                             let bestReceiver = null;
 
@@ -700,7 +699,6 @@ export class Opponent {
                             });
 
                             if (bestReceiver) {
-                                console.log(`Opponent ${this.id} selected receiver ${bestReceiver.id}. Transitioning to PASS state.`);
                                 this.chosenReceiver = bestReceiver;
                                 this.possessionState = 'PASS';
                             }
@@ -722,7 +720,7 @@ export class Opponent {
                 }
 
                 if (this.possessionState === 'SHOOT') {
-                    console.log(`Opponent ${this.id} is SHOOTING!`);
+                    
                     if (this.action.chargingAction !== 'shoot') {
                         this.action.startCharge('shoot');
                     }
@@ -742,13 +740,13 @@ export class Opponent {
                         );
 
                         if (this.action.chargingAction !== 'pass') {
-                            console.log(`Opponent ${this.id} starts charging pass!`);
+                            
                             this.action.startCharge('pass');
                         }
                         this.action.updateCharge(deltaTime * 15.0, null); 
                         
                         if (this.action.kickPower >= this.action.passMaxPower * 0.5) {
-                            console.log(`Opponent ${this.id} KICKS pass!`);
+                
                             this.action.executeKick(this.ball, this.yaw, 0, null, this.chosenReceiver, true);
                             this.passCooldownTimer = 1.5;
                             this.possessionState = 'DRIBBLE';

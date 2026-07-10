@@ -122,12 +122,12 @@ export class FaceSculptor {
             });
         });
 
-        console.log('[FS] Mesh caricate:', this.meshData.map(m => m.mesh.name));
+        
 
         this._buildHandles();
         this.loadDeformations();
 
-        console.log('[FS] init() completato ✓');
+        
     }
 
     _buildHandles() {
@@ -177,7 +177,7 @@ export class FaceSculptor {
         document.addEventListener('pointermove', this._onMove);
         document.addEventListener('pointerup',   this._onUp);
 
-        console.log('[FS] activato, handles:', this.handles.length);
+        
     }
 
     deactivate() {
@@ -391,7 +391,7 @@ export class FaceSculptor {
         });
         this.handles.forEach(h => h.deformAccum.set(0, 0, 0));
         localStorage.removeItem(LOCALSTORAGE_KEY);
-        console.log('[FS] reset effettuato');
+        
     }
 
     
@@ -449,7 +449,7 @@ export class FaceSculptor {
             if (accums) accums.forEach(([x, y, z], i) => {
                 if (this.handles[i]) this.handles[i].deformAccum.set(x, y, z);
             });
-            console.log('[FS] deformazioni caricate per', meshesSave.length, 'mesh');
+            
         } catch (err) {
             console.warn('[FS] errore load:', err);
         }

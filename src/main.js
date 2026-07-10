@@ -768,7 +768,7 @@ function animate(timestamp) {
 
             possessionManager.update(ball, player, teammates, bots, deltaTime);
             const currentMatchState = possessionManager.getState();
-            console.log(currentMatchState);
+            
 
 
 

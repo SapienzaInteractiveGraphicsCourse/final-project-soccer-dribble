@@ -1,10 +1,10 @@
 # ⚽ Soccer Dribble
 
-[![Gioca alla Demo](https://img.shields.io/badge/Gioca_alla_Demo-%23000000.svg?style=for-the-badge&logo=youtube&logoColor=white)](https://SapienzaInteractiveGraphicsCourse.github.io/final-project-soccer-dribble/)
+[![PLAY THE DEMO](https://img.shields.io/badge/Gioca_alla_Demo-%23000000.svg?style=for-the-badge&logo=youtube&logoColor=white)](https://SapienzaInteractiveGraphicsCourse.github.io/final-project-soccer-dribble/)
 
 **Final Project — Interactive Graphics Course**
 **Sapienza University of Rome**
-**Author:** Pierluca Grasso — Student ID: 1050186
+**Author:** Pierluca Grasso — Student ID: 1950186
 
 ---
 

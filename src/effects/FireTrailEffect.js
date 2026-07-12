@@ -68,6 +68,7 @@ export class FireTrailEffect {
         this.ball = ball;
         this.mode = mode;
         this.particles = []; 
+        this.points.visible = true;
         
         if (this.mode === 'electric') {
             this.particleMaterial.map = this.electricTexture;

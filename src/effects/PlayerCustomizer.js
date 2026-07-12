@@ -175,6 +175,7 @@ export class PlayerCustomizer {
      * @param {string} hexString - Colore in formato '#rrggbb'
      */
     changeHairColor(hexString) {
+        if (!hexString) return;
         const color = new THREE.Color(hexString);
         let applied = false;
 
@@ -182,24 +183,44 @@ export class PlayerCustomizer {
         const hairAccessory = this.equippedAccessories['hair'];
         if (hairAccessory) {
             hairAccessory.traverse((child) => {
-                if (child.isMesh) {
-                    child.material = child.material.clone();
-                    child.material.color.copy(color);
-                    child.material.needsUpdate = true;
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material = child.material.map(m => {
+                            const newMat = m.clone();
+                            newMat.color.copy(color);
+                            newMat.map = null;
+                            newMat.needsUpdate = true;
+                            return newMat;
+                        });
+                    } else {
+                        child.material = child.material.clone();
+                        child.material.color.copy(color);
+                        child.material.map = null;
+                        child.material.needsUpdate = true;
+                    }
                 }
             });
             applied = true;
         }
 
         
-        
-        
         if (this.player.model) {
             this.player.model.traverse((child) => {
-                if (child.isMesh && child.name === 'Ch38_Hair' && child.visible) {
-                    child.material = child.material.clone();
-                    child.material.color.copy(color);
-                    child.material.needsUpdate = true;
+                if (child.isMesh && child.name === 'Ch38_Hair') {
+                    if (Array.isArray(child.material)) {
+                        child.material = child.material.map(m => {
+                            const newMat = m.clone();
+                            newMat.color.copy(color);
+                            newMat.map = null;
+                            newMat.needsUpdate = true;
+                            return newMat;
+                        });
+                    } else {
+                        child.material = child.material.clone();
+                        child.material.color.copy(color);
+                        child.material.map = null;
+                        child.material.needsUpdate = true;
+                    }
                     applied = true;
                 }
             });

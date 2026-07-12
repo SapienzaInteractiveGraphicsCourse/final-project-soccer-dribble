@@ -546,6 +546,47 @@ document.addEventListener('triggerSlowMotion', (e) => {
     targetCameraZoom = 1.4; 
 });
 
+document.addEventListener('warmUpAssets', () => {
+    const audios = [
+        matchManager.whistleSound, matchManager.bgMusic, player.action.kickSound, player.nitroSound,
+        uiManager.clickSound, uiManager.switchSound, uiManager.bonusSound, uiManager.popupSound
+    ];
+
+    audios.forEach(snd => {
+        if (snd && typeof snd.play === 'function') {
+            const oldVol = snd.volume;
+            snd.volume = 0;
+            const p = snd.play();
+            if (p && p.catch) {
+                p.then(() => { snd.pause(); snd.currentTime = 0; snd.volume = oldVol; }).catch(() => {});
+            }
+        }
+    });
+
+    if (player.passArrow) player.passArrow.visible = true;
+    if (player.goalCrosshair) player.goalCrosshair.visible = true;
+    if (player.aimRing) player.aimRing.visible = true;
+    if (player.cornerCrosshair) player.cornerCrosshair.visible = true;
+    if (window.fireTrailEffect && window.fireTrailEffect.points) window.fireTrailEffect.points.visible = true;
+    
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false });
+    const ringGeo = new THREE.RingGeometry(1, 1.2, 16);
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    scene.add(ringMesh);
+
+    renderer.compile(scene, camera);
+
+    scene.remove(ringMesh);
+    ringGeo.dispose();
+    ringMat.dispose();
+
+    if (player.passArrow) player.passArrow.visible = false;
+    if (player.goalCrosshair) player.goalCrosshair.visible = false;
+    if (player.aimRing) player.aimRing.visible = false;
+    if (player.cornerCrosshair) player.cornerCrosshair.visible = false;
+    if (window.fireTrailEffect && window.fireTrailEffect.points) window.fireTrailEffect.points.visible = false;
+});
+
 const replaySystem = new ReplaySystem();
 const gameEntities = { ball, player, teammates, bots, homeGK, awayGK, referee };
 
@@ -761,7 +802,14 @@ function animate(timestamp) {
             
             ball.update(deltaTime);
             player.update(deltaTime);
-            referee.update(deltaTime);
+            
+            const isTrainingMode = matchManager.gameMode === 'penalty' || matchManager.gameMode === 'freekick' || matchManager.gameMode === 'corner';
+            if (!isTrainingMode) {
+                if (referee.model) referee.model.visible = true;
+                referee.update(deltaTime);
+            } else {
+                if (referee.model) referee.model.visible = false;
+            }
 
             const attackDirX = matchManager.playerTeam === 'home' ? 1 : -1;
             const isMatchStarted = matchManager.isGameStarted;

@@ -94,6 +94,10 @@ export class UIManager {
 
     setupEventListeners() {
         document.addEventListener('click', (e) => {
+            if (!this.assetsWarmedUp) {
+                this.assetsWarmedUp = true;
+                document.dispatchEvent(new Event('warmUpAssets'));
+            }
             if (e.target.tagName === 'BUTTON' || e.target.closest('.menu-btn') || e.target.closest('.touch-action-btn')) {
                 this.clickSound.currentTime = 0;
                 this.clickSound.play().catch(() => {});

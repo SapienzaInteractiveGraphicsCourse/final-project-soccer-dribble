@@ -305,9 +305,8 @@ export class MatchManager {
         this.homeScore = 0;
         this.awayScore = 0;
 
-        
-        const ballX = 25.0;
-        const ballZ = -12.0;
+        const ballX = 15.0 + Math.random() * 20.0;
+        const ballZ = -20.0 + Math.random() * 40.0;
         this.ball.position.set(ballX, this.ball.radius, ballZ);
         this.ball.velocity.set(0, 0, 0);
         this.ball.isGoal = false;
@@ -317,17 +316,32 @@ export class MatchManager {
         this.ball.isPowerShot = false;
         this.ball.spin = 0;
 
+        const dxGoal = 48.5 - ballX;
+        const dzGoal = 0 - ballZ;
+        const distGoal = Math.sqrt(dxGoal * dxGoal + dzGoal * dzGoal);
+        const dirX = dxGoal / distGoal;
+        const dirZ = dzGoal / distGoal;
+
         if (this.player.model) {
-            this.player.model.position.set(21.0, 0, ballZ - 2.0);
-            const targetYaw = Math.atan2(48.5 - 21.0, 0 - (ballZ - 2.0));
+            const pX = ballX - dirX * 4.0;
+            const pZ = ballZ - dirZ * 4.0;
+            this.player.model.position.set(pX, 0, pZ);
+            const targetYaw = Math.atan2(dxGoal, dzGoal);
             this.player.model.rotation.y = targetYaw;
             this.player.yaw = targetYaw;
         }
 
         
-        if (this.currentO1.model) { this.currentO1.model.position.set(34, 0, -6); this.currentO1.model.rotation.y = 3 / 2 * Math.PI; }
-        if (this.currentO2.model) { this.currentO2.model.position.set(34, 0, -7.5); this.currentO2.model.rotation.y = 3 / 2 * Math.PI; }
-        if (this.currentO3.model) { this.currentO3.model.position.set(34, 0, -9); this.currentO3.model.rotation.y = 3 / 2 * Math.PI; }
+        const wallDist = 9.0;
+        const wCenterX = ballX + dirX * wallDist;
+        const wCenterZ = ballZ + dirZ * wallDist;
+        const perpX = -dirZ;
+        const perpZ = dirX;
+        const wallYaw = Math.atan2(-dxGoal, -dzGoal);
+
+        if (this.currentO1.model) { this.currentO1.model.position.set(wCenterX, 0, wCenterZ); this.currentO1.model.rotation.y = wallYaw; }
+        if (this.currentO2.model) { this.currentO2.model.position.set(wCenterX + perpX * 1.5, 0, wCenterZ + perpZ * 1.5); this.currentO2.model.rotation.y = wallYaw; }
+        if (this.currentO3.model) { this.currentO3.model.position.set(wCenterX - perpX * 1.5, 0, wCenterZ - perpZ * 1.5); this.currentO3.model.rotation.y = wallYaw; }
 
         [this.currentT1, this.currentT2].forEach(npc => {
             if (npc.model) npc.model.position.set(0, -100, 0);

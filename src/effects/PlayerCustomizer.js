@@ -50,9 +50,6 @@ export class PlayerCustomizer {
         });
     }
 
-    /**
-     * CAMBIO COLORE TINTE UNITE (Senza caricare texture, ottimo per la pelle base)
-     */
     changeBaseColor(meshName, hexColor) {
         if (!this.player.model) return;
 
@@ -72,14 +69,6 @@ export class PlayerCustomizer {
      * @param {string} slotName - Categoria per l'inventario (es. 'hair', 'glasses')
      * @param {THREE.Vector3} offsetPos - Offset opzionale per aggiustare il posizionamento
      * @param {THREE.Euler} offsetRot - Offset opzionale per aggiustare la rotazione
-     */
-    /**
-     * AGGANCIO MODELLI MODULARI 3D (Capelli, Occhiali, Scarpini)
-     * Versione senza Box3: si affida a offset precisi passati come parametri
-     */
-    /**
-     * AGGANCIO MODELLI MODULARI 3D
-     * Con compensazione della scala dell'osso (Anti-Shrink)
      */
     equipAccessory(modelUrl, boneName, slotName, offsetPos = new THREE.Vector3(0, 0, 0), offsetRot = new THREE.Euler(0, 0, 0), customScale = 1.0) {
         const bone = this.player.animator.bones[boneName];
@@ -131,9 +120,7 @@ export class PlayerCustomizer {
         });
     }
 
-    /**
-     * RIMUOZIONE ACCESSORIO
-     */
+    
     removeAccessory(slotName) {
     const currentAccessory = this.equippedAccessories[slotName];
     if (currentAccessory && currentAccessory.parent) {
@@ -158,9 +145,7 @@ export class PlayerCustomizer {
         delete this.equippedAccessories[slotName];
     }
 }
-    /**
-     * NASCONDI/MOSTRA CAPELLI DI DEFAULT
-     */
+ 
     toggleDefaultHair(visible) {
         if (!this.player.model) return;
         this.player.model.traverse((child) => {
@@ -232,10 +217,7 @@ export class PlayerCustomizer {
         }
     }
 
-    /**
-     * EQUIPAGGIA OCCHIALI DA SOLE
-     * Utilizza la mesh delle ciglia per un posizionamento più preciso come richiesto
-     */
+    
     equipGlasses(id) {
         const slotName = 'accessory';
         if (!id || id === '0') {
@@ -243,12 +225,6 @@ export class PlayerCustomizer {
             return;
         }
 
-        
-        
-        
-        
-        
-        
         
 
         const GLASSES_CONFIG = {
@@ -300,9 +276,7 @@ export class PlayerCustomizer {
         });
     }
 
-    /**
-     * EQUIPAGGIA CAPPELLO
-     */
+   
     equipHat(id) {
         const slotName = 'hat';
         if (!id || id === '0') {

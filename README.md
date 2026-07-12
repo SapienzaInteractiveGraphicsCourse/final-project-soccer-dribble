@@ -18,7 +18,7 @@
 
 ### 🎮 Gameplay
 - **Full 3D third-person controls** with Pointer Lock API for an immersive experience
-- **Game modes**: 3v3 match and Training with freekick and penalty
+- **Game modes**: 3v3 match and Training (Penalty, Free Kick, Corner Kick)
 - **Player switching**: cycle through your teammates with `E`
 - **Pass & Shoot system**: hold Left Click to charge a pass, Right Click to shoot (with a curved/diagonal trajectory)
 - **Defensive Slide Tackle** with `T`
@@ -57,9 +57,11 @@ Collect diamond-shaped pickups on the field to load a special shot (active on ne
 
 ### 🧍 Player Customization
 Before kick-off, you can customize your player:
-- **Shirt color** and **skin tone** via color pickers
-- **Hair style** (4 different `.glb` hairstyle accessories) and **hair color**
-- Live 3D preview with drag-to-rotate and scroll-to-zoom
+- **Shirt color** (Milan, Inter, Juve team kits or custom color) and **skin tone** via color pickers
+- **Hair style** (5 different `.glb` hairstyle accessories) and **hair color**
+- **Hats** (5 hat models) and **Sunglasses** (5 sunglasses models)
+- **Face sculpting**: drag interactive handles to deform facial features (nose, mouth, eyes, ears)
+- Live 3D preview with drag-to-rotate and scroll-to-zoom via `model-viewer`
 
 ### 📊 HUD & Radar
 - Scoreboard with HOME / AWAY score and match timer
@@ -77,11 +79,14 @@ Before kick-off, you can customize your player:
 | `Mouse` | Aim / Camera look |
 | `Shift` | Sprint (consumes Stamina) |
 | `Left Click` (hold) | Charge & release a pass |
-| `Right Click` | Shoot (diagonal curve) |
+| `Right Click` (hold) | Charge & release a shot (finesse curve when aiming far post) |
 | `Space` | Activate Boost |
 | `E` | Switch controlled player |
 | `T` | Defensive slide tackle |
+| `R` | Reset ball position (training modes only) |
 | `Esc` | Pause menu |
+
+> **Mobile**: Touch controls are available with a virtual joystick and on-screen action buttons.
 
 ---
 
@@ -93,9 +98,10 @@ Before kick-off, you can customize your player:
 | [Vite](https://vitejs.dev/) `v8` | Build tool & dev server |
 | Vanilla JavaScript (ES Modules) | Game logic |
 | Vanilla CSS | UI styling |
-| GLTFLoader / GLB | 3D model loading (player, stadium, ball, hair) |
+| GLTFLoader / GLB | 3D model loading (player, stadium, ball, hair, hats, sunglasses) |
 | RGBELoader / EXRLoader | HDR & EXR skybox loading |
 | PointerLockControls | First-person-style input |
+| [Model Viewer](https://modelviewer.dev/) `v3.5` | 3D accessory previews in customization UI |
 
 ---
 
@@ -104,8 +110,8 @@ Before kick-off, you can customize your player:
 ```
 final-project-pierlucateam/
 ├── public/
-│   ├── models/          # 3D assets (.glb): player, stadium, ball, hair styles
-│   ├── textures/        # PBR grass textures, skybox HDR/EXR files
+│   ├── models/          # 3D assets (.glb): player, stadium, ball, hair, hats, sunglasses
+│   ├── textures/        # PBR grass textures, skybox HDR/EXR, shirt textures, ball texture
 │   └── sound/           # Audio assets
 ├── src/
 │   ├── main.js          # Entry point & game loop
@@ -118,26 +124,35 @@ final-project-pierlucateam/
 │   │   ├── Player.js          # Player controller (movement, pass, shoot)
 │   │   ├── Ball.js            # Ball physics & collision
 │   │   ├── Teammate.js        # AI teammate logic
-│   │   ├── Bot.js             # AI opponent logic
+│   │   ├── Opponent.js        # AI opponent logic
 │   │   ├── GoalKeeper.js      # Goalkeeper AI
 │   │   ├── Referee.js         # Referee entity
-│   │   └── BenchPlayer.js     # Decorative bench players
+│   │   └── BenchPlayer.js     # Bench/substitute players
 │   ├── game/
 │   │   ├── MatchManager.js    # Match rules, scoring, game states
 │   │   ├── BonusManager.js    # Power-up spawning & collection
 │   │   ├── BoostPadManager.js # Boost pad spawning & recharge logic
-│   │   └── PossessionManager.js # Ball possession state machine
+│   │   ├── PossessionManager.js # Ball possession state machine
+│   │   ├── DefensiveManager.js  # Defensive marking & threat scoring
+│   │   └── TacticalManager.js   # Offensive lane assignment system
 │   ├── effects/
 │   │   ├── GameEffects.js     # Player indicator, goal arrow effects
 │   │   ├── FireTrailEffect.js # Fire trail particle system for Super Shot
 │   │   ├── BoosTrail.js       # Boost particle trail
 │   │   ├── Arrow.js           # Directional arrow indicator
-│   │   └── PlayerCustomizer.js # Runtime material & accessory customization
+│   │   ├── PlayerCustomizer.js # Runtime material & accessory customization
+│   │   └── FaceSculptor.js    # Interactive face vertex deformation
 │   ├── environment/
-│   │   └── Pitch.js           # Football pitch geometry & field lines
+│   │   ├── Pitch.js           # Football pitch geometry & field lines
+│   │   └── Scoreboard.js     # 3D in-world CanvasTexture scoreboard
 │   ├── ui/
 │   │   └── UIManager.js       # All HUD, menus, and UI event handling
-│   └── animation-action/      # Animation state machine helpers
+│   ├── physics/
+│   │   └── PhysicsWorld.js    # Ground debris particle system
+│   └── animation-action/
+│       ├── PlayerAnimation.js # Procedural player animations
+│       ├── PlayerAction.js    # Pass, shoot, dribble, header logic
+│       └── GoalKeeperAnimation.js # Procedural goalkeeper animations
 ├── index.html
 ├── package.json
 └── vite.config.js
@@ -184,4 +199,4 @@ npm run preview
 - **University:** Sapienza University of Rome
 - **Academic Year:** 2025/2026
 - **Author:** Pierluca Grasso
-- **Student ID:** 1050186
+- **Student ID:** 1950186

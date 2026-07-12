@@ -443,12 +443,12 @@ export class UIManager {
             document.getElementById('btn-next-settings').addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.settingsMenu.style.display = 'none';
-                this.formationMenu.style.display = 'flex';
                 
                 const time = document.getElementById('select-time').value;
                 const weather = document.getElementById('select-weather').value;
                 
                 document.dispatchEvent(new CustomEvent('updateEnvironment', { detail: { time, weather } }));
+                this.startGame('2-1');
             });
 
             document.getElementById('btn-back-settings').addEventListener('click', (e) => {
@@ -547,21 +547,7 @@ export class UIManager {
             });
         }
 
-        document.getElementById('btn-back-formation').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.formationMenu.style.display = 'none';
-            this.mainMenu.style.display = 'flex';
-        });
 
-        document.getElementById('btn-form-21').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.startGame('2-1');
-        });
-
-        document.getElementById('btn-form-12').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.startGame('1-2');
-        });
 
         
         const btnResume = document.getElementById('btn-resume');
@@ -618,7 +604,9 @@ export class UIManager {
     }
 
     startGame(formation) {
-        this.formationMenu.style.display = 'none';
+        if (this.formationMenu) {
+            this.formationMenu.style.display = 'none';
+        }
         this.gameUi.style.display = 'block';
         this.onStartGame(formation); 
     }

@@ -753,7 +753,7 @@ export class UIManager {
 
         
         const fakeBonuses = [
-            "🔥 SUPER TIRO", "⚡ TIRO ELETTRICO"
+            "🔥 SUPER SHOOT", "⚡ ELECTRIC SHOOT"
         ];
 
         

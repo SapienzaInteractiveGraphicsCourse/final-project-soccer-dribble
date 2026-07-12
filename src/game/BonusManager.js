@@ -88,7 +88,7 @@ export class BonusManager {
         
         if (isElectric) {
             if (this.uiManager) {
-                animDuration = this.uiManager.triggerBonusRoulette("⚡ TIRO ELETTRICO", "bonus-electricshot") || 3;
+                animDuration = this.uiManager.triggerBonusRoulette("⚡ ELECTRIC SHOOT", "bonus-electricshot") || 3;
             }
             setTimeout(() => {
                 player.action.hasElectricShot = true;
@@ -98,7 +98,7 @@ export class BonusManager {
             }, animDuration * 1000);
         } else {
             if (this.uiManager) {
-                animDuration = this.uiManager.triggerBonusRoulette("🔥 SUPER TIRO", "bonus-supershot") || 3;
+                animDuration = this.uiManager.triggerBonusRoulette("🔥 SUPER SHOOT", "bonus-supershot") || 3;
             }
             setTimeout(() => {
                 player.action.hasSuperShot = true;

@@ -265,7 +265,7 @@ export class PlayerAction {
             let V_xz, V_y;
 
             if (this.isTakingCorner) {
-                const maxHeight = 15.0; 
+                const maxHeight = isBot ? 6.0 : 15.0; 
                 V_y = Math.sqrt(2 * 12.0 * maxHeight);
                 const flightTime = (2 * V_y) / 12.0;
                 const dragCompensation = 1 + (distanceToTarget * 0.015);

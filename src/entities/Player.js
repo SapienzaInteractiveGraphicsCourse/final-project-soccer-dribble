@@ -47,6 +47,8 @@ export class Player {
         this.ballThrown = false;
         this.kickButtonHeld = false;
         this.headerCooldown = 0;
+        this.rightMouseButtonDown = false;
+        this.rightClickHeaderBuffer = 0;
 
         this.customizer = new PlayerCustomizer(this);
 
@@ -184,6 +186,10 @@ export class Player {
 
         
         document.addEventListener('mousedown', (e) => {
+            if (e.button === 2) {
+                this.rightMouseButtonDown = true;
+                this.rightClickHeaderBuffer = 0.5;
+            }
             if (this.controls.isLocked) {
                 if (this.action.isThrowingIn && e.button === 0) {
                     
@@ -207,6 +213,9 @@ export class Player {
         });
 
         document.addEventListener('mouseup', (e) => {
+            if (e.button === 2) {
+                this.rightMouseButtonDown = false;
+            }
             if (this.controls.isLocked && this.action.chargingAction) {
                 if ((this.action.chargingAction === 'pass' && e.button === 0) ||
                     (this.action.chargingAction === 'shoot' && e.button === 2)) {
@@ -589,6 +598,7 @@ export class Player {
         if (this.ball && this.ball.isLoaded && !this.action.isThrowingIn && !this.throwAnimPlaying) {
 
             
+            if (this.rightClickHeaderBuffer > 0) this.rightClickHeaderBuffer -= deltaTime;
             if (this.headerCooldown > 0) this.headerCooldown -= deltaTime;
 
             const distanceToBall2D = new THREE.Vector2(this.model.position.x, this.model.position.z)
@@ -604,8 +614,14 @@ export class Player {
             
             if (!this.action.isHeading && isBallHigh && distanceToBall2D < 3.5 && this.headerCooldown <= 0) {
                 
-                
-                if (this.kickButtonHeld && this.action.chargingAction) {
+                if (this.rightMouseButtonDown || this.rightClickHeaderBuffer > 0) {
+                    this.action.cancelCharge(this.passArrow);      
+                    this.action.startHeader(this.ball, 'shoot');
+                    this.kickButtonHeld = false;
+                    this.rightClickHeaderBuffer = 0;
+                    this.headerCooldown = 1.2; 
+                }
+                else if (this.kickButtonHeld && this.action.chargingAction) {
                     const actionType = this.action.chargingAction; 
                     this.action.cancelCharge(this.passArrow);      
                     this.action.startHeader(this.ball, actionType);

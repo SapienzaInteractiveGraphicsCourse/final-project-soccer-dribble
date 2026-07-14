@@ -518,7 +518,7 @@ export class UIManager {
                 this.switchSound.play().catch(() => {});
                 
                 const val = parseInt(e.target.value);
-                const labels = ["Bassa", "Media", "Alta"];
+                const labels = ["Low", "Medium", "High"];
                 document.getElementById('val-graphics').innerText = labels[val];
                 if (window.gameSettings) {
                     window.gameSettings.graphicsQuality = val;

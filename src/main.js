@@ -781,7 +781,7 @@ function animate(timestamp) {
             uiManager.updateHUD(player.playerName, player.stamina, matchTime, matchManager.homeScore, matchManager.awayScore);
             scoreboard.updateScore(matchManager.homeScore, matchManager.awayScore, matchTime);
 
-            if (matchTime >= 120 && matchManager.isGameStarted && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick' && matchManager.gameMode !== 'corner') {
+            if (matchTime >= 300 && matchManager.isGameStarted && matchManager.gameMode !== 'penalty' && matchManager.gameMode !== 'freekick' && matchManager.gameMode !== 'corner') {
                 matchManager.isGameStarted = false;
                 isBallInPlay = false;
                 document.exitPointerLock();
